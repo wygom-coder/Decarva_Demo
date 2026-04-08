@@ -11,6 +11,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #f5f5f3;
       color: #1a1a18;
+      min-height: 100vh;
     }
 
     /* ── GNB ── */
@@ -123,6 +124,7 @@
       align-items: stretch;
       max-width: 1200px;
       margin: 0 auto;
+      min-height: calc(100vh - 78px);
     }
 
     .col {
@@ -591,19 +593,3 @@
 
 </body>
 </html>
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #f5f5f3;
-  color: #1a1a18;
-  min-height: 100vh;  /* 이거 추가 */
-}
-.body {
-  padding: 12px 16px 24px;
-  display: grid;
-  grid-template-columns: 160px 1fr 180px;
-  gap: 10px;
-  align-items: stretch;
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: calc(100vh - 78px);  /* 이거 추가 */
-}
