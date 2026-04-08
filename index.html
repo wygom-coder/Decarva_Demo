@@ -204,30 +204,43 @@
       border: 0.5px solid rgba(0,0,0,0.1);
       border-radius: 8px;
       overflow: hidden;
+      background: rgba(0,0,0,0.06);
     }
+    .news-col-hd {
+      background: #fff;
+      padding: 8px 12px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* 신문사 2×2 그리드 */
     .news-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1px;
-      background: rgba(0,0,0,0.08);
       flex: 1;
     }
-    .news-card {
+
+    /* 신문사 섹션 카드 */
+    .news-source-card {
       background: #fff;
-      cursor: pointer;
       display: flex;
       flex-direction: column;
-      text-decoration: none;
     }
-    .news-card:hover { background: #fafaf8; }
+
+    /* 대표 이미지 */
     .news-thumb {
       width: 100%;
-      height: 100px;
+      height: 72px;
       flex-shrink: 0;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
     }
     .news-thumb img {
       width: 100%;
@@ -238,15 +251,46 @@
       font-size: 9px;
       color: rgba(255,255,255,0.25);
     }
+    .news-src-label {
+      position: absolute;
+      bottom: 6px;
+      left: 8px;
+      font-size: 9px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: .02em;
+    }
     .c1 { background: #0C2340; }
     .c2 { background: #0f3050; }
     .c3 { background: #1a3a5c; }
     .c4 { background: #0d2b44; }
 
-    .news-info { padding: 7px 9px 8px; flex-shrink: 0; }
-    .news-src { font-size: 9px; color: #999; margin-bottom: 3px; }
-    .news-title {
-      font-size: 11px;
+    /* 기사 리스트 */
+    .news-article-list {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .news-article {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 6px 9px;
+      border-top: 0.5px solid rgba(0,0,0,0.06);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .news-article:hover { background: #fafaf8; }
+    .news-article-dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #ccc;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .news-article-title {
+      font-size: 10px;
       font-weight: 500;
       color: #1a1a18;
       line-height: 1.4;
@@ -254,8 +298,15 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      flex: 1;
     }
-    .news-time { font-size: 9px; color: #999; margin-top: 3px; }
+    .news-article-time {
+      font-size: 9px;
+      color: #bbb;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
 
     .news-more {
       background: #fff;
@@ -450,47 +501,112 @@
     <!-- 중: 해운 뉴스 -->
     <div class="col">
       <div class="news-col">
+        <div class="news-col-hd">
+          <div class="ph-t">해운 뉴스</div>
+          <div class="ph-s">제휴 언론사</div>
+        </div>
         <div class="news-grid">
-          <a class="news-card" href="#" target="_blank">
+
+          <!-- 해사신문 -->
+          <div class="news-source-card">
             <div class="news-thumb c1">
               <span class="thumb-placeholder">기사 이미지</span>
+              <span class="news-src-label">해사신문</span>
             </div>
-            <div class="news-info">
-              <div class="news-src">해사신문</div>
-              <div class="news-title">EUA €63 돌파… EU ETS 강화 앞두고 선사 비용 부담 가중</div>
-              <div class="news-time">30분 전</div>
+            <div class="news-article-list">
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">EUA €63 돌파… EU ETS 강화 앞두고 선사 비용 부담 가중</span>
+                <span class="news-article-time">30분</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">HMM, 친환경 선박 전환 로드맵 2030 발표</span>
+                <span class="news-article-time">2시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">부산항 3월 컨테이너 물동량 전년比 4.2% 증가</span>
+                <span class="news-article-time">4시간</span>
+              </a>
             </div>
-          </a>
-          <a class="news-card" href="#" target="_blank">
+          </div>
+
+          <!-- 해운뉴스 -->
+          <div class="news-source-card">
             <div class="news-thumb c2">
               <span class="thumb-placeholder">기사 이미지</span>
+              <span class="news-src-label">해운뉴스</span>
             </div>
-            <div class="news-info">
-              <div class="news-src">해운뉴스</div>
-              <div class="news-title">SCFI 2,100선 회복… 홍해 우회로 수급 타이트 지속</div>
-              <div class="news-time">2시간 전</div>
+            <div class="news-article-list">
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">SCFI 2,100선 회복… 홍해 우회로 수급 타이트 지속</span>
+                <span class="news-article-time">1시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">아시아~북미 서안 운임 주간 3.2% 상승</span>
+                <span class="news-article-time">3시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">MSC, 극동~유럽 노선 GRI 발표… $500/TEU</span>
+                <span class="news-article-time">5시간</span>
+              </a>
             </div>
-          </a>
-          <a class="news-card" href="#" target="_blank">
+          </div>
+
+          <!-- 코리아쉬핑가제트 -->
+          <div class="news-source-card">
             <div class="news-thumb c3">
               <span class="thumb-placeholder">기사 이미지</span>
+              <span class="news-src-label">코리아쉬핑가제트</span>
             </div>
-            <div class="news-info">
-              <div class="news-src">코리아쉬핑가제트</div>
-              <div class="news-title">HMM 신조 컨테이너선 4척 추가 발주… 2027년 인도</div>
-              <div class="news-time">4시간 전</div>
+            <div class="news-article-list">
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">HMM 신조 컨테이너선 4척 추가 발주… 2027년 인도</span>
+                <span class="news-article-time">2시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">팬오션, 벌크 장기계약 비중 65%로 확대</span>
+                <span class="news-article-time">4시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">SM상선, 중동 노선 신규 취항 검토</span>
+                <span class="news-article-time">6시간</span>
+              </a>
             </div>
-          </a>
-          <a class="news-card" href="#" target="_blank">
+          </div>
+
+          <!-- 한국해운신문 -->
+          <div class="news-source-card">
             <div class="news-thumb c4">
               <span class="thumb-placeholder">기사 이미지</span>
+              <span class="news-src-label">한국해운신문</span>
             </div>
-            <div class="news-info">
-              <div class="news-src">한국해운신문</div>
-              <div class="news-title">IMO 2030 메탄올 연료 기준 초안 공개… 선사 대응 시급</div>
-              <div class="news-time">5시간 전</div>
+            <div class="news-article-list">
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">IMO 2030 메탄올 연료 기준 초안 공개… 선사 대응 시급</span>
+                <span class="news-article-time">3시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">해수부, 선원 복지 개선 종합대책 발표</span>
+                <span class="news-article-time">5시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">국적 외항선사 2025년 상반기 운항 실적 공개</span>
+                <span class="news-article-time">7시간</span>
+              </a>
             </div>
-          </a>
+          </div>
+
         </div>
         <a class="news-more" href="#" target="_blank">해운 뉴스 전체 보기 →</a>
       </div>
