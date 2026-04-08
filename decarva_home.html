@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DECARVA</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f3;
+      color: #1a1a18;
+    }
+
+    /* ── GNB ── */
+    .gnb {
+      background: #fff;
+      border-bottom: 0.5px solid rgba(0,0,0,0.12);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      height: 48px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 15px;
+      font-weight: 600;
+      color: #185FA5;
+      margin-right: 32px;
+      letter-spacing: -0.3px;
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+    .nav-item {
+      font-size: 13px;
+      color: #666;
+      padding: 0 14px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .nav-item.on {
+      color: #1a1a18;
+      border-bottom-color: #185FA5;
+      font-weight: 500;
+    }
+    .gnb-time {
+      margin-left: auto;
+      font-size: 11px;
+      color: #999;
+    }
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      margin-left: auto;
+      padding: 4px;
+    }
+    .hb-line {
+      width: 20px;
+      height: 1.5px;
+      background: #666;
+      border-radius: 1px;
+    }
+
+    /* ── TICKER ── */
+    .ticker-bar {
+      background: #042C53;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      overflow: hidden;
+      gap: 12px;
+    }
+    .ticker-live {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      color: #378ADD;
+      border: 0.5px solid #185FA5;
+      padding: 1px 5px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+    .ticker-track {
+      overflow: hidden;
+      flex: 1;
+      display: flex;
+    }
+    .ticker-scroll {
+      display: flex;
+      gap: 28px;
+      animation: ticker 25s linear infinite;
+      white-space: nowrap;
+    }
+    @keyframes ticker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ti { font-size: 11px; color: #85B7EB; }
+    .ti b { color: #E6F1FB; font-weight: 500; }
+    .t-up { color: #5DCAA5; }
+    .t-dn { color: #F09595; }
+
+    /* ── BODY ── */
+    .body {
+      padding: 12px 16px 24px;
+      display: grid;
+      grid-template-columns: 160px 1fr 180px;
+      gap: 10px;
+      align-items: stretch;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── PANEL ── */
+    .panel {
+      background: #fff;
+      border: 0.5px solid rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .panel-hd {
+      padding: 8px 12px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .ph-t { font-size: 11px; font-weight: 500; }
+    .ph-s { font-size: 9px; color: #999; }
+
+    /* ── 환율 ── */
+    .fx-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .fx-row {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.06);
+      flex: 1;
+    }
+    .fx-row:last-child { border-bottom: none; }
+    .fx-pair {
+      font-size: 11px;
+      font-weight: 500;
+      flex: 1;
+    }
+    .fx-unit { font-size: 9px; color: #999; font-weight: 400; }
+    .fx-rate {
+      font-size: 11px;
+      font-weight: 500;
+      text-align: right;
+      margin-right: 6px;
+    }
+    .fx-diff { font-size: 10px; min-width: 44px; text-align: right; }
+    .up  { color: #0F6E56; }
+    .dn  { color: #A32D2D; }
+    .neu { color: #999; }
+
+    .more-row {
+      padding: 7px 12px;
+      font-size: 10px;
+      color: #185FA5;
+      text-align: center;
+      border-top: 0.5px solid rgba(0,0,0,0.08);
+      cursor: pointer;
+      flex-shrink: 0;
+      text-decoration: none;
+      display: block;
+    }
+    .more-row:hover { background: #f5f5f3; }
+
+    /* ── 해운 뉴스 ── */
+    .news-col {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      border: 0.5px solid rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .news-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: rgba(0,0,0,0.08);
+      flex: 1;
+    }
+    .news-card {
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+    }
+    .news-card:hover { background: #fafaf8; }
+    .news-thumb {
+      width: 100%;
+      flex: 1;
+      min-height: 70px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .news-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .thumb-placeholder {
+      font-size: 9px;
+      color: rgba(255,255,255,0.25);
+    }
+    .c1 { background: #0C2340; }
+    .c2 { background: #0f3050; }
+    .c3 { background: #1a3a5c; }
+    .c4 { background: #0d2b44; }
+
+    .news-info { padding: 7px 9px 8px; flex-shrink: 0; }
+    .news-src { font-size: 9px; color: #999; margin-bottom: 3px; }
+    .news-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: #1a1a18;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .news-time { font-size: 9px; color: #999; margin-top: 3px; }
+
+    .news-more {
+      background: #fff;
+      padding: 7px 12px;
+      font-size: 10px;
+      color: #185FA5;
+      text-align: center;
+      border-top: 0.5px solid rgba(0,0,0,0.08);
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      flex-shrink: 0;
+    }
+    .news-more:hover { background: #fafaf8; }
+
+    /* ── 경제 뉴스 ── */
+    .econ-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .econ-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 12px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.06);
+      cursor: pointer;
+      flex: 1;
+      text-decoration: none;
+    }
+    .econ-row:last-child { border-bottom: none; }
+    .econ-row:hover { background: #fafaf8; }
+    .econ-num {
+      font-size: 10px;
+      font-weight: 500;
+      color: #999;
+      min-width: 12px;
+      flex-shrink: 0;
+    }
+    .econ-body { flex: 1; }
+    .econ-title { font-size: 11px; color: #1a1a18; line-height: 1.4; }
+    .econ-meta { font-size: 9px; color: #999; margin-top: 2px; }
+
+    /* ── 모바일 반응형 ── */
+    @media (max-width: 768px) {
+      .gnb { padding: 0 16px; }
+      .nav-links { display: none; }
+      .gnb-time { display: none; }
+      .hamburger { display: flex; }
+
+      .ticker-bar { padding: 0 16px; height: 26px; }
+      .ti { font-size: 10px; }
+
+      .body {
+        grid-template-columns: 1fr;
+        padding: 10px 12px 20px;
+        gap: 8px;
+      }
+
+      /* 모바일 환율: 2x2 그리드 */
+      .fx-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        flex: none;
+      }
+      .fx-row {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 8px 12px;
+        border-bottom: 0.5px solid rgba(0,0,0,0.06);
+        border-right: 0.5px solid rgba(0,0,0,0.06);
+        flex: none;
+        gap: 2px;
+      }
+      .fx-row:nth-child(even) { border-right: none; }
+      .fx-row:nth-last-child(-n+2) { border-bottom: none; }
+      .fx-pair { font-size: 10px; }
+      .fx-rate { font-size: 13px; margin-right: 0; text-align: left; }
+      .fx-diff { font-size: 9px; min-width: auto; text-align: left; }
+
+      /* 모바일 해운뉴스: 2x2 유지 */
+      .news-thumb { min-height: 56px; }
+      .news-title { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- GNB -->
+  <nav class="gnb">
+    <a class="logo" href="#">DECARVA</a>
+    <div class="nav-links">
+      <a class="nav-item on" href="#">홈</a>
+      <a class="nav-item" href="#">뉴스</a>
+      <a class="nav-item" href="#">중고거래</a>
+      <a class="nav-item" href="#">EUA거래</a>
+      <a class="nav-item" href="#">커뮤니티</a>
+      <a class="nav-item" href="#">더보기</a>
+    </div>
+    <div class="gnb-time" id="clock"></div>
+    <div class="hamburger" onclick="toggleMenu()">
+      <div class="hb-line"></div>
+      <div class="hb-line"></div>
+      <div class="hb-line"></div>
+    </div>
+  </nav>
+
+  <!-- TICKER -->
+  <div class="ticker-bar">
+    <div class="ticker-live">LIVE</div>
+    <div class="ticker-track">
+      <div class="ticker-scroll">
+        <div class="ti">BDI <b>1,284</b> <span class="t-dn">▼18</span></div>
+        <div class="ti">SCFI <b>2,106</b> <span class="t-up">▲32</span></div>
+        <div class="ti">CCFI <b>1,048</b> <span class="t-up">▲11</span></div>
+        <div class="ti">HRCI <b>892</b> <span class="t-dn">▼5</span></div>
+        <div class="ti">EUA <b>€63.42</b> <span class="t-up">▲1.24%</span></div>
+        <div class="ti">WTI <b>$78.42</b> <span class="t-dn">▼0.6%</span></div>
+        <div class="ti">브렌트 <b>$82.15</b> <span class="t-dn">▼0.4%</span></div>
+        <div class="ti">VLSFO <b>$612/MT</b> <span class="t-up">▲3</span></div>
+        <div class="ti">MGO <b>$748/MT</b> <span class="t-up">▲2</span></div>
+        <div class="ti">LNG JKM <b>$9.84</b> <span class="t-up">▲2.2%</span></div>
+        <!-- 무한루프를 위한 복사본 -->
+        <div class="ti">BDI <b>1,284</b> <span class="t-dn">▼18</span></div>
+        <div class="ti">SCFI <b>2,106</b> <span class="t-up">▲32</span></div>
+        <div class="ti">CCFI <b>1,048</b> <span class="t-up">▲11</span></div>
+        <div class="ti">HRCI <b>892</b> <span class="t-dn">▼5</span></div>
+        <div class="ti">EUA <b>€63.42</b> <span class="t-up">▲1.24%</span></div>
+        <div class="ti">WTI <b>$78.42</b> <span class="t-dn">▼0.6%</span></div>
+        <div class="ti">브렌트 <b>$82.15</b> <span class="t-dn">▼0.4%</span></div>
+        <div class="ti">VLSFO <b>$612/MT</b> <span class="t-up">▲3</span></div>
+        <div class="ti">MGO <b>$748/MT</b> <span class="t-up">▲2</span></div>
+        <div class="ti">LNG JKM <b>$9.84</b> <span class="t-up">▲2.2%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- 좌: 환율 -->
+    <div class="col">
+      <div class="panel">
+        <div class="panel-hd">
+          <div class="ph-t">환율</div>
+          <div class="ph-s">한국은행 · <span id="fx-time">15:30</span></div>
+        </div>
+        <div class="fx-list">
+          <div class="fx-row">
+            <div class="fx-pair">USD/KRW</div>
+            <div class="fx-rate">1,381.5</div>
+            <div class="fx-diff up">▲0.30</div>
+          </div>
+          <div class="fx-row">
+            <div class="fx-pair">EUR/KRW</div>
+            <div class="fx-rate">1,509.2</div>
+            <div class="fx-diff dn">▼2.10</div>
+          </div>
+          <div class="fx-row">
+            <div class="fx-pair">JPY/KRW <span class="fx-unit">100엔</span></div>
+            <div class="fx-rate">922.40</div>
+            <div class="fx-diff up">▲1.20</div>
+          </div>
+          <div class="fx-row">
+            <div class="fx-pair">CNY/KRW</div>
+            <div class="fx-rate">190.35</div>
+            <div class="fx-diff neu">—</div>
+          </div>
+          <div class="fx-row">
+            <div class="fx-pair">GBP/KRW</div>
+            <div class="fx-rate">1,748.6</div>
+            <div class="fx-diff dn">▼3.20</div>
+          </div>
+          <div class="fx-row">
+            <div class="fx-pair">SGD/KRW</div>
+            <div class="fx-rate">1,032.1</div>
+            <div class="fx-diff up">▲0.80</div>
+          </div>
+          <div class="fx-row">
+            <div class="fx-pair">USD/JPY</div>
+            <div class="fx-rate">149.83</div>
+            <div class="fx-diff up">▲0.12</div>
+          </div>
+        </div>
+        <a class="more-row" href="https://www.bok.or.kr" target="_blank">한국은행 바로가기 →</a>
+      </div>
+    </div>
+
+    <!-- 중: 해운 뉴스 -->
+    <div class="col">
+      <div class="news-col">
+        <div class="news-grid">
+          <a class="news-card" href="#" target="_blank">
+            <div class="news-thumb c1">
+              <span class="thumb-placeholder">기사 이미지</span>
+            </div>
+            <div class="news-info">
+              <div class="news-src">해사신문</div>
+              <div class="news-title">EUA €63 돌파… EU ETS 강화 앞두고 선사 비용 부담 가중</div>
+              <div class="news-time">30분 전</div>
+            </div>
+          </a>
+          <a class="news-card" href="#" target="_blank">
+            <div class="news-thumb c2">
+              <span class="thumb-placeholder">기사 이미지</span>
+            </div>
+            <div class="news-info">
+              <div class="news-src">해운뉴스</div>
+              <div class="news-title">SCFI 2,100선 회복… 홍해 우회로 수급 타이트 지속</div>
+              <div class="news-time">2시간 전</div>
+            </div>
+          </a>
+          <a class="news-card" href="#" target="_blank">
+            <div class="news-thumb c3">
+              <span class="thumb-placeholder">기사 이미지</span>
+            </div>
+            <div class="news-info">
+              <div class="news-src">코리아쉬핑가제트</div>
+              <div class="news-title">HMM 신조 컨테이너선 4척 추가 발주… 2027년 인도</div>
+              <div class="news-time">4시간 전</div>
+            </div>
+          </a>
+          <a class="news-card" href="#" target="_blank">
+            <div class="news-thumb c4">
+              <span class="thumb-placeholder">기사 이미지</span>
+            </div>
+            <div class="news-info">
+              <div class="news-src">한국해운신문</div>
+              <div class="news-title">IMO 2030 메탄올 연료 기준 초안 공개… 선사 대응 시급</div>
+              <div class="news-time">5시간 전</div>
+            </div>
+          </a>
+        </div>
+        <a class="news-more" href="#" target="_blank">해운 뉴스 전체 보기 →</a>
+      </div>
+    </div>
+
+    <!-- 우: 경제 뉴스 -->
+    <div class="col">
+      <div class="panel">
+        <div class="panel-hd">
+          <div class="ph-t">경제 뉴스</div>
+          <div class="ph-s">네이버</div>
+        </div>
+        <div class="econ-list">
+          <a class="econ-row" href="#" target="_blank">
+            <div class="econ-num">1</div>
+            <div class="econ-body">
+              <div class="econ-title">원/달러 1,380원대… 미 연준 금리 동결 영향</div>
+              <div class="econ-meta">연합뉴스 · 1시간 전</div>
+            </div>
+          </a>
+          <a class="econ-row" href="#" target="_blank">
+            <div class="econ-num">2</div>
+            <div class="econ-body">
+              <div class="econ-title">국제유가 하락… WTI $78대 마감</div>
+              <div class="econ-meta">한국경제 · 2시간 전</div>
+            </div>
+          </a>
+          <a class="econ-row" href="#" target="_blank">
+            <div class="econ-num">3</div>
+            <div class="econ-body">
+              <div class="econ-title">중국 수출 예상 상회… 아시아 물동량 회복 기대</div>
+              <div class="econ-meta">매일경제 · 3시간 전</div>
+            </div>
+          </a>
+          <a class="econ-row" href="#" target="_blank">
+            <div class="econ-num">4</div>
+            <div class="econ-body">
+              <div class="econ-title">EU CBAM 적용 품목 확대 예고</div>
+              <div class="econ-meta">조선비즈 · 4시간 전</div>
+            </div>
+          </a>
+          <a class="econ-row" href="#" target="_blank">
+            <div class="econ-num">5</div>
+            <div class="econ-body">
+              <div class="econ-title">미·중 무역협상 재개… 물동량 회복 기대감</div>
+              <div class="econ-meta">서울경제 · 5시간 전</div>
+            </div>
+          </a>
+          <a class="econ-row" href="#" target="_blank">
+            <div class="econ-num">6</div>
+            <div class="econ-body">
+              <div class="econ-title">LNG 현물가 반등… 아시아 수요 증가</div>
+              <div class="econ-meta">에너지경제 · 6시간 전</div>
+            </div>
+          </a>
+        </div>
+        <a class="more-row" href="https://news.naver.com/section/101" target="_blank">네이버 경제뉴스 바로가기 →</a>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 현재 시각 표시
+    function updateClock() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const timeStr =
+        now.getFullYear() + '.' +
+        pad(now.getMonth() + 1) + '.' +
+        pad(now.getDate()) + ' · ' +
+        pad(now.getHours()) + ':' +
+        pad(now.getMinutes()) + ' KST';
+      const el = document.getElementById('clock');
+      if (el) el.textContent = timeStr;
+    }
+    updateClock();
+    setInterval(updateClock, 60000);
+
+    // 햄버거 메뉴 (모바일)
+    function toggleMenu() {
+      const nav = document.querySelector('.nav-links');
+      if (nav.style.display === 'flex') {
+        nav.style.display = 'none';
+      } else {
+        nav.style.display = 'flex';
+        nav.style.flexDirection = 'column';
+        nav.style.position = 'absolute';
+        nav.style.top = '48px';
+        nav.style.left = '0';
+        nav.style.right = '0';
+        nav.style.background = '#fff';
+        nav.style.borderBottom = '0.5px solid rgba(0,0,0,0.1)';
+        nav.style.padding = '8px 0';
+        nav.style.zIndex = '99';
+      }
+    }
+  </script>
+
+</body>
+</html>
