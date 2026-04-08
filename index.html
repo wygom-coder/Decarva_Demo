@@ -124,7 +124,6 @@
       align-items: stretch;
       max-width: 1200px;
       margin: 0 auto;
-      min-height: calc(100vh - 78px);
     }
 
     .col {
@@ -223,8 +222,8 @@
     .news-card:hover { background: #fafaf8; }
     .news-thumb {
       width: 100%;
-      flex: 1;
-      min-height: 70px;
+      height: 100px;
+      flex-shrink: 0;
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -341,7 +340,7 @@
       .fx-diff { font-size: 9px; min-width: auto; text-align: left; }
 
       /* 모바일 해운뉴스: 2x2 유지 */
-      .news-thumb { min-height: 56px; }
+      .news-thumb { height: 70px; }
       .news-title { font-size: 10px; }
     }
   </style>
