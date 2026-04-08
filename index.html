@@ -6,7 +6,8 @@
   <title>DECARVA</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a18; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a18; min-height: 100vh; display: flex; flex-direction: column; }
+    html { height: 100%; }
 
     .gnb { background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.12); padding: 0 24px; display: flex; align-items: center; height: 48px; position: sticky; top: 0; z-index: 100; }
     .logo { font-size: 15px; font-weight: 600; color: #185FA5; margin-right: 32px; letter-spacing: -0.3px; text-decoration: none; }
@@ -27,7 +28,7 @@
     .t-up { color: #5DCAA5; }
     .t-dn { color: #F09595; }
 
-    .body { padding: 12px 20px 24px; display: grid; grid-template-columns: 200px 1fr 200px; gap: 12px; align-items: stretch; max-width: 1400px; margin: 0 auto; }
+    .body { padding: 12px 20px 16px; display: grid; grid-template-columns: 200px 1fr 200px; gap: 12px; align-items: stretch; flex: 1; }
     .col { display: flex; flex-direction: column; }
 
     .panel { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; flex: 1; }
@@ -206,7 +207,7 @@
             <div class="user-avatar" id="user-avatar">김</div>
             <div>
               <div class="user-name" id="user-name">김선장님</div>
-              <div class="user-email" id="user-email">captain@decarva.co.kr</div>
+              <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4724263733262e290723222426353126692428692c35">[email&#160;protected]</a></div>
             </div>
           </div>
           <div class="svc-list">
@@ -332,7 +333,7 @@
 
   </div>
 
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     function updateClock() {
       const now = new Date();
       const pad = n => String(n).padStart(2, '0');
@@ -372,14 +373,4 @@
         nav.style.position = 'absolute';
         nav.style.top = '48px';
         nav.style.left = '0';
-        nav.style.right = '0';
-        nav.style.background = '#fff';
-        nav.style.borderBottom = '0.5px solid rgba(0,0,0,0.1)';
-        nav.style.padding = '8px 0';
-        nav.style.zIndex = '99';
-      }
-    }
-  </script>
-
-</body>
-</html>
+        nav.sty
