@@ -6,493 +6,133 @@
   <title>DECARVA</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a18; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f5f3;
-      color: #1a1a18;
-      min-height: 100vh;
-    }
+    .gnb { background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.12); padding: 0 24px; display: flex; align-items: center; height: 48px; position: sticky; top: 0; z-index: 100; }
+    .logo { font-size: 15px; font-weight: 600; color: #185FA5; margin-right: 32px; letter-spacing: -0.3px; text-decoration: none; }
+    .nav-links { display: flex; align-items: center; }
+    .nav-item { font-size: 13px; color: #666; padding: 0 14px; height: 48px; display: flex; align-items: center; border-bottom: 2px solid transparent; text-decoration: none; }
+    .nav-item.on { color: #1a1a18; border-bottom-color: #185FA5; font-weight: 500; }
+    .gnb-time { margin-left: auto; font-size: 11px; color: #999; }
+    .hamburger { display: none; flex-direction: column; gap: 4px; cursor: pointer; margin-left: auto; padding: 4px; }
+    .hb-line { width: 20px; height: 1.5px; background: #666; border-radius: 1px; }
 
-    /* ── GNB ── */
-    .gnb {
-      background: #fff;
-      border-bottom: 0.5px solid rgba(0,0,0,0.12);
-      padding: 0 24px;
-      display: flex;
-      align-items: center;
-      height: 48px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .logo {
-      font-size: 15px;
-      font-weight: 600;
-      color: #185FA5;
-      margin-right: 32px;
-      letter-spacing: -0.3px;
-      text-decoration: none;
-    }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 0;
-    }
-    .nav-item {
-      font-size: 13px;
-      color: #666;
-      padding: 0 14px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      border-bottom: 2px solid transparent;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .nav-item.on {
-      color: #1a1a18;
-      border-bottom-color: #185FA5;
-      font-weight: 500;
-    }
-    .gnb-time {
-      margin-left: auto;
-      font-size: 11px;
-      color: #999;
-    }
-    .hamburger {
-      display: none;
-      flex-direction: column;
-      gap: 4px;
-      cursor: pointer;
-      margin-left: auto;
-      padding: 4px;
-    }
-    .hb-line {
-      width: 20px;
-      height: 1.5px;
-      background: #666;
-      border-radius: 1px;
-    }
-
-    /* ── TICKER ── */
-    .ticker-bar {
-      background: #042C53;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      overflow: hidden;
-      gap: 12px;
-    }
-    .ticker-live {
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: .08em;
-      color: #378ADD;
-      border: 0.5px solid #185FA5;
-      padding: 1px 5px;
-      border-radius: 3px;
-      white-space: nowrap;
-    }
-    .ticker-track {
-      overflow: hidden;
-      flex: 1;
-      display: flex;
-    }
-    .ticker-scroll {
-      display: flex;
-      gap: 28px;
-      animation: ticker 25s linear infinite;
-      white-space: nowrap;
-    }
-    @keyframes ticker {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
+    .ticker-bar { background: #042C53; height: 30px; display: flex; align-items: center; padding: 0 24px; overflow: hidden; gap: 12px; }
+    .ticker-live { font-size: 9px; font-weight: 600; letter-spacing: .08em; color: #378ADD; border: 0.5px solid #185FA5; padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+    .ticker-track { overflow: hidden; flex: 1; display: flex; }
+    .ticker-scroll { display: flex; gap: 28px; animation: ticker 25s linear infinite; white-space: nowrap; }
+    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     .ti { font-size: 11px; color: #85B7EB; }
     .ti b { color: #E6F1FB; font-weight: 500; }
     .t-up { color: #5DCAA5; }
     .t-dn { color: #F09595; }
 
-    /* ── BODY ── */
-    .body {
-      padding: 12px 16px 24px;
-      display: grid;
-      grid-template-columns: 160px 1fr 180px;
-      gap: 10px;
-      align-items: stretch;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+    .body { padding: 12px 20px 24px; display: grid; grid-template-columns: 200px 1fr 200px; gap: 12px; align-items: stretch; max-width: 1400px; margin: 0 auto; }
+    .col { display: flex; flex-direction: column; }
 
-    .col {
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ── PANEL ── */
-    .panel {
-      background: #fff;
-      border: 0.5px solid rgba(0,0,0,0.1);
-      border-radius: 8px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-    .panel-hd {
-      padding: 8px 12px;
-      border-bottom: 0.5px solid rgba(0,0,0,0.08);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-shrink: 0;
-    }
+    .panel { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; flex: 1; }
+    .panel-hd { padding: 8px 12px; border-bottom: 0.5px solid rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
     .ph-t { font-size: 11px; font-weight: 500; }
     .ph-s { font-size: 9px; color: #999; }
+    .more-row { padding: 7px 12px; font-size: 10px; color: #185FA5; text-align: center; border-top: 0.5px solid rgba(0,0,0,0.08); cursor: pointer; flex-shrink: 0; text-decoration: none; display: block; }
+    .more-row:hover { background: #f5f5f3; }
+    .up { color: #0F6E56; } .dn { color: #A32D2D; } .neu { color: #999; }
 
-    /* ── 로그인 위젯 ── */
-    .login-panel {
-      background: #fff;
-      border: 0.5px solid rgba(0,0,0,0.1);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 8px;
-      flex-shrink: 0;
-    }
+    /* 로그인 위젯 */
+    .login-panel { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; margin-bottom: 8px; flex-shrink: 0; }
     .login-box { padding: 10px 12px 12px; }
-    .login-input {
-      width: 100%;
-      border: 0.5px solid rgba(0,0,0,0.15);
-      border-radius: 5px;
-      padding: 6px 9px;
-      font-size: 11px;
-      color: #1a1a18;
-      background: #fff;
-      margin-bottom: 6px;
-      display: block;
-      outline: none;
-    }
+    .login-input { width: 100%; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 5px; padding: 6px 9px; font-size: 11px; color: #1a1a18; background: #fff; margin-bottom: 6px; display: block; outline: none; }
     .login-input:focus { border-color: #185FA5; }
     .login-input::placeholder { color: #bbb; }
     .login-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 2px; }
-    .btn-login {
-      background: #185FA5; color: #fff; border: none;
-      border-radius: 5px; padding: 6px 0; font-size: 11px;
-      font-weight: 500; cursor: pointer; text-align: center;
-    }
+    .btn-login { background: #185FA5; color: #fff; border: none; border-radius: 5px; padding: 6px 0; font-size: 11px; font-weight: 500; cursor: pointer; text-align: center; }
     .btn-login:hover { background: #0C447C; }
-    .btn-join {
-      background: #f5f5f3; color: #555;
-      border: 0.5px solid rgba(0,0,0,0.15);
-      border-radius: 5px; padding: 6px 0;
-      font-size: 11px; cursor: pointer; text-align: center;
-    }
-    .btn-join:hover { background: #eee; }
+    .btn-join { background: #f5f5f3; color: #555; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 5px; padding: 6px 0; font-size: 11px; cursor: pointer; text-align: center; }
     .login-links { display: flex; justify-content: center; gap: 8px; margin-top: 7px; }
     .login-link { font-size: 9px; color: #bbb; cursor: pointer; }
-    .login-link:hover { color: #888; }
-
-    /* 로그인 후 위젯 */
-    .user-box { padding: 10px 12px 10px; }
+    .user-box { padding: 10px 12px; }
     .user-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .user-avatar {
-      width: 30px; height: 30px; border-radius: 50%;
-      background: #E6F1FB; display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 500; color: #185FA5; flex-shrink: 0;
-    }
+    .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: #E6F1FB; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: #185FA5; flex-shrink: 0; }
     .user-name { font-size: 12px; font-weight: 500; color: #1a1a18; }
     .user-email { font-size: 9px; color: #999; margin-top: 1px; }
     .svc-list { display: flex; flex-direction: column; margin-bottom: 8px; }
-    .svc-row {
-      display: flex; align-items: center; gap: 7px;
-      padding: 6px 0;
-      border-bottom: 0.5px solid rgba(0,0,0,0.06);
-    }
+    .svc-row { display: flex; align-items: center; gap: 7px; padding: 6px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
     .svc-row:last-child { border-bottom: none; }
-    .svc-icon {
-      width: 20px; height: 20px; border-radius: 4px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10px; font-weight: 500; flex-shrink: 0;
-    }
+    .svc-icon { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; flex-shrink: 0; }
     .ic-trade { background: #FCEBEB; color: #A32D2D; }
-    .ic-eua   { background: #E6F1FB; color: #185FA5; }
-    .ic-comm  { background: #EAF3DE; color: #3B6D11; }
+    .ic-eua { background: #E6F1FB; color: #185FA5; }
+    .ic-comm { background: #EAF3DE; color: #3B6D11; }
     .svc-name { font-size: 11px; color: #1a1a18; flex: 1; }
     .svc-info { font-size: 10px; font-weight: 500; color: #666; }
     .svc-alert { font-size: 10px; font-weight: 500; color: #A32D2D; }
-    .btn-svc-join {
-      font-size: 9px; font-weight: 500; color: #185FA5;
-      background: #E6F1FB; border: none; border-radius: 4px;
-      padding: 3px 7px; cursor: pointer; white-space: nowrap;
-    }
-    .btn-svc-join:hover { background: #B5D4F4; }
-    .notif-badge {
-      background: #E24B4A; color: #fff;
-      font-size: 8px; font-weight: 600;
-      padding: 1px 4px; border-radius: 8px; margin-left: 2px;
-    }
+    .btn-svc-join { font-size: 9px; font-weight: 500; color: #185FA5; background: #E6F1FB; border: none; border-radius: 4px; padding: 3px 7px; cursor: pointer; white-space: nowrap; }
+    .notif-badge { background: #E24B4A; color: #fff; font-size: 8px; font-weight: 600; padding: 1px 4px; border-radius: 8px; margin-left: 2px; }
     .user-links { display: flex; gap: 5px; }
-    .user-link {
-      flex: 1; text-align: center; font-size: 10px; color: #555;
-      background: #f5f5f3; border: 0.5px solid rgba(0,0,0,0.1);
-      border-radius: 5px; padding: 5px 0; cursor: pointer;
-    }
-    .user-link:hover { background: #eee; }
+    .user-link { flex: 1; text-align: center; font-size: 10px; color: #555; background: #f5f5f3; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 5px; padding: 5px 0; cursor: pointer; }
     .user-link.logout { color: #bbb; }
-
-    /* 로그인 상태 토글 */
     .state-guest { display: block; }
     .state-member { display: none; }
 
-
-    .fx-list {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .fx-row {
-      display: flex;
-      align-items: center;
-      padding: 0 12px;
-      border-bottom: 0.5px solid rgba(0,0,0,0.06);
-      flex: 1;
-    }
+    /* 환율 */
+    .fx-list { flex: 1; display: flex; flex-direction: column; }
+    .fx-row { display: flex; align-items: center; padding: 0 12px; border-bottom: 0.5px solid rgba(0,0,0,0.06); flex: 1; }
     .fx-row:last-child { border-bottom: none; }
-    .fx-pair {
-      font-size: 11px;
-      font-weight: 500;
-      flex: 1;
-    }
+    .fx-pair { font-size: 11px; font-weight: 500; flex: 1; }
     .fx-unit { font-size: 9px; color: #999; font-weight: 400; }
-    .fx-rate {
-      font-size: 11px;
-      font-weight: 500;
-      text-align: right;
-      margin-right: 6px;
-    }
-    .fx-diff { font-size: 10px; min-width: 44px; text-align: right; }
-    .up  { color: #0F6E56; }
-    .dn  { color: #A32D2D; }
-    .neu { color: #999; }
+    .fx-rate { font-size: 11px; font-weight: 500; text-align: right; margin-right: 6px; }
+    .fx-diff { font-size: 10px; min-width: 54px; text-align: right; }
 
-    .more-row {
-      padding: 7px 12px;
-      font-size: 10px;
-      color: #185FA5;
-      text-align: center;
-      border-top: 0.5px solid rgba(0,0,0,0.08);
-      cursor: pointer;
-      flex-shrink: 0;
-      text-decoration: none;
-      display: block;
-    }
-    .more-row:hover { background: #f5f5f3; }
-
-    /* ── 해운 뉴스 ── */
-    .news-col {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      border: 0.5px solid rgba(0,0,0,0.1);
-      border-radius: 8px;
-      overflow: hidden;
-      background: rgba(0,0,0,0.06);
-    }
-    .news-col-hd {
-      background: #fff;
-      padding: 8px 12px;
-      border-bottom: 0.5px solid rgba(0,0,0,0.08);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-shrink: 0;
-    }
-
-    /* 신문사 2×2 그리드 */
-    .news-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1px;
-      flex: 1;
-    }
-
-    /* 신문사 섹션 카드 */
-    .news-source-card {
-      background: #fff;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* 대표 이미지 */
-    .news-thumb {
-      width: 100%;
-      height: 72px;
-      flex-shrink: 0;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-    .news-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .thumb-placeholder {
-      font-size: 9px;
-      color: rgba(255,255,255,0.25);
-    }
-    .news-src-label {
-      position: absolute;
-      bottom: 6px;
-      left: 8px;
-      font-size: 9px;
-      font-weight: 600;
-      color: rgba(255,255,255,0.9);
-      letter-spacing: .02em;
-    }
-    .c1 { background: #0C2340; }
-    .c2 { background: #0f3050; }
-    .c3 { background: #1a3a5c; }
-    .c4 { background: #0d2b44; }
-
-    /* 기사 리스트 */
-    .news-article-list {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-    .news-article {
-      display: flex;
-      align-items: flex-start;
-      gap: 6px;
-      padding: 6px 9px;
-      border-top: 0.5px solid rgba(0,0,0,0.06);
-      text-decoration: none;
-      cursor: pointer;
-    }
+    /* 해운 뉴스 */
+    .news-col { display: flex; flex-direction: column; flex: 1; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; background: rgba(0,0,0,0.06); }
+    .news-col-hd { background: #fff; padding: 8px 12px; border-bottom: 0.5px solid rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; flex: 1; }
+    .news-source-card { background: #fff; display: flex; flex-direction: column; }
+    .news-source-hd { padding: 6px 10px; border-bottom: 0.5px solid rgba(0,0,0,0.06); display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .news-source-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .news-source-name { font-size: 10px; font-weight: 600; color: #555; }
+    .news-article-list { display: flex; flex-direction: column; flex: 1; }
+    .news-article { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 0.5px solid rgba(0,0,0,0.06); text-decoration: none; cursor: pointer; }
+    .news-article:last-child { border-bottom: none; }
     .news-article:hover { background: #fafaf8; }
-    .news-article-dot {
-      width: 3px;
-      height: 3px;
-      border-radius: 50%;
-      background: #ccc;
-      flex-shrink: 0;
-      margin-top: 5px;
-    }
-    .news-article-title {
-      font-size: 10px;
-      font-weight: 500;
-      color: #1a1a18;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      flex: 1;
-    }
-    .news-article-time {
-      font-size: 9px;
-      color: #bbb;
-      white-space: nowrap;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
+    .article-thumb { width: 52px; height: 38px; border-radius: 4px; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .article-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: rgba(255,255,255,0.25); }
+    .at1 { background: #0C2340; } .at2 { background: #1a3a5c; } .at3 { background: #0f3050; } .at4 { background: #0d2b44; } .at5 { background: #162e45; }
+    .article-body { flex: 1; min-width: 0; }
+    .article-title { font-size: 11px; font-weight: 500; color: #1a1a18; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .article-time { font-size: 9px; color: #bbb; margin-top: 3px; }
+    .news-more { background: #fff; padding: 7px 12px; font-size: 10px; color: #185FA5; text-align: center; border-top: 0.5px solid rgba(0,0,0,0.08); cursor: pointer; text-decoration: none; display: block; flex-shrink: 0; }
 
-    .news-more {
-      background: #fff;
-      padding: 7px 12px;
-      font-size: 10px;
-      color: #185FA5;
-      text-align: center;
-      border-top: 0.5px solid rgba(0,0,0,0.08);
-      cursor: pointer;
-      text-decoration: none;
-      display: block;
-      flex-shrink: 0;
-    }
-    .news-more:hover { background: #fafaf8; }
-
-    /* ── 경제 뉴스 ── */
-    .econ-list {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .econ-row {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 0 12px;
-      border-bottom: 0.5px solid rgba(0,0,0,0.06);
-      cursor: pointer;
-      flex: 1;
-      text-decoration: none;
-    }
+    /* 경제 뉴스 */
+    .econ-list { flex: 1; display: flex; flex-direction: column; }
+    .econ-row { display: flex; align-items: center; gap: 7px; padding: 0 12px; border-bottom: 0.5px solid rgba(0,0,0,0.06); cursor: pointer; flex: 1; text-decoration: none; }
     .econ-row:last-child { border-bottom: none; }
     .econ-row:hover { background: #fafaf8; }
-    .econ-num {
-      font-size: 10px;
-      font-weight: 500;
-      color: #999;
-      min-width: 12px;
-      flex-shrink: 0;
-    }
+    .econ-num { font-size: 10px; font-weight: 500; color: #ccc; min-width: 12px; flex-shrink: 0; }
     .econ-body { flex: 1; }
     .econ-title { font-size: 11px; color: #1a1a18; line-height: 1.4; }
-    .econ-meta { font-size: 9px; color: #999; margin-top: 2px; }
+    .econ-meta { font-size: 9px; color: #bbb; margin-top: 2px; }
 
-    /* ── 모바일 반응형 ── */
+    /* 모바일 */
     @media (max-width: 768px) {
       .gnb { padding: 0 16px; }
       .nav-links { display: none; }
       .gnb-time { display: none; }
       .hamburger { display: flex; }
-
       .ticker-bar { padding: 0 16px; height: 26px; }
       .ti { font-size: 10px; }
-
-      .body {
-        grid-template-columns: 1fr;
-        padding: 10px 12px 20px;
-        gap: 8px;
-      }
-
-      /* 모바일 환율: 2x2 그리드 */
-      .fx-list {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0;
-        flex: none;
-      }
-      .fx-row {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 8px 12px;
-        border-bottom: 0.5px solid rgba(0,0,0,0.06);
-        border-right: 0.5px solid rgba(0,0,0,0.06);
-        flex: none;
-        gap: 2px;
-      }
+      .body { grid-template-columns: 1fr; padding: 10px 12px 20px; gap: 8px; }
+      .fx-list { display: grid; grid-template-columns: 1fr 1fr; flex: none; }
+      .fx-row { flex-direction: column; align-items: flex-start; padding: 8px 12px; border-right: 0.5px solid rgba(0,0,0,0.06); flex: none; gap: 2px; }
       .fx-row:nth-child(even) { border-right: none; }
       .fx-row:nth-last-child(-n+2) { border-bottom: none; }
-      .fx-pair { font-size: 10px; }
-      .fx-rate { font-size: 13px; margin-right: 0; text-align: left; }
-      .fx-diff { font-size: 9px; min-width: auto; text-align: left; }
-
-      /* 모바일 해운뉴스: 2x2 유지 */
-      .news-thumb { height: 70px; }
-      .news-title { font-size: 10px; }
+      .fx-rate { font-size: 13px; margin-right: 0; }
+      .news-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <!-- GNB -->
   <nav class="gnb">
     <a class="logo" href="#">DECARVA</a>
     <div class="nav-links">
@@ -505,13 +145,10 @@
     </div>
     <div class="gnb-time" id="clock"></div>
     <div class="hamburger" onclick="toggleMenu()">
-      <div class="hb-line"></div>
-      <div class="hb-line"></div>
-      <div class="hb-line"></div>
+      <div class="hb-line"></div><div class="hb-line"></div><div class="hb-line"></div>
     </div>
   </nav>
 
-  <!-- TICKER -->
   <div class="ticker-bar">
     <div class="ticker-live">LIVE</div>
     <div class="ticker-track">
@@ -526,7 +163,6 @@
         <div class="ti">VLSFO <b>$612/MT</b> <span class="t-up">▲3</span></div>
         <div class="ti">MGO <b>$748/MT</b> <span class="t-up">▲2</span></div>
         <div class="ti">LNG JKM <b>$9.84</b> <span class="t-up">▲2.2%</span></div>
-        <!-- 무한루프를 위한 복사본 -->
         <div class="ti">BDI <b>1,284</b> <span class="t-dn">▼18</span></div>
         <div class="ti">SCFI <b>2,106</b> <span class="t-up">▲32</span></div>
         <div class="ti">CCFI <b>1,048</b> <span class="t-up">▲11</span></div>
@@ -541,22 +177,17 @@
     </div>
   </div>
 
-  <!-- BODY -->
   <div class="body">
 
     <!-- 좌: 로그인 + 환율 -->
     <div class="col">
-
-      <!-- 로그인 위젯 -->
       <div class="login-panel">
         <div class="panel-hd">
           <div class="ph-t state-guest">로그인</div>
           <div class="ph-t state-member" id="user-greeting">안녕하세요 👋</div>
-          <div class="ph-s state-guest">회원가입 →</div>
+          <div class="ph-s state-guest" style="color:#185FA5;cursor:pointer;">회원가입 →</div>
           <div class="ph-s state-member" style="color:#185FA5;cursor:pointer;">마이페이지 →</div>
         </div>
-
-        <!-- 비회원 상태 -->
         <div class="login-box state-guest">
           <input class="login-input" type="text" id="input-id" placeholder="아이디 또는 이메일">
           <input class="login-input" type="password" id="input-pw" placeholder="비밀번호">
@@ -570,8 +201,6 @@
             <span class="login-link">비밀번호 찾기</span>
           </div>
         </div>
-
-        <!-- 회원 상태 -->
         <div class="user-box state-member">
           <div class="user-top">
             <div class="user-avatar" id="user-avatar">김</div>
@@ -604,63 +233,22 @@
         </div>
       </div>
 
-      <!-- 환율 -->
       <div class="panel">
         <div class="panel-hd">
           <div class="ph-t">환율</div>
-          <div class="ph-s">한국은행 · <span id="fx-time">15:30</span></div>
+          <div class="ph-s">한국은행 · 15:30</div>
         </div>
         <div class="fx-list">
-          <div class="fx-row">
-            <div class="fx-pair">USD/KRW</div>
-            <div class="fx-rate">1,381.5</div>
-            <div class="fx-diff up">▲0.30</div>
-          </div>
-          <div class="fx-row">
-            <div class="fx-pair">EUR/KRW</div>
-            <div class="fx-rate">1,509.2</div>
-            <div class="fx-diff dn">▼2.10</div>
-          </div>
-          <div class="fx-row">
-            <div class="fx-pair">JPY/KRW <span class="fx-unit">100엔</span></div>
-            <div class="fx-rate">922.40</div>
-            <div class="fx-diff up">▲1.20</div>
-          </div>
-          <div class="fx-row">
-            <div class="fx-pair">CNY/KRW</div>
-            <div class="fx-rate">190.35</div>
-            <div class="fx-diff neu">—</div>
-          </div>
-          <div class="fx-row">
-            <div class="fx-pair">GBP/KRW</div>
-            <div class="fx-rate">1,748.6</div>
-            <div class="fx-diff dn">▼3.20</div>
-          </div>
-          <div class="fx-row">
-            <div class="fx-pair">SGD/KRW</div>
-            <div class="fx-rate">1,032.1</div>
-            <div class="fx-diff up">▲0.80</div>
-          </div>
-          <div class="fx-row">
-            <div class="fx-pair">USD/JPY</div>
-            <div class="fx-rate">149.83</div>
-            <div class="fx-diff up">▲0.12</div>
-          </div>
-          <div class="fx-row">
-            <div class="fx-pair">AUD/KRW</div>
-            <div class="fx-rate">895.40</div>
-            <div class="fx-diff dn">▼1.50</div>
-          </div>
-          <div class="fx-row">
-            <div class="fx-pair">HKD/KRW</div>
-            <div class="fx-rate">176.80</div>
-            <div class="fx-diff up">▲0.20</div>
-          </div>
-          <div class="fx-row">
-            <div class="fx-pair">EUR/USD</div>
-            <div class="fx-rate">1.0924</div>
-            <div class="fx-diff dn">▼0.0014</div>
-          </div>
+          <div class="fx-row"><div class="fx-pair">USD/KRW</div><div class="fx-rate">1,381.5</div><div class="fx-diff up">▲0.30</div></div>
+          <div class="fx-row"><div class="fx-pair">EUR/KRW</div><div class="fx-rate">1,509.2</div><div class="fx-diff dn">▼2.10</div></div>
+          <div class="fx-row"><div class="fx-pair">JPY/KRW <span class="fx-unit">100엔</span></div><div class="fx-rate">922.40</div><div class="fx-diff up">▲1.20</div></div>
+          <div class="fx-row"><div class="fx-pair">CNY/KRW</div><div class="fx-rate">190.35</div><div class="fx-diff neu">—</div></div>
+          <div class="fx-row"><div class="fx-pair">GBP/KRW</div><div class="fx-rate">1,748.6</div><div class="fx-diff dn">▼3.20</div></div>
+          <div class="fx-row"><div class="fx-pair">SGD/KRW</div><div class="fx-rate">1,032.1</div><div class="fx-diff up">▲0.80</div></div>
+          <div class="fx-row"><div class="fx-pair">AUD/KRW</div><div class="fx-rate">895.40</div><div class="fx-diff dn">▼1.50</div></div>
+          <div class="fx-row"><div class="fx-pair">HKD/KRW</div><div class="fx-rate">176.80</div><div class="fx-diff up">▲0.20</div></div>
+          <div class="fx-row"><div class="fx-pair">USD/JPY</div><div class="fx-rate">149.83</div><div class="fx-diff up">▲0.12</div></div>
+          <div class="fx-row"><div class="fx-pair">EUR/USD</div><div class="fx-rate">1.0924</div><div class="fx-diff dn">▼0.0014</div></div>
         </div>
         <a class="more-row" href="https://www.bok.or.kr" target="_blank">한국은행 바로가기 →</a>
       </div>
@@ -674,147 +262,46 @@
           <div class="ph-s">제휴 언론사</div>
         </div>
         <div class="news-grid">
-
-          <!-- 해사신문 -->
           <div class="news-source-card">
-            <div class="news-thumb c1">
-              <span class="thumb-placeholder">기사 이미지</span>
-              <span class="news-src-label">해사신문</span>
-            </div>
+            <div class="news-source-hd"><div class="news-source-dot" style="background:#185FA5;"></div><div class="news-source-name">해사신문</div></div>
             <div class="news-article-list">
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">EUA €63 돌파… EU ETS 강화 앞두고 선사 비용 부담 가중</span>
-                <span class="news-article-time">30분</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">HMM, 친환경 선박 전환 로드맵 2030 발표</span>
-                <span class="news-article-time">2시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">부산항 3월 컨테이너 물동량 전년比 4.2% 증가</span>
-                <span class="news-article-time">4시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">해운사 탄소세 대응 비용, 올해 최대 12% 상승 전망</span>
-                <span class="news-article-time">6시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">인천항 신규 여객 터미널 2026년 착공 확정</span>
-                <span class="news-article-time">8시간</span>
-              </a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at1"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">EUA €63 돌파… EU ETS 강화 앞두고 선사 비용 부담 가중</div><div class="article-time">30분 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at2"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">HMM, 친환경 선박 전환 로드맵 2030 발표</div><div class="article-time">2시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at3"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">부산항 3월 컨테이너 물동량 전년比 4.2% 증가</div><div class="article-time">4시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at4"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">해운사 탄소세 대응 비용 올해 최대 12% 상승 전망</div><div class="article-time">6시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at5"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">인천항 신규 여객 터미널 2026년 착공 확정</div><div class="article-time">8시간 전</div></div></a>
             </div>
           </div>
-
-          <!-- 해운뉴스 -->
           <div class="news-source-card">
-            <div class="news-thumb c2">
-              <span class="thumb-placeholder">기사 이미지</span>
-              <span class="news-src-label">해운뉴스</span>
-            </div>
+            <div class="news-source-hd"><div class="news-source-dot" style="background:#0F6E56;"></div><div class="news-source-name">해운뉴스</div></div>
             <div class="news-article-list">
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">SCFI 2,100선 회복… 홍해 우회로 수급 타이트 지속</span>
-                <span class="news-article-time">1시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">아시아~북미 서안 운임 주간 3.2% 상승</span>
-                <span class="news-article-time">3시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">MSC, 극동~유럽 노선 GRI 발표… $500/TEU</span>
-                <span class="news-article-time">5시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">에버그린, 2분기 운임 협상 조기 타결 발표</span>
-                <span class="news-article-time">7시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">중국 춘제 이후 공장 가동률 94% 회복</span>
-                <span class="news-article-time">9시간</span>
-              </a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at2"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">SCFI 2,100선 회복… 홍해 우회로 수급 타이트 지속</div><div class="article-time">1시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at3"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">아시아~북미 서안 운임 주간 3.2% 상승</div><div class="article-time">3시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at1"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">MSC, 극동~유럽 노선 GRI 발표… $500/TEU</div><div class="article-time">5시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at4"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">에버그린, 2분기 운임 협상 조기 타결 발표</div><div class="article-time">7시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at5"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">중국 춘제 이후 공장 가동률 94% 회복</div><div class="article-time">9시간 전</div></div></a>
             </div>
           </div>
-
-          <!-- 코리아쉬핑가제트 -->
           <div class="news-source-card">
-            <div class="news-thumb c3">
-              <span class="thumb-placeholder">기사 이미지</span>
-              <span class="news-src-label">코리아쉬핑가제트</span>
-            </div>
+            <div class="news-source-hd"><div class="news-source-dot" style="background:#854F0B;"></div><div class="news-source-name">코리아쉬핑가제트</div></div>
             <div class="news-article-list">
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">HMM 신조 컨테이너선 4척 추가 발주… 2027년 인도</span>
-                <span class="news-article-time">2시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">팬오션, 벌크 장기계약 비중 65%로 확대</span>
-                <span class="news-article-time">4시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">SM상선, 중동 노선 신규 취항 검토</span>
-                <span class="news-article-time">6시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">고려해운, 동남아 항로 주 3회로 증편</span>
-                <span class="news-article-time">8시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">현대글로비스, 자동차 전용선 2척 신규 확보</span>
-                <span class="news-article-time">10시간</span>
-              </a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at3"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">HMM 신조 컨테이너선 4척 추가 발주… 2027년 인도</div><div class="article-time">2시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at1"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">팬오션, 벌크 장기계약 비중 65%로 확대</div><div class="article-time">4시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at2"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">SM상선, 중동 노선 신규 취항 검토</div><div class="article-time">6시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at5"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">고려해운, 동남아 항로 주 3회로 증편</div><div class="article-time">8시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at4"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">현대글로비스, 자동차 전용선 2척 신규 확보</div><div class="article-time">10시간 전</div></div></a>
             </div>
           </div>
-
-          <!-- 한국해운신문 -->
           <div class="news-source-card">
-            <div class="news-thumb c4">
-              <span class="thumb-placeholder">기사 이미지</span>
-              <span class="news-src-label">한국해운신문</span>
-            </div>
+            <div class="news-source-hd"><div class="news-source-dot" style="background:#534AB7;"></div><div class="news-source-name">한국해운신문</div></div>
             <div class="news-article-list">
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">IMO 2030 메탄올 연료 기준 초안 공개… 선사 대응 시급</span>
-                <span class="news-article-time">3시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">해수부, 선원 복지 개선 종합대책 발표</span>
-                <span class="news-article-time">5시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">국적 외항선사 2025년 상반기 운항 실적 공개</span>
-                <span class="news-article-time">7시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">한국선급, 암모니아 추진선 안전기준 제정 착수</span>
-                <span class="news-article-time">9시간</span>
-              </a>
-              <a class="news-article" href="#" target="_blank">
-                <span class="news-article-dot"></span>
-                <span class="news-article-title">부산 신항 배후단지 물류센터 입주율 98% 달성</span>
-                <span class="news-article-time">11시간</span>
-              </a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at4"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">IMO 2030 메탄올 연료 기준 초안 공개… 선사 대응 시급</div><div class="article-time">3시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at2"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">해수부, 선원 복지 개선 종합대책 발표</div><div class="article-time">5시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at1"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">국적 외항선사 2025년 상반기 운항 실적 공개</div><div class="article-time">7시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at3"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">한국선급, 암모니아 추진선 안전기준 제정 착수</div><div class="article-time">9시간 전</div></div></a>
+              <a class="news-article" href="#" target="_blank"><div class="article-thumb at5"><div class="thumb-ph">img</div></div><div class="article-body"><div class="article-title">부산 신항 배후단지 물류센터 입주율 98% 달성</div><div class="article-time">11시간 전</div></div></a>
             </div>
           </div>
-
         </div>
         <a class="news-more" href="#" target="_blank">해운 뉴스 전체 보기 →</a>
       </div>
@@ -828,76 +315,16 @@
           <div class="ph-s">네이버</div>
         </div>
         <div class="econ-list">
-          <a class="econ-row" href="#" target="_blank">
-            <div class="econ-num">1</div>
-            <div class="econ-body">
-              <div class="econ-title">원/달러 1,380원대… 미 연준 금리 동결 영향</div>
-              <div class="econ-meta">연합뉴스 · 1시간 전</div>
-            </div>
-          </a>
-          <a class="econ-row" href="#" target="_blank">
-            <div class="econ-num">2</div>
-            <div class="econ-body">
-              <div class="econ-title">국제유가 하락… WTI $78대 마감</div>
-              <div class="econ-meta">한국경제 · 2시간 전</div>
-            </div>
-          </a>
-          <a class="econ-row" href="#" target="_blank">
-            <div class="econ-num">3</div>
-            <div class="econ-body">
-              <div class="econ-title">중국 수출 예상 상회… 아시아 물동량 회복 기대</div>
-              <div class="econ-meta">매일경제 · 3시간 전</div>
-            </div>
-          </a>
-          <a class="econ-row" href="#" target="_blank">
-            <div class="econ-num">4</div>
-            <div class="econ-body">
-              <div class="econ-title">EU CBAM 적용 품목 확대 예고</div>
-              <div class="econ-meta">조선비즈 · 4시간 전</div>
-            </div>
-          </a>
-          <a class="econ-row" href="#" target="_blank">
-            <div class="econ-num">5</div>
-            <div class="econ-body">
-              <div class="econ-title">미·중 무역협상 재개… 물동량 회복 기대감</div>
-              <div class="econ-meta">서울경제 · 5시간 전</div>
-            </div>
-          </a>
-          <a class="econ-row" href="#" target="_blank">
-            <div class="econ-num">6</div>
-            <div class="econ-body">
-              <div class="econ-title">LNG 현물가 반등… 아시아 수요 증가</div>
-              <div class="econ-meta">에너지경제 · 6시간 전</div>
-            </div>
-          </a>
-          <a class="econ-row" href="#" target="_blank">
-            <div class="econ-num">7</div>
-            <div class="econ-body">
-              <div class="econ-title">미 연준 의사록 공개… 연내 금리인하 2회 전망</div>
-              <div class="econ-meta">한국경제 · 7시간 전</div>
-            </div>
-          </a>
-          <a class="econ-row" href="#" target="_blank">
-            <div class="econ-num">8</div>
-            <div class="econ-body">
-              <div class="econ-title">코스피 2,650선 회복… 외국인 순매수 전환</div>
-              <div class="econ-meta">연합뉴스 · 8시간 전</div>
-            </div>
-          </a>
-          <a class="econ-row" href="#" target="_blank">
-            <div class="econ-num">9</div>
-            <div class="econ-body">
-              <div class="econ-title">사우디 아람코 2분기 원유 공급가 동결 발표</div>
-              <div class="econ-meta">에너지경제 · 9시간 전</div>
-            </div>
-          </a>
-          <a class="econ-row" href="#" target="_blank">
-            <div class="econ-num">10</div>
-            <div class="econ-body">
-              <div class="econ-title">IMF, 2026년 세계 경제성장률 3.1% 전망 유지</div>
-              <div class="econ-meta">매일경제 · 10시간 전</div>
-            </div>
-          </a>
+          <a class="econ-row" href="#" target="_blank"><div class="econ-num">1</div><div class="econ-body"><div class="econ-title">원/달러 1,380원대… 미 연준 금리 동결 영향</div><div class="econ-meta">연합뉴스 · 1시간 전</div></div></a>
+          <a class="econ-row" href="#" target="_blank"><div class="econ-num">2</div><div class="econ-body"><div class="econ-title">국제유가 하락… WTI $78대 마감</div><div class="econ-meta">한국경제 · 2시간 전</div></div></a>
+          <a class="econ-row" href="#" target="_blank"><div class="econ-num">3</div><div class="econ-body"><div class="econ-title">중국 수출 예상 상회… 아시아 물동량 회복 기대</div><div class="econ-meta">매일경제 · 3시간 전</div></div></a>
+          <a class="econ-row" href="#" target="_blank"><div class="econ-num">4</div><div class="econ-body"><div class="econ-title">EU CBAM 적용 품목 확대 예고</div><div class="econ-meta">조선비즈 · 4시간 전</div></div></a>
+          <a class="econ-row" href="#" target="_blank"><div class="econ-num">5</div><div class="econ-body"><div class="econ-title">미·중 무역협상 재개… 물동량 회복 기대감</div><div class="econ-meta">서울경제 · 5시간 전</div></div></a>
+          <a class="econ-row" href="#" target="_blank"><div class="econ-num">6</div><div class="econ-body"><div class="econ-title">LNG 현물가 반등… 아시아 수요 증가</div><div class="econ-meta">에너지경제 · 6시간 전</div></div></a>
+          <a class="econ-row" href="#" target="_blank"><div class="econ-num">7</div><div class="econ-body"><div class="econ-title">미 연준 의사록… 연내 금리인하 2회 전망</div><div class="econ-meta">한국경제 · 7시간 전</div></div></a>
+          <a class="econ-row" href="#" target="_blank"><div class="econ-num">8</div><div class="econ-body"><div class="econ-title">코스피 2,650선 회복… 외국인 순매수 전환</div><div class="econ-meta">연합뉴스 · 8시간 전</div></div></a>
+          <a class="econ-row" href="#" target="_blank"><div class="econ-num">9</div><div class="econ-body"><div class="econ-title">사우디 아람코 2분기 원유 공급가 동결</div><div class="econ-meta">에너지경제 · 9시간 전</div></div></a>
+          <a class="econ-row" href="#" target="_blank"><div class="econ-num">10</div><div class="econ-body"><div class="econ-title">IMF, 2026년 세계 경제성장률 3.1% 전망</div><div class="econ-meta">매일경제 · 10시간 전</div></div></a>
         </div>
         <a class="more-row" href="https://news.naver.com/section/101" target="_blank">네이버 경제뉴스 바로가기 →</a>
       </div>
@@ -906,27 +333,19 @@
   </div>
 
   <script>
-    // 현재 시각 표시
     function updateClock() {
       const now = new Date();
       const pad = n => String(n).padStart(2, '0');
-      const timeStr =
-        now.getFullYear() + '.' +
-        pad(now.getMonth() + 1) + '.' +
-        pad(now.getDate()) + ' · ' +
-        pad(now.getHours()) + ':' +
-        pad(now.getMinutes()) + ' KST';
+      const s = now.getFullYear() + '.' + pad(now.getMonth()+1) + '.' + pad(now.getDate()) + ' · ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ' KST';
       const el = document.getElementById('clock');
-      if (el) el.textContent = timeStr;
+      if (el) el.textContent = s;
     }
     updateClock();
     setInterval(updateClock, 60000);
 
-    // 로그인 / 로그아웃 (데모용)
     function doLogin() {
       const id = document.getElementById('input-id').value;
       if (!id) { alert('아이디를 입력해주세요.'); return; }
-      // 실제 서비스에서는 서버 인증으로 교체
       const name = id.split('@')[0];
       document.getElementById('user-greeting').textContent = name + '님 👋';
       document.getElementById('user-name').textContent = name + '님';
@@ -935,13 +354,13 @@
       document.querySelectorAll('.state-guest').forEach(el => el.style.display = 'none');
       document.querySelectorAll('.state-member').forEach(el => el.style.display = 'block');
     }
+
     function doLogout() {
       document.querySelectorAll('.state-guest').forEach(el => el.style.display = '');
       document.querySelectorAll('.state-member').forEach(el => el.style.display = 'none');
       document.getElementById('input-id').value = '';
       document.getElementById('input-pw').value = '';
     }
-
 
     function toggleMenu() {
       const nav = document.querySelector('.nav-links');
