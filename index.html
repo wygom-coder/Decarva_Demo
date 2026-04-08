@@ -28,7 +28,7 @@
     .t-up { color: #5DCAA5; }
     .t-dn { color: #F09595; }
 
-    .body { padding: 12px 20px 16px; display: grid; grid-template-columns: 0.8fr 3.4fr 1.2fr; gap: 12px; align-items: stretch; flex: 1; }
+    .body { padding: 12px 20px 16px; display: grid; grid-template-columns: 1.2fr 3fr 1.2fr; gap: 12px; align-items: stretch; flex: 1; }
     .col { display: flex; flex-direction: column; }
 
     .panel { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; flex: 1; }
@@ -315,17 +315,8 @@
           <div class="ph-t">경제 뉴스</div>
           <div class="ph-s">네이버</div>
         </div>
-        <div class="econ-list">
-          <a class="econ-row" href="#" target="_blank"><div class="econ-num">1</div><div class="econ-body"><div class="econ-title">원/달러 1,380원대… 미 연준 금리 동결 영향</div><div class="econ-meta">연합뉴스 · 1시간 전</div></div></a>
-          <a class="econ-row" href="#" target="_blank"><div class="econ-num">2</div><div class="econ-body"><div class="econ-title">국제유가 하락… WTI $78대 마감</div><div class="econ-meta">한국경제 · 2시간 전</div></div></a>
-          <a class="econ-row" href="#" target="_blank"><div class="econ-num">3</div><div class="econ-body"><div class="econ-title">중국 수출 예상 상회… 아시아 물동량 회복 기대</div><div class="econ-meta">매일경제 · 3시간 전</div></div></a>
-          <a class="econ-row" href="#" target="_blank"><div class="econ-num">4</div><div class="econ-body"><div class="econ-title">EU CBAM 적용 품목 확대 예고</div><div class="econ-meta">조선비즈 · 4시간 전</div></div></a>
-          <a class="econ-row" href="#" target="_blank"><div class="econ-num">5</div><div class="econ-body"><div class="econ-title">미·중 무역협상 재개… 물동량 회복 기대감</div><div class="econ-meta">서울경제 · 5시간 전</div></div></a>
-          <a class="econ-row" href="#" target="_blank"><div class="econ-num">6</div><div class="econ-body"><div class="econ-title">LNG 현물가 반등… 아시아 수요 증가</div><div class="econ-meta">에너지경제 · 6시간 전</div></div></a>
-          <a class="econ-row" href="#" target="_blank"><div class="econ-num">7</div><div class="econ-body"><div class="econ-title">미 연준 의사록… 연내 금리인하 2회 전망</div><div class="econ-meta">한국경제 · 7시간 전</div></div></a>
-          <a class="econ-row" href="#" target="_blank"><div class="econ-num">8</div><div class="econ-body"><div class="econ-title">코스피 2,650선 회복… 외국인 순매수 전환</div><div class="econ-meta">연합뉴스 · 8시간 전</div></div></a>
-          <a class="econ-row" href="#" target="_blank"><div class="econ-num">9</div><div class="econ-body"><div class="econ-title">사우디 아람코 2분기 원유 공급가 동결</div><div class="econ-meta">에너지경제 · 9시간 전</div></div></a>
-          <a class="econ-row" href="#" target="_blank"><div class="econ-num">10</div><div class="econ-body"><div class="econ-title">IMF, 2026년 세계 경제성장률 3.1% 전망</div><div class="econ-meta">매일경제 · 10시간 전</div></div></a>
+        <div class="econ-list" id="econ-list">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:#bbb;">뉴스 불러오는 중...</div>
         </div>
         <a class="more-row" href="https://news.naver.com/section/101" target="_blank">네이버 경제뉴스 바로가기 →</a>
       </div>
@@ -334,7 +325,39 @@
   </div>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-    function updateClock() {
+    // 네이버 경제뉴스 실시간 로딩
+    async function loadNaverNews() {
+      const list = document.getElementById('econ-list');
+      try {
+        const res = await fetch('/api/news?query=경제+해운+환율');
+        const data = await res.json();
+        if (!data.items || data.items.length === 0) throw new Error('no items');
+
+        list.innerHTML = data.items.map((item, i) => {
+          const title = item.title.replace(/<[^>]*>/g, '');
+          const source = item.originallink
+            ? new URL(item.originallink).hostname.replace('www.', '').replace('.co.kr','').replace('.com','')
+            : '네이버';
+          const pubDate = new Date(item.pubDate);
+          const diff = Math.floor((Date.now() - pubDate) / 60000);
+          const timeStr = diff < 60 ? diff + '분 전' : Math.floor(diff/60) + '시간 전';
+
+          return `
+            <a class="econ-row" href="${item.originallink || item.link}" target="_blank">
+              <div class="econ-num">${i + 1}</div>
+              <div class="econ-body">
+                <div class="econ-title">${title}</div>
+                <div class="econ-meta">${source} · ${timeStr}</div>
+              </div>
+            </a>`;
+        }).join('');
+      } catch (e) {
+        list.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:#bbb;">뉴스를 불러올 수 없습니다</div>';
+      }
+    }
+    loadNaverNews();
+
+
       const now = new Date();
       const pad = n => String(n).padStart(2, '0');
       const s = now.getFullYear() + '.' + pad(now.getMonth()+1) + '.' + pad(now.getDate()) + ' · ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ' KST';
