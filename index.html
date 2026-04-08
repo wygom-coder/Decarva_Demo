@@ -329,7 +329,7 @@
     async function loadNaverNews() {
       const list = document.getElementById('econ-list');
       try {
-        const res = await fetch('/api/news?query=경제+해운+환율');
+        const res = await fetch('/api/news?query=' + encodeURIComponent('해운 경제 환율'));
         const data = await res.json();
         if (!data.items || data.items.length === 0) throw new Error('no items');
 
