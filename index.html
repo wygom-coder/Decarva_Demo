@@ -152,7 +152,101 @@
     .ph-t { font-size: 11px; font-weight: 500; }
     .ph-s { font-size: 9px; color: #999; }
 
-    /* ── 환율 ── */
+    /* ── 로그인 위젯 ── */
+    .login-panel {
+      background: #fff;
+      border: 0.5px solid rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+    .login-box { padding: 10px 12px 12px; }
+    .login-input {
+      width: 100%;
+      border: 0.5px solid rgba(0,0,0,0.15);
+      border-radius: 5px;
+      padding: 6px 9px;
+      font-size: 11px;
+      color: #1a1a18;
+      background: #fff;
+      margin-bottom: 6px;
+      display: block;
+      outline: none;
+    }
+    .login-input:focus { border-color: #185FA5; }
+    .login-input::placeholder { color: #bbb; }
+    .login-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 2px; }
+    .btn-login {
+      background: #185FA5; color: #fff; border: none;
+      border-radius: 5px; padding: 6px 0; font-size: 11px;
+      font-weight: 500; cursor: pointer; text-align: center;
+    }
+    .btn-login:hover { background: #0C447C; }
+    .btn-join {
+      background: #f5f5f3; color: #555;
+      border: 0.5px solid rgba(0,0,0,0.15);
+      border-radius: 5px; padding: 6px 0;
+      font-size: 11px; cursor: pointer; text-align: center;
+    }
+    .btn-join:hover { background: #eee; }
+    .login-links { display: flex; justify-content: center; gap: 8px; margin-top: 7px; }
+    .login-link { font-size: 9px; color: #bbb; cursor: pointer; }
+    .login-link:hover { color: #888; }
+
+    /* 로그인 후 위젯 */
+    .user-box { padding: 10px 12px 10px; }
+    .user-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .user-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: #E6F1FB; display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 500; color: #185FA5; flex-shrink: 0;
+    }
+    .user-name { font-size: 12px; font-weight: 500; color: #1a1a18; }
+    .user-email { font-size: 9px; color: #999; margin-top: 1px; }
+    .svc-list { display: flex; flex-direction: column; margin-bottom: 8px; }
+    .svc-row {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 0;
+      border-bottom: 0.5px solid rgba(0,0,0,0.06);
+    }
+    .svc-row:last-child { border-bottom: none; }
+    .svc-icon {
+      width: 20px; height: 20px; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 500; flex-shrink: 0;
+    }
+    .ic-trade { background: #FCEBEB; color: #A32D2D; }
+    .ic-eua   { background: #E6F1FB; color: #185FA5; }
+    .ic-comm  { background: #EAF3DE; color: #3B6D11; }
+    .svc-name { font-size: 11px; color: #1a1a18; flex: 1; }
+    .svc-info { font-size: 10px; font-weight: 500; color: #666; }
+    .svc-alert { font-size: 10px; font-weight: 500; color: #A32D2D; }
+    .btn-svc-join {
+      font-size: 9px; font-weight: 500; color: #185FA5;
+      background: #E6F1FB; border: none; border-radius: 4px;
+      padding: 3px 7px; cursor: pointer; white-space: nowrap;
+    }
+    .btn-svc-join:hover { background: #B5D4F4; }
+    .notif-badge {
+      background: #E24B4A; color: #fff;
+      font-size: 8px; font-weight: 600;
+      padding: 1px 4px; border-radius: 8px; margin-left: 2px;
+    }
+    .user-links { display: flex; gap: 5px; }
+    .user-link {
+      flex: 1; text-align: center; font-size: 10px; color: #555;
+      background: #f5f5f3; border: 0.5px solid rgba(0,0,0,0.1);
+      border-radius: 5px; padding: 5px 0; cursor: pointer;
+    }
+    .user-link:hover { background: #eee; }
+    .user-link.logout { color: #bbb; }
+
+    /* 로그인 상태 토글 */
+    .state-guest { display: block; }
+    .state-member { display: none; }
+
+
     .fx-list {
       flex: 1;
       display: flex;
@@ -450,8 +544,67 @@
   <!-- BODY -->
   <div class="body">
 
-    <!-- 좌: 환율 -->
+    <!-- 좌: 로그인 + 환율 -->
     <div class="col">
+
+      <!-- 로그인 위젯 -->
+      <div class="login-panel">
+        <div class="panel-hd">
+          <div class="ph-t state-guest">로그인</div>
+          <div class="ph-t state-member" id="user-greeting">안녕하세요 👋</div>
+          <div class="ph-s state-guest">회원가입 →</div>
+          <div class="ph-s state-member" style="color:#185FA5;cursor:pointer;">마이페이지 →</div>
+        </div>
+
+        <!-- 비회원 상태 -->
+        <div class="login-box state-guest">
+          <input class="login-input" type="text" id="input-id" placeholder="아이디 또는 이메일">
+          <input class="login-input" type="password" id="input-pw" placeholder="비밀번호">
+          <div class="login-btns">
+            <div class="btn-login" onclick="doLogin()">로그인</div>
+            <div class="btn-join">회원가입</div>
+          </div>
+          <div class="login-links">
+            <span class="login-link">아이디 찾기</span>
+            <span class="login-link">|</span>
+            <span class="login-link">비밀번호 찾기</span>
+          </div>
+        </div>
+
+        <!-- 회원 상태 -->
+        <div class="user-box state-member">
+          <div class="user-top">
+            <div class="user-avatar" id="user-avatar">김</div>
+            <div>
+              <div class="user-name" id="user-name">김선장님</div>
+              <div class="user-email" id="user-email">captain@decarva.co.kr</div>
+            </div>
+          </div>
+          <div class="svc-list">
+            <div class="svc-row">
+              <div class="svc-icon ic-trade">교</div>
+              <div class="svc-name">중고거래</div>
+              <div class="svc-info">등록 2건</div>
+            </div>
+            <div class="svc-row">
+              <div class="svc-icon ic-eua">E</div>
+              <div class="svc-name">EUA거래</div>
+              <div class="btn-svc-join">가입하기 →</div>
+            </div>
+            <div class="svc-row">
+              <div class="svc-icon ic-comm">커</div>
+              <div class="svc-name">커뮤니티</div>
+              <div class="svc-alert">댓글 2 <span class="notif-badge">N</span></div>
+            </div>
+          </div>
+          <div class="user-links">
+            <div class="user-link">쪽지 <span class="notif-badge">2</span></div>
+            <div class="user-link logout" onclick="doLogout()">로그아웃</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 환율 -->
       <div class="panel">
         <div class="panel-hd">
           <div class="ph-t">환율</div>
@@ -493,6 +646,21 @@
             <div class="fx-rate">149.83</div>
             <div class="fx-diff up">▲0.12</div>
           </div>
+          <div class="fx-row">
+            <div class="fx-pair">AUD/KRW</div>
+            <div class="fx-rate">895.40</div>
+            <div class="fx-diff dn">▼1.50</div>
+          </div>
+          <div class="fx-row">
+            <div class="fx-pair">HKD/KRW</div>
+            <div class="fx-rate">176.80</div>
+            <div class="fx-diff up">▲0.20</div>
+          </div>
+          <div class="fx-row">
+            <div class="fx-pair">EUR/USD</div>
+            <div class="fx-rate">1.0924</div>
+            <div class="fx-diff dn">▼0.0014</div>
+          </div>
         </div>
         <a class="more-row" href="https://www.bok.or.kr" target="_blank">한국은행 바로가기 →</a>
       </div>
@@ -529,6 +697,16 @@
                 <span class="news-article-title">부산항 3월 컨테이너 물동량 전년比 4.2% 증가</span>
                 <span class="news-article-time">4시간</span>
               </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">해운사 탄소세 대응 비용, 올해 최대 12% 상승 전망</span>
+                <span class="news-article-time">6시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">인천항 신규 여객 터미널 2026년 착공 확정</span>
+                <span class="news-article-time">8시간</span>
+              </a>
             </div>
           </div>
 
@@ -553,6 +731,16 @@
                 <span class="news-article-dot"></span>
                 <span class="news-article-title">MSC, 극동~유럽 노선 GRI 발표… $500/TEU</span>
                 <span class="news-article-time">5시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">에버그린, 2분기 운임 협상 조기 타결 발표</span>
+                <span class="news-article-time">7시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">중국 춘제 이후 공장 가동률 94% 회복</span>
+                <span class="news-article-time">9시간</span>
               </a>
             </div>
           </div>
@@ -579,6 +767,16 @@
                 <span class="news-article-title">SM상선, 중동 노선 신규 취항 검토</span>
                 <span class="news-article-time">6시간</span>
               </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">고려해운, 동남아 항로 주 3회로 증편</span>
+                <span class="news-article-time">8시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">현대글로비스, 자동차 전용선 2척 신규 확보</span>
+                <span class="news-article-time">10시간</span>
+              </a>
             </div>
           </div>
 
@@ -603,6 +801,16 @@
                 <span class="news-article-dot"></span>
                 <span class="news-article-title">국적 외항선사 2025년 상반기 운항 실적 공개</span>
                 <span class="news-article-time">7시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">한국선급, 암모니아 추진선 안전기준 제정 착수</span>
+                <span class="news-article-time">9시간</span>
+              </a>
+              <a class="news-article" href="#" target="_blank">
+                <span class="news-article-dot"></span>
+                <span class="news-article-title">부산 신항 배후단지 물류센터 입주율 98% 달성</span>
+                <span class="news-article-time">11시간</span>
               </a>
             </div>
           </div>
@@ -662,6 +870,34 @@
               <div class="econ-meta">에너지경제 · 6시간 전</div>
             </div>
           </a>
+          <a class="econ-row" href="#" target="_blank">
+            <div class="econ-num">7</div>
+            <div class="econ-body">
+              <div class="econ-title">미 연준 의사록 공개… 연내 금리인하 2회 전망</div>
+              <div class="econ-meta">한국경제 · 7시간 전</div>
+            </div>
+          </a>
+          <a class="econ-row" href="#" target="_blank">
+            <div class="econ-num">8</div>
+            <div class="econ-body">
+              <div class="econ-title">코스피 2,650선 회복… 외국인 순매수 전환</div>
+              <div class="econ-meta">연합뉴스 · 8시간 전</div>
+            </div>
+          </a>
+          <a class="econ-row" href="#" target="_blank">
+            <div class="econ-num">9</div>
+            <div class="econ-body">
+              <div class="econ-title">사우디 아람코 2분기 원유 공급가 동결 발표</div>
+              <div class="econ-meta">에너지경제 · 9시간 전</div>
+            </div>
+          </a>
+          <a class="econ-row" href="#" target="_blank">
+            <div class="econ-num">10</div>
+            <div class="econ-body">
+              <div class="econ-title">IMF, 2026년 세계 경제성장률 3.1% 전망 유지</div>
+              <div class="econ-meta">매일경제 · 10시간 전</div>
+            </div>
+          </a>
         </div>
         <a class="more-row" href="https://news.naver.com/section/101" target="_blank">네이버 경제뉴스 바로가기 →</a>
       </div>
@@ -686,7 +922,27 @@
     updateClock();
     setInterval(updateClock, 60000);
 
-    // 햄버거 메뉴 (모바일)
+    // 로그인 / 로그아웃 (데모용)
+    function doLogin() {
+      const id = document.getElementById('input-id').value;
+      if (!id) { alert('아이디를 입력해주세요.'); return; }
+      // 실제 서비스에서는 서버 인증으로 교체
+      const name = id.split('@')[0];
+      document.getElementById('user-greeting').textContent = name + '님 👋';
+      document.getElementById('user-name').textContent = name + '님';
+      document.getElementById('user-email').textContent = id;
+      document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+      document.querySelectorAll('.state-guest').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.state-member').forEach(el => el.style.display = 'block');
+    }
+    function doLogout() {
+      document.querySelectorAll('.state-guest').forEach(el => el.style.display = '');
+      document.querySelectorAll('.state-member').forEach(el => el.style.display = 'none');
+      document.getElementById('input-id').value = '';
+      document.getElementById('input-pw').value = '';
+    }
+
+
     function toggleMenu() {
       const nav = document.querySelector('.nav-links');
       if (nav.style.display === 'flex') {
