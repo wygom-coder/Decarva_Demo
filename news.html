@@ -104,6 +104,14 @@
     .t-up { color: #5DCAA5; }
     .t-dn { color: #F09595; }
 
+    .fx-list { flex: 1; display: flex; flex-direction: column; background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); overflow: hidden; margin-bottom: 32px; padding: 12px 0; }
+    .fx-row { display: flex; align-items: center; padding: 8px 16px; flex: 1; }
+    .fx-pair { font-size: 13px; font-weight: 500; flex: 1; color: #333; }
+    .fx-rate { font-size: 14px; font-weight: 600; text-align: right; margin-right: 12px; }
+    .fx-diff { font-size: 11px; min-width: 54px; text-align: right; font-weight: 500; }
+    .up { color: #D12F2F; } .dn { color: #1C5EC9; } .neu { color: #999; }
+    .more-row { padding: 12px 16px 4px; font-size: 11px; color: #185FA5; text-align: center; border-top: 1px solid rgba(0,0,0,0.06); cursor: pointer; text-decoration: none; display: block; margin-top: 4px; }
+
     /* 뉴스 전용 레이아웃 */
     .news-page {
       padding: 24px 32px 40px;
@@ -315,9 +323,9 @@
 
   <div class="news-page">
     
-    <!-- 좌측: 해운 뉴스 (그리드 뷰) -->
+    <!-- 좌측: 해양 소식 (그리드 뷰) -->
     <div class="news-main">
-      <div class="section-title">제휴 해운 주요 뉴스 · 논설 <span class="badge">파트너스</span></div>
+      <div class="section-title">제휴 해양 소식 · 논설 <span class="badge">파트너스</span></div>
       <div class="news-grid-expanded">
         <!-- Static Demo Data based on index.html -->
         <a class="news-card" href="#" target="_blank">
@@ -373,7 +381,17 @@
 
     <!-- 우측: 기타 뉴스 (리스트 뷰 - API 실시간) -->
     <div class="news-side">
-      <div class="section-title">실시간 종합 뉴스 (경제·해운 기타)</div>
+      <div class="section-title">환율 정보 <span style="font-size:11px;font-weight:400;color:#999;margin-left:auto;">한국은행 · 15:30</span></div>
+      <div class="fx-list">
+        <div class="fx-row"><div class="fx-pair">USD/KRW</div><div class="fx-rate">1,381.5</div><div class="fx-diff up">▲0.30</div></div>
+        <div class="fx-row"><div class="fx-pair">EUR/KRW</div><div class="fx-rate">1,509.2</div><div class="fx-diff dn">▼2.10</div></div>
+        <div class="fx-row"><div class="fx-pair">JPY/KRW</div><div class="fx-rate">922.40</div><div class="fx-diff up">▲1.20</div></div>
+        <div class="fx-row"><div class="fx-pair">CNY/KRW</div><div class="fx-rate">190.35</div><div class="fx-diff neu">—</div></div>
+        <div class="fx-row"><div class="fx-pair">GBP/KRW</div><div class="fx-rate">1,748.6</div><div class="fx-diff dn">▼3.20</div></div>
+        <a class="more-row" href="https://www.bok.or.kr" target="_blank">한국은행 바로가기 →</a>
+      </div>
+
+      <div class="section-title" style="margin-top:24px;">실시간 종합 뉴스 (경제·기타 소식)</div>
       <div class="news-list-container">
         <div class="list-view-items" id="econ-list-expanded">
           <div style="text-align:center; padding: 40px; font-size:13px; color:#999;">경제 뉴스를 불러오는 중입니다...</div>
