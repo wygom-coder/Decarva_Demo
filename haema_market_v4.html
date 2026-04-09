@@ -202,6 +202,21 @@ body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-s
 .toggle.on .toggle-knob { left: 21px; }
 .logout-btn { width: calc(100% - 32px); margin: 8px 16px; background: #fff; border: 1px solid #FFCDD2; border-radius: 10px; padding: 12px; font-size: 14px; color: #C62828; cursor: pointer; text-align: center; font-family: inherit; font-weight: 600; }
 .withdraw-btn { width: calc(100% - 32px); margin: 0 16px 16px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 10px; font-size: 13px; color: var(--text-muted); cursor: pointer; text-align: center; font-family: inherit; }
+
+/* Filter Dropdown Additions */
+.filter-bar { background: #fff; border-bottom: none; padding: 10px 20px; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-dropdown { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-family: inherit; font-weight: 600; display:flex; align-items:center; gap:4px; transition: all .15s; }
+.filter-dropdown:hover { background: var(--surface); color: var(--blue-800); }
+.filter-dropdown.open { border-color: var(--blue-600); color: var(--blue-800); border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom-color:transparent; }
+.filter-dropdown.applied { background: var(--yellow-50); border-color: var(--yellow-600); color: var(--yellow-800); }
+.filter-reset { font-size: 11px; color: var(--text-muted); cursor: pointer; margin-left: auto; text-decoration: underline; padding-left: 10px; font-weight:500; }
+.filter-panels { background: #fff; border-bottom: 1px solid var(--border); padding: 0; display: none; overflow:hidden; }
+.filter-panels.show { display: block; }
+.filter-panel { padding: 12px 20px; display: none; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--border); background: var(--surface); }
+.filter-panel.show { display: flex; }
+.f-sub-chip { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-weight: 500; transition: all .15s; }
+.f-sub-chip.on { background: var(--blue-100); border-color: var(--blue-600); color: var(--blue-800); font-weight: 700; }
 </style>
 
 <div class="page-nav">
@@ -248,21 +263,52 @@ body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-s
   </div>
 
   <div class="filter-bar">
-    <span class="filter-label">필터</span>
-    <div class="filter-chip on">전체</div>
-    <div class="filter-chip">직거래</div>
-    <div class="filter-chip">경매중</div>
-    <div class="filter-chip">인증판매자</div>
-    <div class="filter-chip">국내</div>
-    
-    <!-- 커스텀 가격대 필터 -->
-    <div class="price-filter" style="display:flex; align-items:center; gap:4px; margin-left:auto;">
-      <input type="number" id="min-price" placeholder="최소 금액(원)" style="width:85px; padding:3px 6px; font-size:11px; border:1px solid var(--border); border-radius:6px; outline:none; font-family:inherit;">
-      <span style="font-size:12px; color:var(--text-muted)">~</span>
-      <input type="number" id="max-price" placeholder="최대 금액(원)" style="width:85px; padding:3px 6px; font-size:11px; border:1px solid var(--border); border-radius:6px; outline:none; font-family:inherit;">
-      <button id="price-apply" style="padding:4px 10px; font-size:11px; background:#fff; border:1px solid var(--blue-400); color:var(--blue-800); border-radius:6px; font-weight:600; cursor:pointer;">적용</button>
+    <div class="filter-dropdown" data-target="region">지역 ▾</div>
+    <div class="filter-dropdown" data-target="condition">상태 ▾</div>
+    <div class="filter-dropdown" data-target="cert">인증 ▾</div>
+    <div class="filter-dropdown" data-target="tradeType">거래방식 ▾</div>
+    <div class="filter-dropdown" data-target="price">가격대 ▾</div>
+    <div class="filter-reset">초기화 ↺</div>
+  </div>
+
+  <div class="filter-panels">
+    <div class="filter-panel" id="panel-region">
+      <div class="f-sub-chip on" data-key="region" data-val="전체">전체지역</div>
+      <div class="f-sub-chip" data-key="region" data-val="부산">부산/경남</div>
+      <div class="f-sub-chip" data-key="region" data-val="인천">인천/수도권</div>
+      <div class="f-sub-chip" data-key="region" data-val="울산">울산/포항</div>
+      <div class="f-sub-chip" data-key="region" data-val="여수">여수/광양</div>
+      <div class="f-sub-chip" data-key="region" data-val="목포">목포/전남</div>
+    </div>
+    <div class="filter-panel" id="panel-condition">
+      <div class="f-sub-chip on" data-key="condition" data-val="전체">전체상태</div>
+      <div class="f-sub-chip" data-key="condition" data-val="미사용 신품">미사용 신품</div>
+      <div class="f-sub-chip" data-key="condition" data-val="S급 (오버홀완료)">S급 (오버홀완료)</div>
+      <div class="f-sub-chip" data-key="condition" data-val="A급/양호">A급/양호</div>
+      <div class="f-sub-chip" data-key="condition" data-val="부품 추출용">부품 추출용</div>
+    </div>
+    <div class="filter-panel" id="panel-cert">
+      <div class="f-sub-chip on" data-key="cert" data-val="전체">전체보기</div>
+      <div class="f-sub-chip" data-key="cert" data-val="KR">KR 승인</div>
+      <div class="f-sub-chip" data-key="cert" data-val="기타선급">DNV/ABS 등</div>
+      <div class="f-sub-chip" data-key="cert" data-val="없음">인증서 없음</div>
+    </div>
+    <div class="filter-panel" id="panel-tradeType">
+      <div class="f-sub-chip on" data-key="tradeType" data-val="전체">전체방식</div>
+      <div class="f-sub-chip" data-key="tradeType" data-val="직거래">일반 직거래</div>
+      <div class="f-sub-chip" data-key="tradeType" data-val="경매">경매중</div>
+      <div class="f-sub-chip" data-key="tradeType" data-val="가격제안">Nego 가능</div>
+    </div>
+    <div class="filter-panel" id="panel-price">
+      <div style="display:flex; align-items:center; gap:4px; width:100%;">
+        <input type="number" id="min-price" placeholder="최소 금액(원)" style="flex:1; padding:6px; font-size:12px; border:1px solid var(--border); border-radius:6px; outline:none; font-family:inherit;">
+        <span style="color:var(--text-muted);font-size:13px;">~</span>
+        <input type="number" id="max-price" placeholder="최대 금액(원)" style="flex:1; padding:6px; font-size:12px; border:1px solid var(--border); border-radius:6px; outline:none; font-family:inherit;">
+        <button id="price-apply" style="padding:6px 14px; font-size:12px; background:var(--blue-800); border:none; color:#fff; border-radius:6px; font-weight:700; cursor:pointer;">범위 적용</button>
+      </div>
     </div>
   </div>
+  <div style="height:1px; background:var(--border);"></div>
 
   <div class="banner">
     <div class="banner-left">
@@ -422,18 +468,23 @@ function hideChatRoom() {
 
 // ==== 상태 관리 및 매물 데이터 ====
 let products = [
-  { id: 1, title: 'MAN B&W 엔진 부품', sub: '부산 · 2024.03', price: '₩ 4,500,000', category: '엔진·동력', tradeType: '직거래', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#3A90D9" stroke-width="1.5"/><path d="M16 20v-6a8 8 0 0116 0v6" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="29" r="3" fill="#3A90D9"/></svg>' },
-  { id: 2, title: 'JRC 레이더 시스템', sub: '인천 · 2022.11', price: '₩ 8,200,000', category: '항법장비', tradeType: '경매', auth: false, auction: true, remain: '14:32 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="4" fill="#D4960A"/><line x1="24" y1="12" x2="24" y2="8" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="36" y1="24" x2="40" y2="24" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-  { id: 3, title: '앵커 체인 50m', sub: '울산 · 2021.06', price: '₩ 1,200,000', category: '갑판장비', tradeType: '직거래', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 36L24 12l12 24H12z" stroke="#3A90D9" stroke-width="1.5" stroke-linejoin="round"/><line x1="24" y1="36" x2="24" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="42" x2="30" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-  { id: 4, title: 'ICOM 위성통신 장비', sub: '여수 · 2023.08', price: '₩ 2,800,000', category: '통신장비', tradeType: '직거래', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="16" width="28" height="20" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M18 16v-4h12v4" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="26" x2="32" y2="26" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="24" y1="22" x2="24" y2="30" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-  { id: 5, title: '구명정 진수장치', sub: '광양 · 2020.04', price: '₩ 5,600,000', category: '안전장비', tradeType: '경매', auth: false, auction: true, remain: '8:14 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="22" r="8" stroke="#3A90D9" stroke-width="1.5"/><path d="M18 30l-4 8M30 30l4 8" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="38" x2="34" y2="38" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-  { id: 6, title: '선박용 압력계 세트', sub: '목포 · 2023.12', price: '₩ 680,000', category: '전기·계측', tradeType: '직거래', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="12" width="28" height="24" rx="3" stroke="#D4960A" stroke-width="1.5"/><line x1="10" y1="20" x2="38" y2="20" stroke="#D4960A" stroke-width="1.5"/><line x1="24" y1="12" x2="24" y2="36" stroke="#D4960A" stroke-width="1.5"/></svg>' }
+  { id: 1, title: 'MAN B&W 엔진 부품', sub: '부산 · 2024.03', price: '₩ 4,500,000', category: '엔진·동력', tradeType: '직거래', region: '부산', condition: 'A급/양호', cert: '전체', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#3A90D9" stroke-width="1.5"/><path d="M16 20v-6a8 8 0 0116 0v6" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="29" r="3" fill="#3A90D9"/></svg>' },
+  { id: 2, title: 'JRC 레이더 시스템', sub: '인천 · 2022.11', price: '₩ 8,200,000', category: '항법장비', tradeType: '경매', region: '인천', condition: 'S급 (오버홀완료)', cert: 'KR', auth: false, auction: true, remain: '14:32 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="4" fill="#D4960A"/><line x1="24" y1="12" x2="24" y2="8" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="36" y1="24" x2="40" y2="24" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+  { id: 3, title: '앵커 체인 50m', sub: '울산 · 2021.06', price: '₩ 1,200,000', category: '갑판장비', tradeType: '가격제안', region: '울산', condition: '부품 추출용', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 36L24 12l12 24H12z" stroke="#3A90D9" stroke-width="1.5" stroke-linejoin="round"/><line x1="24" y1="36" x2="24" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="42" x2="30" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+  { id: 4, title: 'ICOM 위성통신 장비', sub: '여수 · 2023.08', price: '₩ 2,800,000', category: '통신장비', tradeType: '직거래', region: '여수', condition: '미사용 신품', cert: '기타선급', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="16" width="28" height="20" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M18 16v-4h12v4" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="26" x2="32" y2="26" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="24" y1="22" x2="24" y2="30" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+  { id: 5, title: '구명정 진수장치', sub: '광양 · 2020.04', price: '₩ 5,600,000', category: '안전장비', tradeType: '경매', region: '여수', condition: 'A급/양호', cert: '기타선급', auth: false, auction: true, remain: '8:14 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="22" r="8" stroke="#3A90D9" stroke-width="1.5"/><path d="M18 30l-4 8M30 30l4 8" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="38" x2="34" y2="38" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+  { id: 6, title: '선박용 압력계 세트', sub: '목포 · 2023.12', price: '₩ 680,000', category: '전기·계측', tradeType: '직거래', region: '목포', condition: 'S급 (오버홀완료)', cert: 'KR', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="12" width="28" height="24" rx="3" stroke="#D4960A" stroke-width="1.5"/><line x1="10" y1="20" x2="38" y2="20" stroke="#D4960A" stroke-width="1.5"/><line x1="24" y1="12" x2="24" y2="36" stroke="#D4960A" stroke-width="1.5"/></svg>' }
 ];
 
-let currentCat = '전체';
-let currentFilter = '전체';
-let currentMinPrice = null;
-let currentMaxPrice = null;
+let filterState = {
+  category: '전체',
+  region: '전체',
+  condition: '전체',
+  cert: '전체',
+  tradeType: '전체',
+  minPrice: null,
+  maxPrice: null
+};
 
 // 화면 렌더링 로직
 function renderProducts() {
@@ -441,23 +492,26 @@ function renderProducts() {
   if(!grid) return;
   grid.innerHTML = '';
   
-  // 조건 필터링
   let filtered = products.filter(p => {
-    let catMatch = currentCat === '전체' || p.category === currentCat;
-    let filterMatch = true;
-    if (currentFilter === '직거래') filterMatch = (p.tradeType === '직거래' || p.tradeType === '모두');
-    if (currentFilter === '경매중') filterMatch = (p.tradeType === '경매' || p.auction);
-    if (currentFilter === '인증판매자') filterMatch = p.auth;
-    
-    // 가격대 커스텀 필터 연동
+    // 1. 대분류 카테고리 체크
+    if (filterState.category !== '전체' && p.category !== filterState.category) return false;
+    // 2. 다중 필터 체크
+    if (filterState.region !== '전체' && p.region !== filterState.region) return false;
+    if (filterState.condition !== '전체' && p.condition !== filterState.condition) return false;
+    if (filterState.cert !== '전체' && p.cert !== filterState.cert) return false;
+    if (filterState.tradeType !== '전체') {
+        if (filterState.tradeType === '직거래' && p.tradeType !== '직거래') return false;
+        if (filterState.tradeType === '경매' && !p.auction) return false;
+        if (filterState.tradeType === '가격제안' && !p.offer) return false;
+    }
+    // 3. 커스텀 가격
     const valObj = p.price.replace(/[^0-9]/g, '');
     if (valObj) {
         const val = parseInt(valObj);
-        if (currentMinPrice !== null && val < currentMinPrice) filterMatch = false;
-        if (currentMaxPrice !== null && val > currentMaxPrice) filterMatch = false;
+        if (filterState.minPrice !== null && val < filterState.minPrice) return false;
+        if (filterState.maxPrice !== null && val > filterState.maxPrice) return false;
     }
-    
-    return catMatch && filterMatch;
+    return true;
   });
 
   if (filtered.length === 0) {
@@ -465,7 +519,6 @@ function renderProducts() {
     return;
   }
 
-  // 매물 HTML 생성
   filtered.forEach(p => {
     let tagsHTML = '';
     if (p.auth) tagsHTML += '<span class="ptag ptag-b">인증</span>';
@@ -494,10 +547,8 @@ function renderProducts() {
 }
 
 function setCategory(cat, el) {
-  currentCat = cat;
+  filterState.category = cat;
   document.querySelectorAll('.cat-item').forEach(e => e.classList.remove('active'));
-  
-  // 요소가 주어지면 직접 active, 아니면 전체 순회
   if (el && el.classList.contains('cat-item')) el.classList.add('active');
   else {
       document.querySelectorAll('.cat-item').forEach(e => {
@@ -507,106 +558,169 @@ function setCategory(cat, el) {
   renderProducts();
 }
 
-function setFilter(filter, el) {
-  // 토글 로직 (동일한 칩 누르면 전체로 풀림)
-  if (currentFilter === filter && filter !== '전체') {
-     currentFilter = '전체';
-  } else {
-     currentFilter = filter;
-  }
-  
-  document.querySelectorAll('.filter-chip').forEach(e => e.classList.remove('on'));
-  document.querySelectorAll('.filter-chip').forEach(e => {
-      if (e.textContent.trim() === currentFilter) e.classList.add('on');
-  });
+function updateFilterStyles() {
+    // 필터 부모 노드들 강조색 업데이트
+    document.querySelectorAll('.filter-dropdown').forEach(btn => {
+        const target = btn.getAttribute('data-target');
+        // 가격 필터 특수처리
+        if (target === 'price') {
+            if (filterState.minPrice !== null || filterState.maxPrice !== null) btn.classList.add('applied');
+            else btn.classList.remove('applied');
+            return;
+        }
+        // 일반 패널 처리
+        if (filterState[target] && filterState[target] !== '전체') {
+            btn.classList.add('applied');
+        } else {
+            btn.classList.remove('applied');
+        }
+    });
 
-  renderProducts();
+    // 칩 UI 업데이트
+    document.querySelectorAll('.f-sub-chip').forEach(chip => {
+        const key = chip.getAttribute('data-key');
+        const val = chip.getAttribute('data-val');
+        if (filterState[key] === val) chip.classList.add('on');
+        else chip.classList.remove('on');
+    });
 }
 
-// 판매자용 매물 등록 임시 기능
+function applySubFilter(key, val) {
+    filterState[key] = val;
+    updateFilterStyles();
+    renderProducts();
+}
+
+function resetFilters() {
+    filterState.region = '전체';
+    filterState.condition = '전체';
+    filterState.cert = '전체';
+    filterState.tradeType = '전체';
+    filterState.minPrice = null;
+    filterState.maxPrice = null;
+
+    const minInput = document.getElementById('min-price');
+    const maxInput = document.getElementById('max-price');
+    if(minInput) minInput.value = '';
+    if(maxInput) maxInput.value = '';
+
+    // 닫기
+    document.querySelector('.filter-panels').classList.remove('show');
+    document.querySelectorAll('.filter-dropdown').forEach(btn => btn.classList.remove('open'));
+    document.querySelectorAll('.filter-panel').forEach(p => p.classList.remove('show'));
+
+    updateFilterStyles();
+    renderProducts();
+}
+
+// 판매자 매물 등록 시뮬레이션
 function registerProduct() {
   const cat = document.querySelector('#page-register .form-select').value;
   const title = document.querySelector('#page-register .form-input[placeholder*="상품명"]').value;
   let tradeType = '직거래';
-  
-  // 거래방식 선택 확인
   document.querySelectorAll('#page-register .trade-chip').forEach(c => {
       if(c.classList.contains('on')) tradeType = c.textContent.trim();
   });
-  
   const price = document.querySelector('#page-register .form-input[placeholder*="가격"]').value || '₩ 협의 가능';
   
-  if (!title) { alert('상품명을 적어주세요.'); return; }
-  if (cat === '카테고리 선택') { alert('카테고리를 올바르게 선택해주세요.'); return; }
+  if (!title || cat === '카테고리 선택') { alert('상품명과 카테고리는 필수입니다.'); return; }
 
-  // 새 제품 데이터로 등록
   let newProd = {
     id: Date.now(),
     title: title,
-    sub: '등록지역 · 방금 전',
+    sub: '부산 · 방금 전',
     price: price.includes('₩') ? price : '₩ ' + price,
     category: cat,
     tradeType: tradeType,
+    region: '부산',
+    condition: '미사용 신품',
+    cert: '없음',
     auth: true, 
     auction: tradeType === '경매',
+    offer: false,
     svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M14 20v-4a10 10 0 0120 0v4" stroke="#D4960A" stroke-width="1.5"/></svg>'
   };
 
-  products.unshift(newProd); // 맨 위에 노출
+  products.unshift(newProd);
 
   // 폼 초기화
   document.querySelector('#page-register .form-input[placeholder*="상품명"]').value = '';
   document.querySelector('#page-register .form-input[placeholder*="가격"]').value = '';
   
-  alert('최신 매물이 등록되었습니다! (현재 세션 임시저장됨)');
+  alert('매물이 등록되었습니다!');
   
-  // 상태 및 탭 초기화
   setCategory('전체'); 
-  setFilter('전체');
+  resetFilters();
   showPage('home');
-  window.scrollTo(0, 0); // 상단 이동
+  window.scrollTo(0, 0);
 }
 
-// 상호작용 이벤트 리스너 세팅
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. 초기 렌더링
     renderProducts();
+    updateFilterStyles();
 
-    // 2. 텍스트 카테고리 클릭
+    // 메뉴 클릭
     document.querySelectorAll('.cat-item').forEach(el => {
         el.addEventListener('click', () => setCategory(el.textContent.trim(), el));
     });
-
-    // 3. 아이콘 카테고리 클릭
     document.querySelectorAll('.cat-icon-item').forEach(el => {
-        const cat = el.querySelector('.cat-icon-label').textContent.trim();
-        el.addEventListener('click', () => setCategory(cat));
+        el.addEventListener('click', () => setCategory(el.querySelector('.cat-icon-label').textContent.trim()));
     });
 
-    // 4. 필터 칩 클릭
-    document.querySelectorAll('.filter-chip').forEach(el => {
-        el.addEventListener('click', () => setFilter(el.textContent.trim(), el));
+    // 드롭다운 토글 매니저
+    document.querySelectorAll('.filter-dropdown').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = 'panel-' + btn.getAttribute('data-target');
+            const isActive = btn.classList.contains('open');
+
+            // 모두 초기화 (접기)
+            document.querySelectorAll('.filter-dropdown').forEach(b => b.classList.remove('open'));
+            document.querySelectorAll('.filter-panel').forEach(p => p.classList.remove('show'));
+            
+            // 토글 로직
+            if (!isActive) {
+                btn.classList.add('open');
+                document.getElementById(targetId).classList.add('show');
+                document.querySelector('.filter-panels').classList.add('show');
+            } else {
+                document.querySelector('.filter-panels').classList.remove('show');
+            }
+        });
     });
 
-    // 4-1. 커스텀 가격대 필터 버튼 동작
+    // 초기화 버튼
+    const resetBtn = document.querySelector('.filter-reset');
+    if(resetBtn) resetBtn.addEventListener('click', resetFilters);
+
+    // 서브 칩 상호작용
+    document.querySelectorAll('.f-sub-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const key = chip.getAttribute('data-key');
+            const val = chip.getAttribute('data-val');
+            applySubFilter(key, val);
+        });
+    });
+
+    // 커스텀 가격대 필터
     const priceApplyBtn = document.getElementById('price-apply');
     if(priceApplyBtn) {
         priceApplyBtn.addEventListener('click', () => {
              const minVal = parseInt(document.getElementById('min-price').value);
              const maxVal = parseInt(document.getElementById('max-price').value);
-             currentMinPrice = isNaN(minVal) ? null : minVal;
-             currentMaxPrice = isNaN(maxVal) ? null : maxVal;
+             filterState.minPrice = isNaN(minVal) ? null : minVal;
+             filterState.maxPrice = isNaN(maxVal) ? null : maxVal;
+             updateFilterStyles();
              renderProducts();
+             // 패널 닫기
+             document.querySelector('.filter-panels').classList.remove('show');
+             document.querySelectorAll('.filter-dropdown').forEach(b => b.classList.remove('open'));
         });
     }
 
-    // 5. 매물 등록 [등록하기] 버튼 
+    // 등록
     const submitBtn = document.querySelector('#page-register .submit-btn');
-    if(submitBtn) {
-        submitBtn.addEventListener('click', registerProduct);
-    }
+    if(submitBtn) submitBtn.addEventListener('click', registerProduct);
     
-    // UI 로직 (경매 vs 직거래 버튼 스위칭)
     const tradeChips = document.querySelectorAll('#page-register .trade-chip');
     tradeChips.forEach(chip => {
         chip.addEventListener('click', () => {
@@ -615,4 +729,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
 </script>
