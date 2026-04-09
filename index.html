@@ -95,6 +95,63 @@
           newsPages[currentNews].classList.add('active');
         }, 7000);
       }
+
+      // 날씨 API 데이터 가져오기 연동
+      async function fetchWeather() {
+        try {
+          const res = await fetch('/api/weather');
+          if (!res.ok) return; // 오류 시 기존 mock 데이터 유지
+          
+          const data = await res.json();
+          // OpenWeatherMap 응답 데이터 반영
+          if(data.main && data.weather && data.wind) {
+            const temp = (Math.round(data.main.temp * 10) / 10).toFixed(1);
+            const desc = data.weather[0].description;
+            const windSpeedKt = Math.round(data.wind.speed * 1.94384); // m/s -> knots
+            
+            // 날씨 아이콘(이모지) 간단 매핑
+            const iconCode = data.weather[0].icon;
+            let emoji = '⛅️';
+            if(iconCode.includes('01')) emoji = '☀️';
+            else if(iconCode.includes('02')) emoji = '⛅️';
+            else if(iconCode.includes('03') || iconCode.includes('04')) emoji = '☁️';
+            else if(iconCode.includes('09') || iconCode.includes('10')) emoji = '🌧';
+            else if(iconCode.includes('11')) emoji = '⛈';
+            else if(iconCode.includes('13')) emoji = '❄️';
+            else if(iconCode.includes('50')) emoji = '🌫';
+
+            const wTime = document.querySelector('.w-time');
+            const wStat = document.querySelector('.w-stat');
+            const wDesc = document.querySelector('.w-desc');
+            const wIcon = document.querySelector('.w-icon');
+            
+            if(wStat && wDesc && wIcon) {
+              wStat.innerHTML = `${temp}°<span style="font-size:20px; font-weight:400; opacity:0.8;">C</span>`;
+              wDesc.textContent = desc;
+              wIcon.textContent = emoji;
+            }
+
+            // 발표 시각 반영 (API 기준 시각)
+            if(wTime && data.dt) {
+              const dt = new Date(data.dt * 1000);
+              const hh = String(dt.getHours()).padStart(2, '0');
+              const mm = String(dt.getMinutes()).padStart(2, '0');
+              wTime.textContent = `오늘 ${hh}:${mm} 업데이트 됨 (실시간)`;
+            }
+
+            // 풍속(wind speed) 반영
+            const wBoxes = document.querySelectorAll('.w-box-v');
+            if(wBoxes.length > 1) {
+              wBoxes[1].textContent = `${windSpeedKt} kt`; 
+            }
+          }
+        } catch(e) {
+          console.error("날씨 정보 불러오기 실패:", e);
+        }
+      }
+      
+      // 로드 시 실행
+      fetchWeather();
     });
   </script>
   <style>
