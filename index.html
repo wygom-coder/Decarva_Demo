@@ -85,7 +85,7 @@
         }, 5000);
       }
 
-      // 해양 소식 티저 슬라이더 (10초)
+      // 해양 소식 티저 슬라이더 (7초)
       const newsPages = document.querySelectorAll('.news-page');
       let currentNews = 0;
       if(newsPages.length > 0) {
@@ -93,7 +93,7 @@
           newsPages[currentNews].classList.remove('active');
           currentNews = (currentNews + 1) % newsPages.length;
           newsPages[currentNews].classList.add('active');
-        }, 10000);
+        }, 7000);
       }
     });
   </script>
