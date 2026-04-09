@@ -1,0 +1,274 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { background: #ffffff; border: 0.5px solid #e0e0e0; border-radius: 12px; overflow: hidden; }
+.header { background: #fff; border-bottom: 1px solid #e8edf2; padding: 0 20px; display: flex; align-items: center; gap: 12px; height: 56px; }
+.logo-mark { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.logo-svg { width: 44px; height: 44px; }
+.logo-text { font-size: 22px; font-weight: 700; color: #085041; letter-spacing: -0.5px; line-height: 1.2; }
+.logo-sub { font-size: 10px; color: #1D9E75; letter-spacing: 1.5px; line-height: 1.2; margin-top: 1px; }
+.search-bar { flex: 1; display: flex; align-items: center; background: #f4f7fb; border: 1px solid #dce8f5; border-radius: 8px; padding: 0 12px; height: 36px; gap: 8px; }
+.search-bar input { border: none; background: transparent; font-size: 13px; color: #042C53; outline: none; flex: 1; }
+.search-bar input::placeholder { color: #85B7EB; }
+.header-nav { display: flex; align-items: center; gap: 16px; }
+.header-nav a { font-size: 13px; color: #185FA5; text-decoration: none; white-space: nowrap; }
+.btn-login { background: #fff; border: 1px solid #185FA5; color: #185FA5; border-radius: 6px; padding: 5px 12px; font-size: 13px; cursor: pointer; }
+.btn-sell { background: #1D9E75; border: none; color: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.cat-bar { background: #fff; border-bottom: 1px solid #e8edf2; padding: 0 20px; display: flex; overflow-x: auto; }
+.cat-bar::-webkit-scrollbar { display: none; }
+.cat-item { padding: 10px 14px; font-size: 13px; color: #185FA5; white-space: nowrap; cursor: pointer; border-bottom: 2px solid transparent; }
+.cat-item.active { color: #085041; font-weight: 500; border-bottom: 2px solid #1D9E75; }
+.filter-bar { background: #f8fafd; border-bottom: 1px solid #e8edf2; padding: 8px 20px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-chip { background: #fff; border: 1px solid #dce8f5; border-radius: 16px; padding: 4px 12px; font-size: 12px; color: #185FA5; cursor: pointer; white-space: nowrap; }
+.filter-chip.on { background: #E6F1FB; border-color: #185FA5; color: #0C447C; font-weight: 500; }
+.filter-label { font-size: 12px; color: #85B7EB; margin-right: 4px; }
+.banner { background: #E6F1FB; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+.banner-text { font-size: 13px; color: #0C447C; }
+.banner-text strong { font-weight: 500; }
+.banner-tag { background: #1D9E75; color: #fff; font-size: 11px; border-radius: 4px; padding: 2px 8px; margin-right: 8px; }
+.banner-btn { font-size: 12px; color: #185FA5; border: 1px solid #185FA5; border-radius: 6px; padding: 4px 10px; cursor: pointer; background: #fff; }
+.main { padding: 16px 20px; background: #f8fafd; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.section-title { font-size: 15px; font-weight: 500; color: #042C53; }
+.section-more { font-size: 12px; color: #185FA5; cursor: pointer; }
+.cat-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
+.cat-icon-item { background: #fff; border: 0.5px solid #e8edf2; border-radius: 10px; padding: 12px 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+.cat-icon-item:hover { border-color: #185FA5; }
+.cat-icon-box { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.cat-icon-label { font-size: 11px; color: #185FA5; text-align: center; line-height: 1.3; }
+.product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
+.product-card { background: #fff; border: 0.5px solid #e8edf2; border-radius: 10px; overflow: hidden; cursor: pointer; }
+.product-card:hover { border-color: #185FA5; }
+.product-img { width: 100%; aspect-ratio: 1; background: #f4f7fb; display: flex; align-items: center; justify-content: center; }
+.product-body { padding: 10px; }
+.product-title { font-size: 13px; color: #042C53; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.product-sub { font-size: 11px; color: #85B7EB; margin-bottom: 5px; }
+.product-price { font-size: 14px; font-weight: 500; color: #042C53; }
+.product-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+.ptag { font-size: 10px; border-radius: 4px; padding: 2px 6px; }
+.ptag-b { background: #E6F1FB; color: #0C447C; }
+.ptag-g { background: #E1F5EE; color: #085041; }
+.ptag-r { background: #FCEBEB; color: #A32D2D; }
+.auction-badge { background: #185FA5; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+.tabbar { background: #fff; border-top: 1px solid #e8edf2; display: flex; padding: 8px 0 4px; }
+.tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+.tab-icon { width: 20px; height: 20px; }
+.tab-label { font-size: 10px; color: #85B7EB; }
+.tab-item.active .tab-label { color: #1D9E75; font-weight: 500; }
+</style>
+
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo-mark">
+      <!-- 로고: Daat + 슬로건 세로 높이(약 44px)에 맞춤 -->
+      <svg class="logo-svg" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="22" cy="15" r="7" fill="none" stroke="#5DCAA5" stroke-width="1.1" stroke-dasharray="3 3" opacity="0.8"/>
+        <line x1="22" y1="15" x2="22" y2="20" stroke="#1D9E75" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="13" y1="20" x2="31" y2="20" stroke="#1D9E75" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="22" y1="20" x2="22" y2="33" stroke="#1D9E75" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="22" y1="33" x2="14" y2="29" stroke="#1D9E75" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="22" y1="33" x2="30" y2="29" stroke="#1D9E75" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M14,29 Q22,37 30,29" stroke="#1D9E75" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <circle cx="22" cy="15" r="4"   fill="#085041"/><circle cx="22" cy="15" r="1.9" fill="#E1F5EE"/>
+        <circle cx="13" cy="20" r="3"   fill="#1D9E75"/><circle cx="13" cy="20" r="1.3" fill="#E1F5EE"/>
+        <circle cx="31" cy="20" r="3"   fill="#1D9E75"/><circle cx="31" cy="20" r="1.3" fill="#E1F5EE"/>
+        <circle cx="22" cy="20" r="2.4" fill="#085041"/><circle cx="22" cy="20" r="1"   fill="#E1F5EE"/>
+        <circle cx="22" cy="33" r="4"   fill="#085041"/><circle cx="22" cy="33" r="1.9" fill="#E1F5EE"/>
+        <circle cx="14" cy="29" r="3.4" fill="#085041"/><circle cx="14" cy="29" r="1.5" fill="#E1F5EE"/>
+        <circle cx="30" cy="29" r="3.4" fill="#085041"/><circle cx="30" cy="29" r="1.5" fill="#E1F5EE"/>
+      </svg>
+      <div>
+        <div class="logo-text">Daat</div>
+        <div class="logo-sub">닿다 · 잇다 · 띄우다</div>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <circle cx="6.5" cy="6.5" r="4.5" stroke="#85B7EB" stroke-width="1.2"/>
+        <line x1="10" y1="10" x2="14" y2="14" stroke="#85B7EB" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <input type="text" placeholder="선박 엔진, 앵커, 레이더 등 검색">
+    </div>
+
+    <div class="header-nav">
+      <a href="#">판매하기</a>
+      <a href="#">경매</a>
+      <button class="btn-login">로그인</button>
+      <button class="btn-sell">+ 등록</button>
+    </div>
+  </div>
+
+  <div class="cat-bar">
+    <div class="cat-item active">전체</div>
+    <div class="cat-item">엔진·동력</div>
+    <div class="cat-item">항법장비</div>
+    <div class="cat-item">갑판장비</div>
+    <div class="cat-item">통신장비</div>
+    <div class="cat-item">안전장비</div>
+    <div class="cat-item">펌프·배관</div>
+    <div class="cat-item">전기·계측</div>
+    <div class="cat-item">기타부품</div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">필터</span>
+    <div class="filter-chip on">전체</div>
+    <div class="filter-chip">직거래</div>
+    <div class="filter-chip">경매중</div>
+    <div class="filter-chip">인증판매자</div>
+    <div class="filter-chip">100만원 이하</div>
+    <div class="filter-chip">국내</div>
+    <div class="filter-chip">해외</div>
+  </div>
+
+  <div class="banner">
+    <div class="banner-text">
+      <span class="banner-tag">NEW</span>
+      <strong>경매 기능 오픈!</strong> 희귀 기자재를 경쟁 입찰로 만나보세요
+    </div>
+    <button class="banner-btn">자세히 보기</button>
+  </div>
+
+  <div class="main">
+    <div class="section-header">
+      <span class="section-title">카테고리</span>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-icon-item">
+        <div class="cat-icon-box" style="background:#E6F1FB;">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="10" width="16" height="9" rx="2" stroke="#185FA5" stroke-width="1.3"/><path d="M7 10V7a4 4 0 018 0v3" stroke="#185FA5" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </div>
+        <span class="cat-icon-label">엔진·동력</span>
+      </div>
+      <div class="cat-icon-item">
+        <div class="cat-icon-box" style="background:#E1F5EE;">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="6" stroke="#1D9E75" stroke-width="1.3"/><line x1="11" y1="5" x2="11" y2="3" stroke="#1D9E75" stroke-width="1.3" stroke-linecap="round"/><line x1="17" y1="11" x2="19" y2="11" stroke="#1D9E75" stroke-width="1.3" stroke-linecap="round"/><circle cx="11" cy="11" r="2" fill="#1D9E75"/></svg>
+        </div>
+        <span class="cat-icon-label">항법장비</span>
+      </div>
+      <div class="cat-icon-item">
+        <div class="cat-icon-box" style="background:#E6F1FB;">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 14L11 4l7 10H4z" stroke="#185FA5" stroke-width="1.3" stroke-linejoin="round"/><line x1="11" y1="14" x2="11" y2="19" stroke="#185FA5" stroke-width="1.3" stroke-linecap="round"/><line x1="7" y1="19" x2="15" y2="19" stroke="#185FA5" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </div>
+        <span class="cat-icon-label">갑판장비</span>
+      </div>
+      <div class="cat-icon-item">
+        <div class="cat-icon-box" style="background:#E1F5EE;">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5" y="6" width="12" height="10" rx="2" stroke="#1D9E75" stroke-width="1.3"/><path d="M9 6V4h4v2" stroke="#1D9E75" stroke-width="1.3" stroke-linecap="round"/><line x1="8" y1="11" x2="14" y2="11" stroke="#1D9E75" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </div>
+        <span class="cat-icon-label">통신장비</span>
+      </div>
+      <div class="cat-icon-item">
+        <div class="cat-icon-box" style="background:#E6F1FB;">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="10" r="5" stroke="#185FA5" stroke-width="1.3"/><path d="M8 16l3 3 3-3" stroke="#185FA5" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><line x1="11" y1="19" x2="11" y2="15" stroke="#185FA5" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </div>
+        <span class="cat-icon-label">안전장비</span>
+      </div>
+      <div class="cat-icon-item">
+        <div class="cat-icon-box" style="background:#E1F5EE;">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 8h12M5 14h12" stroke="#1D9E75" stroke-width="1.3" stroke-linecap="round"/><rect x="3" y="5" width="16" height="12" rx="2" stroke="#1D9E75" stroke-width="1.3"/></svg>
+        </div>
+        <span class="cat-icon-label">전기·계측</span>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">최신 매물</span>
+      <span class="section-more">더보기 →</span>
+    </div>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="product-img">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#185FA5" stroke-width="1.5"/><path d="M16 20v-6a8 8 0 0116 0v6" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="29" r="3" fill="#185FA5"/></svg>
+        </div>
+        <div class="product-body">
+          <div class="product-title">MAN B&W 엔진 부품</div>
+          <div class="product-sub">부산 · 2024.03</div>
+          <div class="product-price">₩ 4,500,000</div>
+          <div class="product-tags"><span class="ptag ptag-g">인증</span><span class="ptag ptag-b">직거래</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#1D9E75" stroke-width="1.5"/><circle cx="24" cy="24" r="4" fill="#1D9E75"/><line x1="24" y1="12" x2="24" y2="8" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round"/><line x1="36" y1="24" x2="40" y2="24" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="product-body">
+          <div class="product-title">JRC 레이더 시스템</div>
+          <div class="product-sub">인천 · 2022.11</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:500;color:#042C53;">₩ 8,200,000</span></div>
+          <div class="product-tags"><span class="ptag ptag-b">14:32 남음</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 36L24 12l12 24H12z" stroke="#185FA5" stroke-width="1.5" stroke-linejoin="round"/><line x1="24" y1="36" x2="24" y2="42" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="42" x2="30" y2="42" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="product-body">
+          <div class="product-title">앵커 체인 50m</div>
+          <div class="product-sub">울산 · 2021.06</div>
+          <div class="product-price">₩ 1,200,000</div>
+          <div class="product-tags"><span class="ptag ptag-b">직거래</span><span class="ptag ptag-r">가격제안</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="16" width="28" height="20" rx="3" stroke="#1D9E75" stroke-width="1.5"/><path d="M18 16v-4h12v4" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="26" x2="32" y2="26" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round"/><line x1="24" y1="22" x2="24" y2="30" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="product-body">
+          <div class="product-title">ICOM 위성통신 장비</div>
+          <div class="product-sub">여수 · 2023.08</div>
+          <div class="product-price">₩ 2,800,000</div>
+          <div class="product-tags"><span class="ptag ptag-g">인증</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="22" r="8" stroke="#185FA5" stroke-width="1.5"/><path d="M18 30l-4 8M30 30l4 8" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="38" x2="34" y2="38" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="product-body">
+          <div class="product-title">구명정 진수장치</div>
+          <div class="product-sub">광양 · 2020.04</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:500;color:#042C53;">₩ 5,600,000</span></div>
+          <div class="product-tags"><span class="ptag ptag-b">8:14 남음</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="12" width="28" height="24" rx="3" stroke="#1D9E75" stroke-width="1.5"/><line x1="10" y1="20" x2="38" y2="20" stroke="#1D9E75" stroke-width="1.5"/><line x1="24" y1="12" x2="24" y2="36" stroke="#1D9E75" stroke-width="1.5"/></svg>
+        </div>
+        <div class="product-body">
+          <div class="product-title">선박용 압력계 세트</div>
+          <div class="product-sub">목포 · 2023.12</div>
+          <div class="product-price">₩ 680,000</div>
+          <div class="product-tags"><span class="ptag ptag-b">직거래</span><span class="ptag ptag-g">인증</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab-item active">
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none"><path d="M3 8l7-5 7 5v9a1 1 0 01-1 1H4a1 1 0 01-1-1V8z" stroke="#1D9E75" stroke-width="1.3"/><rect x="7" y="12" width="6" height="5" rx="1" stroke="#1D9E75" stroke-width="1.3"/></svg>
+      <span class="tab-label" style="color:#1D9E75;">홈</span>
+    </div>
+    <div class="tab-item">
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none"><circle cx="8" cy="8" r="5" stroke="#85B7EB" stroke-width="1.3"/><line x1="12" y1="12" x2="17" y2="17" stroke="#85B7EB" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <span class="tab-label">검색</span>
+    </div>
+    <div class="tab-item">
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none"><path d="M10 3l1.8 5.4H17l-4.5 3.3 1.7 5.3L10 14l-4.2 3 1.7-5.3L3 8.4h5.2L10 3z" stroke="#85B7EB" stroke-width="1.3" stroke-linejoin="round"/></svg>
+      <span class="tab-label">경매</span>
+    </div>
+    <div class="tab-item">
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none"><path d="M2 4h16v10a2 2 0 01-2 2H4a2 2 0 01-2-2V4z" stroke="#85B7EB" stroke-width="1.3"/><path d="M2 4l8 7 8-7" stroke="#85B7EB" stroke-width="1.3"/></svg>
+      <span class="tab-label">채팅</span>
+    </div>
+    <div class="tab-item">
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="4" stroke="#85B7EB" stroke-width="1.3"/><path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="#85B7EB" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <span class="tab-label">마이페이지</span>
+    </div>
+  </div>
+
+</div>
