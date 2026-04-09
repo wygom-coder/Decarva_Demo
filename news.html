@@ -36,21 +36,17 @@
         }
       });
 
-      // 네이버 경제뉴스 가짜(Mock) 데이터 렌더링
+      // 네이버 경제뉴스 API 호출 (실운영)
       async function loadNaverNews() {
         const list = document.getElementById('econ-list-expanded');
         if (!list) return;
-        
-        const mockData = [
-          { title: "글로벌 해운사 운임료 일제히 인상… 수출 업계 '비상'", description: "아시아발 유럽/북미 노선의 수요가 급증하면서 해상 운임표가 큰 폭으로 올랐습니다.", pubDate: new Date(Date.now() - 1000*60*5).toISOString(), originallink: "https://news.naver.com" },
-          { title: "원/달러 환율 1,380원 돌파, 수입물가 상승 압력", description: "미 연준의 금리 인하 기대감이 후퇴하며 강달러 현상이 계속 이어지고 있습니다.", pubDate: new Date(Date.now() - 1000*60*25).toISOString(), originallink: "https://news.naver.com" },
-          { title: "BDI 3주 연속 상승세, 벌크선 시장 '훈풍'", description: "중국의 철광석 수요 회복에 힘입어 발틱운임지수(BDI)가 뚜렷한 오름세를 보이고 있습니다.", pubDate: new Date(Date.now() - 1000*60*45).toISOString(), originallink: "https://news.naver.com" },
-          { title: "정부, 친환경 선박 전환 지원금 3조 투입 확정", description: "국내 선사들의 IMO 환경 규제 대응을 돕기 위해 친환경 정책 자금이 대거 방출됩니다.", pubDate: new Date(Date.now() - 1000*60*120).toISOString(), originallink: "https://news.naver.com" },
-          { title: "홍해 지정학적 리스크 장기화, 글로벌 물류 적신호", description: "우회 경로 확대에 따른 운항 일수 증가가 컨테이너선 부족 현상을 야기할 우려가 큽니다.", pubDate: new Date(Date.now() - 1000*60*180).toISOString(), originallink: "https://news.naver.com" }
-        ];
 
         try {
-          list.innerHTML = mockData.map((item, i) => {
+          const res = await fetch('/api/news?query=' + encodeURIComponent('해운 경제 환율'));
+          const data = await res.json();
+          if (!data.items || data.items.length === 0) throw new Error('no items');
+
+          list.innerHTML = data.items.map((item, i) => {
             const title = item.title.replace(/<[^>]*>/g, '');
             const desc = item.description.replace(/<[^>]*>/g, '');
             const source = item.originallink
