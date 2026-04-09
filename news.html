@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DECARVA - 뉴스</title>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 시계
+      function updateClock() {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const s = now.getFullYear() + '.' + pad(now.getMonth()+1) + '.' + pad(now.getDate()) + ' · ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ' KST';
+        const el = document.getElementById('clock');
+        if (el) el.textContent = s;
+      }
+      updateClock();
+      setInterval(updateClock, 60000);
+
+      // 햄버거 메뉴
+      document.getElementById('hamburger')?.addEventListener('click', function() {
+        const nav = document.querySelector('.nav-links');
+        if (nav.style.display === 'flex') {
+          nav.style.display = 'none';
+        } else {
+          nav.style.display = 'flex';
+          nav.style.flexDirection = 'column';
+          nav.style.position = 'absolute';
+          nav.style.top = '48px';
+          nav.style.left = '0';
+          nav.style.right = '0';
+          nav.style.background = '#fff';
+          nav.style.borderBottom = '0.5px solid rgba(0,0,0,0.1)';
+          nav.style.padding = '8px 0';
+          nav.style.zIndex = '99';
+        }
+      });
+
+      // 네이버 경제뉴스 가짜(Mock) 데이터 렌더링
+      async function loadNaverNews() {
+        const list = document.getElementById('econ-list-expanded');
+        if (!list) return;
+        
+        const mockData = [
+          { title: "글로벌 해운사 운임료 일제히 인상… 수출 업계 '비상'", description: "아시아발 유럽/북미 노선의 수요가 급증하면서 해상 운임표가 큰 폭으로 올랐습니다.", pubDate: new Date(Date.now() - 1000*60*5).toISOString(), originallink: "https://news.naver.com" },
+          { title: "원/달러 환율 1,380원 돌파, 수입물가 상승 압력", description: "미 연준의 금리 인하 기대감이 후퇴하며 강달러 현상이 계속 이어지고 있습니다.", pubDate: new Date(Date.now() - 1000*60*25).toISOString(), originallink: "https://news.naver.com" },
+          { title: "BDI 3주 연속 상승세, 벌크선 시장 '훈풍'", description: "중국의 철광석 수요 회복에 힘입어 발틱운임지수(BDI)가 뚜렷한 오름세를 보이고 있습니다.", pubDate: new Date(Date.now() - 1000*60*45).toISOString(), originallink: "https://news.naver.com" },
+          { title: "정부, 친환경 선박 전환 지원금 3조 투입 확정", description: "국내 선사들의 IMO 환경 규제 대응을 돕기 위해 친환경 정책 자금이 대거 방출됩니다.", pubDate: new Date(Date.now() - 1000*60*120).toISOString(), originallink: "https://news.naver.com" },
+          { title: "홍해 지정학적 리스크 장기화, 글로벌 물류 적신호", description: "우회 경로 확대에 따른 운항 일수 증가가 컨테이너선 부족 현상을 야기할 우려가 큽니다.", pubDate: new Date(Date.now() - 1000*60*180).toISOString(), originallink: "https://news.naver.com" }
+        ];
+
+        try {
+          list.innerHTML = mockData.map((item, i) => {
+            const title = item.title.replace(/<[^>]*>/g, '');
+            const desc = item.description.replace(/<[^>]*>/g, '');
+            const source = item.originallink
+              ? new URL(item.originallink).hostname.replace('www.','').replace('.co.kr','').replace('.com','')
+              : '네이버';
+            const pubDate = new Date(item.pubDate);
+            const diff = Math.floor((Date.now() - pubDate) / 60000);
+            const timeStr = diff < 60 ? diff + '분 전' : Math.floor(diff/60) + '시간 전';
+            
+            // 뉴스 전용 썸네일 랜덤 지정
+            const thumbClass = 'at' + ((i % 5) + 1);
+            
+            return `<a class="news-card" href="${item.originallink || item.link}" target="_blank">
+              <div class="news-card-thumb ${thumbClass}">
+                <div class="thumb-ph">N E W S</div>
+              </div>
+              <div class="news-card-body">
+                <div class="news-card-title">${title}</div>
+                <div class="news-card-desc">${desc}</div>
+                <div class="news-card-meta">
+                  <span class="source">${source}</span> <span class="dot">·</span> <span>${timeStr}</span>
+                </div>
+              </div>
+            </a>`;
+          }).join('');
+        } catch(e) {
+          if (list) list.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;color:#bbb;padding:40px;">뉴스를 불러올 수 없습니다</div>';
+        }
+      }
+      loadNaverNews();
+    });
+  </script>
+  <style>
+    /* 공통 스타일 (index.html 재사용) */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a18; min-height: 100vh; display: flex; flex-direction: column; }
+
+    .gnb { background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.12); padding: 0 24px; display: flex; align-items: center; height: 48px; position: sticky; top: 0; z-index: 100; }
+    .logo { font-size: 15px; font-weight: 600; color: #185FA5; margin-right: 32px; letter-spacing: -0.3px; text-decoration: none; }
+    .nav-links { display: flex; align-items: center; }
+    .nav-item { font-size: 13px; color: #666; padding: 0 14px; height: 48px; display: flex; align-items: center; border-bottom: 2px solid transparent; text-decoration: none; }
+    .nav-item.on { color: #1a1a18; border-bottom-color: #185FA5; font-weight: 500; }
+    .gnb-time { margin-left: auto; font-size: 11px; color: #999; }
+    .hamburger { display: none; flex-direction: column; gap: 4px; cursor: pointer; margin-left: auto; padding: 4px; }
+    .hb-line { width: 20px; height: 1.5px; background: #666; border-radius: 1px; }
+
+    .ticker-bar { background: #042C53; height: 30px; display: flex; align-items: center; padding: 0 24px; overflow: hidden; gap: 12px; }
+    .ticker-live { font-size: 9px; font-weight: 600; letter-spacing: .08em; color: #378ADD; border: 0.5px solid #185FA5; padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+    .ticker-track { overflow: hidden; flex: 1; display: flex; }
+    .ticker-scroll { display: flex; gap: 28px; animation: ticker 25s linear infinite; white-space: nowrap; }
+    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .ti { font-size: 11px; color: #85B7EB; }
+    .ti b { color: #E6F1FB; font-weight: 500; }
+    .t-up { color: #5DCAA5; }
+    .t-dn { color: #F09595; }
+
+    /* 뉴스 전용 레이아웃 */
+    .news-page {
+      padding: 24px 32px 40px;
+      flex: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 7.5fr 2.5fr;
+      gap: 24px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a18;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .badge {
+      font-size: 10px;
+      font-weight: 600;
+      background: #185FA5;
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+
+    .news-grid-expanded {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .news-card {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .news-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    
+    .news-card-thumb {
+      height: 140px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0C2340;
+    }
+    .thumb-ph { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.3); letter-spacing: 2px; }
+    .at1 { background: linear-gradient(135deg, #0C2340, #185FA5); } 
+    .at2 { background: linear-gradient(135deg, #0F6E56, #219B7B); } 
+    .at3 { background: linear-gradient(135deg, #854F0B, #C77D20); } 
+    .at4 { background: linear-gradient(135deg, #534AB7, #7A72DE); } 
+    .at5 { background: linear-gradient(135deg, #1a3a5c, #2F557D); }
+
+    .news-card-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .news-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a18;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .news-card-desc {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+    .news-card-meta {
+      font-size: 11px;
+      color: #999;
+      display: flex;
+      align-items: center;
+    }
+    .news-card-meta .source { font-weight: 600; color: #555; }
+    .news-card-meta .dot { margin: 0 6px; }
+
+    /* 우측 리스트형 (경제 뉴스) */
+    .news-list-container {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .list-view-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .list-view-items .news-card {
+      flex-direction: row;
+      border: none;
+      border-radius: 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      box-shadow: none;
+      padding: 16px 0;
+      align-items: center;
+    }
+    .list-view-items .news-card:hover {
+      transform: none;
+      background: #fafaf8;
+      border-radius: 8px;
+      padding-left: 12px;
+      padding-right: 12px;
+      margin: 0 -12px;
+    }
+    .list-view-items .news-card:last-child {
+      border-bottom: none;
+    }
+    .list-view-items .news-card-thumb {
+      width: 80px;
+      height: 60px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .list-view-items .news-card-body {
+      padding: 0 0 0 16px;
+    }
+    .list-view-items .news-card-desc {
+      display: none; /* 리스트 뷰에서는 설명 생략 */
+    }
+    .list-view-items .news-card-title {
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 1024px) {
+      .news-grid-expanded { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .gnb { padding: 0 16px; }
+      .nav-links { display: none; }
+      .gnb-time { display: none; }
+      .hamburger { display: flex; }
+      .ticker-bar { padding: 0 16px; height: 26px; }
+      .news-page { grid-template-columns: 1fr; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- GNB 수정: '홈' 링크와 '뉴스' 활성화 상태 -->
+  <nav class="gnb">
+    <a class="logo" href="index.html">DECARVA</a>
+    <div class="nav-links">
+      <a class="nav-item" href="index.html">홈</a>
+      <a class="nav-item on" href="news.html">뉴스</a>
+      <a class="nav-item" href="#">중고거래</a>
+      <a class="nav-item" href="#">EUA거래</a>
+      <a class="nav-item" href="#">커뮤니티</a>
+      <a class="nav-item" href="#">더보기</a>
+    </div>
+    <div class="gnb-time" id="clock"></div>
+    <div class="hamburger" id="hamburger">
+      <div class="hb-line"></div><div class="hb-line"></div><div class="hb-line"></div>
+    </div>
+  </nav>
+
+  <!-- 실시간 티커 유지 -->
+  <div class="ticker-bar">
+    <div class="ticker-live">LIVE</div>
+    <div class="ticker-track">
+      <div class="ticker-scroll">
+        <div class="ti">BDI <b>1,284</b> <span class="t-dn">▼18</span></div>
+        <div class="ti">SCFI <b>2,106</b> <span class="t-up">▲32</span></div>
+        <div class="ti">CCFI <b>1,048</b> <span class="t-up">▲11</span></div>
+        <div class="ti">HRCI <b>892</b> <span class="t-dn">▼5</span></div>
+        <div class="ti">EUA <b>€63.42</b> <span class="t-up">▲1.24%</span></div>
+        <div class="ti">WTI <b>$78.42</b> <span class="t-dn">▼0.6%</span></div>
+        <div class="ti">브렌트 <b>$82.15</b> <span class="t-dn">▼0.4%</span></div>
+        <div class="ti">VLSFO <b>$612/MT</b> <span class="t-up">▲3</span></div>
+        <div class="ti">MGO <b>$748/MT</b> <span class="t-up">▲2</span></div>
+        <div class="ti">LNG JKM <b>$9.84</b> <span class="t-up">▲2.2%</span></div>
+        <!-- 반복 -->
+        <div class="ti">BDI <b>1,284</b> <span class="t-dn">▼18</span></div>
+        <div class="ti">SCFI <b>2,106</b> <span class="t-up">▲32</span></div>
+        <div class="ti">CCFI <b>1,048</b> <span class="t-up">▲11</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="news-page">
+    
+    <!-- 좌측: 해운 뉴스 (그리드 뷰) -->
+    <div class="news-main">
+      <div class="section-title">제휴 해운 주요 뉴스 · 논설 <span class="badge">파트너스</span></div>
+      <div class="news-grid-expanded">
+        <!-- Static Demo Data based on index.html -->
+        <a class="news-card" href="#" target="_blank">
+          <div class="news-card-thumb at1"><div class="thumb-ph">해사신문</div></div>
+          <div class="news-card-body">
+            <div class="news-card-title">EUA €63 돌파… EU ETS 강화 앞두고 선사 비용 부담 가중</div>
+            <div class="news-card-desc">탄소 배출권 가격이 상승 곡선을 그리고 있습니다. 선박 운항사들은 하반기 비용 증가에 대비하여 새로운 전략을 모색하고 있습니다.</div>
+            <div class="news-card-meta"><span class="source">해사신문</span> <span class="dot">·</span> <span>30분 전</span></div>
+          </div>
+        </a>
+        <a class="news-card" href="#" target="_blank">
+          <div class="news-card-thumb at2"><div class="thumb-ph">해운뉴스</div></div>
+          <div class="news-card-body">
+            <div class="news-card-title">HMM, 친환경 선박 전환 로드맵 2030 발표</div>
+            <div class="news-card-desc">국내 최대 선사인 HMM은 2030년까지 친환경 선박 비율을 획기적으로 늘리는 로드맵을 공개하며 ESG 경영에 박차를 가합니다.</div>
+            <div class="news-card-meta"><span class="source">해운뉴스</span> <span class="dot">·</span> <span>2시간 전</span></div>
+          </div>
+        </a>
+        <a class="news-card" href="#" target="_blank">
+          <div class="news-card-thumb at3"><div class="thumb-ph">코리아쉬핑가제트</div></div>
+          <div class="news-card-body">
+            <div class="news-card-title">부산항 3월 컨테이너 물동량 전년比 4.2% 증가</div>
+            <div class="news-card-desc">봄철 수출입 물동량이 회복세를 보이며 부산항의 컨테이너 처리량이 전년 동기 대비 약 4.2% 증가한 것으로 집계되었습니다.</div>
+            <div class="news-card-meta"><span class="source">코리아쉬핑가제트</span> <span class="dot">·</span> <span>4시간 전</span></div>
+          </div>
+        </a>
+        <a class="news-card" href="#" target="_blank">
+          <div class="news-card-thumb at4"><div class="thumb-ph">한국해운신문</div></div>
+          <div class="news-card-body">
+            <div class="news-card-title">해운사 탄소세 대응 비용 올해 최대 12% 상승 전망</div>
+            <div class="news-card-desc">선박 연료 가격의 변동성과 글로벌 환경 규제 강화로 인해 아시아 지역 주요 선사들의 운항 보조 비용이 상승할 전망입니다.</div>
+            <div class="news-card-meta"><span class="source">한국해운신문</span> <span class="dot">·</span> <span>6시간 전</span></div>
+          </div>
+        </a>
+        <a class="news-card" href="#" target="_blank">
+          <div class="news-card-thumb at5"><div class="thumb-ph">해사신문</div></div>
+          <div class="news-card-body">
+            <div class="news-card-title">조선 3사, 올해 수주 목표 조기 달성 전망 발표</div>
+            <div class="news-card-desc">한국 조선해양, 삼성중공업, 한화오션 등 국내 주요 조선 3사가 우수한 기술력을 바탕으로 고부가가치 선박 수주를 연이어 성공하고 있습니다.</div>
+            <div class="news-card-meta"><span class="source">해사신문</span> <span class="dot">·</span> <span>8시간 전</span></div>
+          </div>
+        </a>
+        <a class="news-card" href="#" target="_blank">
+          <div class="news-card-thumb at1"><div class="thumb-ph">해운뉴스</div></div>
+          <div class="news-card-body">
+            <div class="news-card-title">IMO 2030 메탄올 연료 기준 초안 공개… 선사 대응 시급</div>
+            <div class="news-card-desc">국제해사기구가 차세대 선박 연료인 메탄올에 대한 구체적인 사용 규정 및 안전 초안을 공식 발표했습니다.</div>
+            <div class="news-card-meta"><span class="source">해운뉴스</span> <span class="dot">·</span> <span>10시간 전</span></div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- 우측: 기타 뉴스 (리스트 뷰 - API 실시간) -->
+    <div class="news-side">
+      <div class="section-title">실시간 종합 뉴스 (경제·해운 기타)</div>
+      <div class="news-list-container">
+        <div class="list-view-items" id="econ-list-expanded">
+          <div style="text-align:center; padding: 40px; font-size:13px; color:#999;">경제 뉴스를 불러오는 중입니다...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
