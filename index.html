@@ -84,6 +84,17 @@
           sbSlides[currentSb].classList.add('active');
         }, 5000);
       }
+
+      // 해양 소식 티저 슬라이더 (10초)
+      const newsPages = document.querySelectorAll('.news-page');
+      let currentNews = 0;
+      if(newsPages.length > 0) {
+        setInterval(() => {
+          newsPages[currentNews].classList.remove('active');
+          currentNews = (currentNews + 1) % newsPages.length;
+          newsPages[currentNews].classList.add('active');
+        }, 10000);
+      }
     });
   </script>
   <style>
@@ -169,8 +180,10 @@
     .shop-title { font-size: 14px; font-weight: 500; color: #1a1a18; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .shop-price { font-size: 16px; font-weight: 700; color: #185FA5; margin-top: auto; padding-top: 8px; }
 
-    /* News Teaser */
-    .news-teaser { display: flex; flex-direction: column; gap: 12px; }
+    /* News Teaser Slider */
+    .news-teaser { position: relative; height: 180px; }
+    .news-page { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; opacity: 0; transition: opacity 0.6s ease-in-out; pointer-events: none; }
+    .news-page.active { opacity: 1; z-index: 2; pointer-events: auto; }
     .te-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #fff; border-radius: 10px; border: 1px solid rgba(0,0,0,0.06); text-decoration: none; transition: background 0.2s, box-shadow 0.2s; }
     .te-item:hover { background: #fafaf8; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
     .te-badge { background: #E6F1FB; color: #185FA5; font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; flex-shrink: 0; }
@@ -343,21 +356,62 @@
             <a href="/news" class="sec-more">뉴스 탭으로 이동 →</a>
           </div>
           <div class="news-teaser">
-            <a href="/news" class="te-item">
-              <div class="te-badge">글로벌</div>
-              <div class="te-title">EUA €63 돌파… EU ETS 강화 앞두고 선사 비용 부담 가중</div>
-              <div class="te-time">30분 전</div>
-            </a>
-            <a href="/news" class="te-item">
-              <div class="te-badge">친환경</div>
-              <div class="te-title">HMM, 친환경 선박 전환 로드맵 2030 발표 및 ESG 박차</div>
-              <div class="te-time">2시간 전</div>
-            </a>
-            <a href="/news" class="te-item">
-              <div class="te-badge">물류</div>
-              <div class="te-title">부산항 3월 전체 컨테이너 물동량 전년 대비 4.2% 증가 확정</div>
-              <div class="te-time">4시간 전</div>
-            </a>
+            <!-- 페이지 1 -->
+            <div class="news-page active">
+              <a href="/news" class="te-item">
+                <div class="te-badge">글로벌</div>
+                <div class="te-title">EUA €63 돌파… EU ETS 강화 앞두고 선사 비용 부담 가중</div>
+                <div class="te-time">30분 전</div>
+              </a>
+              <a href="/news" class="te-item">
+                <div class="te-badge">친환경</div>
+                <div class="te-title">HMM, 친환경 선박 전환 로드맵 2030 발표 및 ESG 박차</div>
+                <div class="te-time">2시간 전</div>
+              </a>
+              <a href="/news" class="te-item">
+                <div class="te-badge">물류</div>
+                <div class="te-title">부산항 3월 전체 컨테이너 물동량 전년 대비 4.2% 증가 확정</div>
+                <div class="te-time">4시간 전</div>
+              </a>
+            </div>
+            
+            <!-- 페이지 2 -->
+            <div class="news-page">
+              <a href="/news" class="te-item">
+                <div class="te-badge" style="color:#0F6E56; background:#E5F5F0;">시황</div>
+                <div class="te-title">SCFI 2,100선 회복… 홍해 우회로 수급 타이트 지속</div>
+                <div class="te-time">1시간 전</div>
+              </a>
+              <a href="/news" class="te-item">
+                <div class="te-badge" style="color:#854F0B; background:#F8F0E5;">기업</div>
+                <div class="te-title">팬오션, 벌크 장기계약 비중 65%로 확대 선언</div>
+                <div class="te-time">3시간 전</div>
+              </a>
+              <a href="/news" class="te-item">
+                <div class="te-badge" style="color:#A32D2D; background:#FCEBEB;">정책</div>
+                <div class="te-title">해수부, 최첨단 해상 기상 예보 및 안전 시스템 가동</div>
+                <div class="te-time">5시간 전</div>
+              </a>
+            </div>
+
+            <!-- 페이지 3 -->
+            <div class="news-page">
+              <a href="/news" class="te-item">
+                <div class="te-badge" style="color:#534AB7; background:#ECEBFA;">항만</div>
+                <div class="te-title">울산항, 스마트 액체 화물 허브 항만으로 대대적 도약</div>
+                <div class="te-time">45분 전</div>
+              </a>
+              <a href="/news" class="te-item">
+                <div class="te-badge">글로벌</div>
+                <div class="te-title">머스크, 3분기 운임 추가 인상 예고… 시장 파장 커질듯</div>
+                <div class="te-time">4시간 전</div>
+              </a>
+              <a href="/news" class="te-item">
+                <div class="te-badge" style="color:#0F6E56; background:#E5F5F0;">시황</div>
+                <div class="te-title">중국 춘제 이후 공장 가동률 94% 회복, 아시아 물동량 급등</div>
+                <div class="te-time">8시간 전</div>
+              </a>
+            </div>
           </div>
         </div>
 
