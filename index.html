@@ -96,10 +96,11 @@
         }, 7000);
       }
 
-      // 날씨 API 데이터 가져오기 연동
-      async function fetchWeather() {
+      // 날씨 API 데이터 가져오기 연동 (위치 기반)
+      async function fetchWeather(lat, lon) {
         try {
-          const res = await fetch('/api/weather');
+          const url = (lat && lon) ? `/api/weather?lat=${lat}&lon=${lon}` : '/api/weather';
+          const res = await fetch(url);
           if (!res.ok) return; // 오류 시 기존 mock 데이터 유지
           
           const data = await res.json();
@@ -120,11 +121,18 @@
             else if(iconCode.includes('13')) emoji = '❄️';
             else if(iconCode.includes('50')) emoji = '🌫';
 
+            const wLoc = document.querySelector('.w-loc');
             const wTime = document.querySelector('.w-time');
             const wStat = document.querySelector('.w-stat');
             const wDesc = document.querySelector('.w-desc');
             const wIcon = document.querySelector('.w-icon');
             
+            // 지명 업데이트 (API에서 보내주는 사용자의 실시간 지역명)
+            if(wLoc && data.name) {
+              const country = data.sys && data.sys.country ? data.sys.country : '';
+              wLoc.textContent = `📌 ${data.name} ${country ? '('+country+')' : ''}`;
+            }
+
             if(wStat && wDesc && wIcon) {
               wStat.innerHTML = `${temp}°<span style="font-size:20px; font-weight:400; opacity:0.8;">C</span>`;
               wDesc.textContent = desc;
@@ -150,8 +158,21 @@
         }
       }
       
-      // 로드 시 실행
-      fetchWeather();
+      // 사용자 위치 요청 후 실행
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+             // 위치 권한 허용 시 -> 내 위치 기반 날씨 호출
+             fetchWeather(position.coords.latitude, position.coords.longitude);
+          },
+          (error) => {
+             console.warn("위치 정보 접근 거부됨. 기본 위치(부산)로 로드합니다.", error);
+             fetchWeather();
+          }
+        );
+      } else {
+        fetchWeather(); // Geolocation 지원 안하는 구형 브라우저
+      }
     });
   </script>
   <style>
