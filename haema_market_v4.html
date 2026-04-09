@@ -413,4 +413,181 @@ function hideChatRoom() {
   document.getElementById('chat-list').style.display = 'block';
   document.getElementById('chatroom').style.display = 'none';
 }
+
+// ==== 상태 관리 및 매물 데이터 ====
+let products = [
+  { id: 1, title: 'MAN B&W 엔진 부품', sub: '부산 · 2024.03', price: '₩ 4,500,000', category: '엔진·동력', tradeType: '직거래', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#3A90D9" stroke-width="1.5"/><path d="M16 20v-6a8 8 0 0116 0v6" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="29" r="3" fill="#3A90D9"/></svg>' },
+  { id: 2, title: 'JRC 레이더 시스템', sub: '인천 · 2022.11', price: '₩ 8,200,000', category: '항법장비', tradeType: '경매', auth: false, auction: true, remain: '14:32 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="4" fill="#D4960A"/><line x1="24" y1="12" x2="24" y2="8" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="36" y1="24" x2="40" y2="24" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+  { id: 3, title: '앵커 체인 50m', sub: '울산 · 2021.06', price: '₩ 1,200,000', category: '갑판장비', tradeType: '직거래', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 36L24 12l12 24H12z" stroke="#3A90D9" stroke-width="1.5" stroke-linejoin="round"/><line x1="24" y1="36" x2="24" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="42" x2="30" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+  { id: 4, title: 'ICOM 위성통신 장비', sub: '여수 · 2023.08', price: '₩ 2,800,000', category: '통신장비', tradeType: '직거래', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="16" width="28" height="20" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M18 16v-4h12v4" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="26" x2="32" y2="26" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="24" y1="22" x2="24" y2="30" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+  { id: 5, title: '구명정 진수장치', sub: '광양 · 2020.04', price: '₩ 5,600,000', category: '안전장비', tradeType: '경매', auth: false, auction: true, remain: '8:14 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="22" r="8" stroke="#3A90D9" stroke-width="1.5"/><path d="M18 30l-4 8M30 30l4 8" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="38" x2="34" y2="38" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+  { id: 6, title: '선박용 압력계 세트', sub: '목포 · 2023.12', price: '₩ 680,000', category: '전기·계측', tradeType: '직거래', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="12" width="28" height="24" rx="3" stroke="#D4960A" stroke-width="1.5"/><line x1="10" y1="20" x2="38" y2="20" stroke="#D4960A" stroke-width="1.5"/><line x1="24" y1="12" x2="24" y2="36" stroke="#D4960A" stroke-width="1.5"/></svg>' }
+];
+
+let currentCat = '전체';
+let currentFilter = '전체';
+
+// 화면 렌더링 로직
+function renderProducts() {
+  const grid = document.querySelector('.product-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  
+  // 조건 필터링
+  let filtered = products.filter(p => {
+    let catMatch = currentCat === '전체' || p.category === currentCat;
+    let filterMatch = true;
+    if (currentFilter === '직거래') filterMatch = (p.tradeType === '직거래' || p.tradeType === '모두');
+    if (currentFilter === '경매중') filterMatch = (p.tradeType === '경매' || p.auction);
+    if (currentFilter === '인증판매자') filterMatch = p.auth;
+    if (currentFilter === '100만원 이하') {
+        const val = parseInt(p.price.replace(/[^0-9]/g, ''));
+        if (val > 1000000) filterMatch = false;
+    }
+    return catMatch && filterMatch;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div style="grid-column: span 3; padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">선택한 조건에 맞는 매물이 없습니다.</div>';
+    return;
+  }
+
+  // 매물 HTML 생성
+  filtered.forEach(p => {
+    let tagsHTML = '';
+    if (p.auth) tagsHTML += '<span class="ptag ptag-b">인증</span>';
+    if (p.tradeType === '직거래' || p.tradeType === '모두') tagsHTML += '<span class="ptag ptag-y">직거래</span>';
+    if (p.offer) tagsHTML += '<span class="ptag ptag-r">가격제안</span>';
+    if (p.auction && p.remain) tagsHTML += `<span class="ptag ptag-b">${p.remain}</span>`;
+
+    let priceHTML = `<div class="product-price">${p.price}</div>`;
+    if (p.auction) {
+      priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${p.price}</span></div>`;
+    }
+
+    let card = `
+      <div class="product-card">
+        <div class="product-img">${p.svg}</div>
+        <div class="product-body">
+          <div class="product-title">${p.title}</div>
+          <div class="product-sub">${p.sub}</div>
+          ${priceHTML}
+          <div class="product-tags" style="gap:4px;">${tagsHTML}</div>
+        </div>
+      </div>
+    `;
+    grid.innerHTML += card;
+  });
+}
+
+function setCategory(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-item').forEach(e => e.classList.remove('active'));
+  
+  // 요소가 주어지면 직접 active, 아니면 전체 순회
+  if (el && el.classList.contains('cat-item')) el.classList.add('active');
+  else {
+      document.querySelectorAll('.cat-item').forEach(e => {
+          if (e.textContent.trim() === cat) e.classList.add('active');
+      });
+  }
+  renderProducts();
+}
+
+function setFilter(filter, el) {
+  // 토글 로직 (동일한 칩 누르면 전체로 풀림)
+  if (currentFilter === filter && filter !== '전체') {
+     currentFilter = '전체';
+  } else {
+     currentFilter = filter;
+  }
+  
+  document.querySelectorAll('.filter-chip').forEach(e => e.classList.remove('on'));
+  document.querySelectorAll('.filter-chip').forEach(e => {
+      if (e.textContent.trim() === currentFilter) e.classList.add('on');
+  });
+
+  renderProducts();
+}
+
+// 판매자용 매물 등록 임시 기능
+function registerProduct() {
+  const cat = document.querySelector('#page-register .form-select').value;
+  const title = document.querySelector('#page-register .form-input[placeholder*="상품명"]').value;
+  let tradeType = '직거래';
+  
+  // 거래방식 선택 확인
+  document.querySelectorAll('#page-register .trade-chip').forEach(c => {
+      if(c.classList.contains('on')) tradeType = c.textContent.trim();
+  });
+  
+  const price = document.querySelector('#page-register .form-input[placeholder*="가격"]').value || '₩ 협의 가능';
+  
+  if (!title) { alert('상품명을 적어주세요.'); return; }
+  if (cat === '카테고리 선택') { alert('카테고리를 올바르게 선택해주세요.'); return; }
+
+  // 새 제품 데이터로 등록
+  let newProd = {
+    id: Date.now(),
+    title: title,
+    sub: '등록지역 · 방금 전',
+    price: price.includes('₩') ? price : '₩ ' + price,
+    category: cat,
+    tradeType: tradeType,
+    auth: true, 
+    auction: tradeType === '경매',
+    svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M14 20v-4a10 10 0 0120 0v4" stroke="#D4960A" stroke-width="1.5"/></svg>'
+  };
+
+  products.unshift(newProd); // 맨 위에 노출
+
+  // 폼 초기화
+  document.querySelector('#page-register .form-input[placeholder*="상품명"]').value = '';
+  document.querySelector('#page-register .form-input[placeholder*="가격"]').value = '';
+  
+  alert('최신 매물이 등록되었습니다! (현재 세션 임시저장됨)');
+  
+  // 상태 및 탭 초기화
+  setCategory('전체'); 
+  setFilter('전체');
+  showPage('home');
+  window.scrollTo(0, 0); // 상단 이동
+}
+
+// 상호작용 이벤트 리스너 세팅
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. 초기 렌더링
+    renderProducts();
+
+    // 2. 텍스트 카테고리 클릭
+    document.querySelectorAll('.cat-item').forEach(el => {
+        el.addEventListener('click', () => setCategory(el.textContent.trim(), el));
+    });
+
+    // 3. 아이콘 카테고리 클릭
+    document.querySelectorAll('.cat-icon-item').forEach(el => {
+        const cat = el.querySelector('.cat-icon-label').textContent.trim();
+        el.addEventListener('click', () => setCategory(cat));
+    });
+
+    // 4. 필터 칩 클릭
+    document.querySelectorAll('.filter-chip').forEach(el => {
+        el.addEventListener('click', () => setFilter(el.textContent.trim(), el));
+    });
+
+    // 5. 매물 등록 [등록하기] 버튼 
+    const submitBtn = document.querySelector('#page-register .submit-btn');
+    if(submitBtn) {
+        submitBtn.addEventListener('click', registerProduct);
+    }
+    
+    // UI 로직 (경매 vs 직거래 버튼 스위칭)
+    const tradeChips = document.querySelectorAll('#page-register .trade-chip');
+    tradeChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            tradeChips.forEach(c => c.classList.remove('on'));
+            chip.classList.add('on');
+        });
+    });
+});
 </script>
