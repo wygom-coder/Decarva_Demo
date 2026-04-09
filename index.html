@@ -127,11 +127,8 @@
             const wDesc = document.querySelector('.w-desc');
             const wIcon = document.querySelector('.w-icon');
             
-            // 지명 업데이트 (API에서 보내주는 사용자의 실시간 지역명)
-            if(wLoc && data.name) {
-              const country = data.sys && data.sys.country ? data.sys.country : '';
-              wLoc.textContent = `📌 ${data.name} ${country ? '('+country+')' : ''}`;
-            }
+            // 지명 업데이트 (자동완성일경우 API이름 사용, 아니면 목록 텍스트 사용 반영)
+            // (select ui를 살리기 위해 텍스트는 덮어쓰지 않음)
 
             if(wStat && wDesc && wIcon) {
               wStat.innerHTML = `${temp}°<span style="font-size:20px; font-weight:400; opacity:0.8;">C</span>`;
@@ -159,20 +156,34 @@
       }
       
       // 사용자 위치 요청 후 실행
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-             // 위치 권한 허용 시 -> 내 위치 기반 날씨 호출
-             fetchWeather(position.coords.latitude, position.coords.longitude);
-          },
-          (error) => {
-             console.warn("위치 정보 접근 거부됨. 기본 위치(부산)로 로드합니다.", error);
-             fetchWeather();
-          }
-        );
-      } else {
-        fetchWeather(); // Geolocation 지원 안하는 구형 브라우저
+      function loadWeather() {
+        const val = document.getElementById('weather-loc-select')?.value;
+        if(val && val !== 'auto') {
+           const coords = val.split(',');
+           fetchWeather(coords[0], coords[1]);
+        } else if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+               fetchWeather(position.coords.latitude, position.coords.longitude);
+            },
+            (error) => {
+               console.warn("위치 정보 접근 거부됨. 기본 위치(부산)로 로드합니다.");
+               fetchWeather();
+            }
+          );
+        } else {
+          fetchWeather();
+        }
       }
+
+      // 셀렉터 변경 시 다시 로드
+      const locSelect = document.getElementById('weather-loc-select');
+      if (locSelect) {
+        locSelect.addEventListener('change', loadWeather);
+      }
+      
+      // 최초 실행
+      loadWeather();
     });
   </script>
   <style>
@@ -650,10 +661,21 @@
         </div>
 
         <!-- 바다 날씨 위젯 -->
-        <div class="weather-widget">
+        <div class="weather-widget" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" onclick="if(event.target.tagName !== 'SELECT') window.open('https://openweathermap.org/', '_blank')">
           <div class="w-top">
             <div>
-              <div class="w-loc">📌 부산항 (Korea)</div>
+              <div class="w-loc" style="display:flex; align-items:center; gap:4px;">
+                 📌 
+                 <select id="weather-loc-select" style="background:transparent; border:none; color:#fff; font-size:inherit; font-weight:bold; cursor:pointer; outline:none; appearance:none;">
+                   <option value="auto" style="color:#333;">📍 접속 위치 (자동)</option>
+                   <option value="35.1,129.0" style="color:#333;">부산항 (Busan)</option>
+                   <option value="37.4,126.6" style="color:#333;">인천항 (Incheon)</option>
+                   <option value="34.7,127.7" style="color:#333;">여수항 (Yeosu)</option>
+                   <option value="35.5,129.3" style="color:#333;">울산항 (Ulsan)</option>
+                   <option value="34.8,126.4" style="color:#333;">목포항 (Mokpo)</option>
+                 </select>
+                 <span style="font-size:10px; opacity:0.7;">▼</span>
+              </div>
               <div class="w-time">오늘 15:00 발표 기준</div>
               <div class="w-stat">12.5°<span style="font-size:20px; font-weight:400; opacity:0.8;">C</span></div>
               <div class="w-desc">구름 조금, 시정 양호</div>
