@@ -59,11 +59,30 @@
             nav.style.left = '0';
             nav.style.right = '0';
             nav.style.background = '#fff';
-            nav.style.borderBottom = '0.5px solid rgba(0,0,0,0.1)';
-            nav.style.padding = '8px 0';
-            nav.style.zIndex = '99';
           }
         });
+      }
+
+      // 메인 가로 배너 슬라이더
+      const heroSlides = document.querySelectorAll('.hero-slide');
+      let currentHero = 0;
+      if(heroSlides.length > 0) {
+        setInterval(() => {
+          heroSlides[currentHero].classList.remove('active');
+          currentHero = (currentHero + 1) % heroSlides.length;
+          heroSlides[currentHero].classList.add('active');
+        }, 5000);
+      }
+
+      // 우측 소형 배너 슬라이더
+      const sbSlides = document.querySelectorAll('.sb-slide');
+      let currentSb = 0;
+      if(sbSlides.length > 0) {
+        setInterval(() => {
+          sbSlides[currentSb].classList.remove('active');
+          currentSb = (currentSb + 1) % sbSlides.length;
+          sbSlides[currentSb].classList.add('active');
+        }, 5000);
       }
     });
   </script>
@@ -105,14 +124,29 @@
     .search-btn:hover { background: #0C447C; }
 
     /* Hero Banners */
-    .hero-banners { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .banner-card { position: relative; border-radius: 16px; overflow: hidden; height: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); cursor: pointer; }
-    .banner-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
-    .banner-card:hover img { transform: scale(1.04); }
-    .banner-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 100%); padding: 32px 24px; display: flex; flex-direction: column; justify-content: center; pointer-events: none; }
+    .hero-banners { position: relative; border-radius: 16px; overflow: hidden; height: 260px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); cursor: pointer; }
+    .hero-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease-in-out; }
+    .hero-slide.active { opacity: 1; z-index: 2; }
+    .hero-slide img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+    .hero-banners:hover img { transform: scale(1.02); }
+    .banner-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 100%); padding: 40px; display: flex; flex-direction: column; justify-content: center; pointer-events: none; }
     .b-tag-wrap { display: flex; margin-bottom: 12px; }
-    .b-tag { font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.25); backdrop-filter: blur(4px); color: #fff; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.5px; }
-    .b-title { color: #fff; font-size: 22px; font-weight: 700; line-height: 1.4; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .b-tag { font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.3); backdrop-filter: blur(4px); color: #fff; padding: 6px 12px; border-radius: 6px; letter-spacing: 0.5px; }
+    .b-title { color: #fff; font-size: 28px; font-weight: 700; line-height: 1.4; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    
+    /* Dummy Banners CSS */
+    .hero-dummy { background: linear-gradient(135deg, #185FA5, #0C2340); width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; }
+    .hd-title { font-size: 40px; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px; }
+    .hd-sub { font-size: 16px; font-weight: 500; opacity: 0.9; }
+
+    /* Side Small Banners */
+    .small-banners { position: relative; border-radius: 12px; overflow: hidden; height: 100px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); cursor: pointer; }
+    .sb-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease-in-out; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; }
+    .sb-slide.active { opacity: 1; z-index: 2; }
+    .sb-1 { background: linear-gradient(135deg, #A43131, #7A1919); }
+    .sb-2 { background: linear-gradient(135deg, #3B6D11, #254F06); }
+    .sb-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .sb-sub { font-size: 12px; font-weight: 500; opacity: 0.85; }
 
     /* Main Content Layout */
     .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: start; }
@@ -258,16 +292,25 @@
       </div>
     </div>
 
-    <!-- 광고 배너 (AI 생성 이미지) -->
+    <!-- 광고 배너 (AI 생성 이미지 및 CSS 디자인 슬라이더) -->
     <div class="hero-banners">
-      <div class="banner-card">
+      <!-- 1번 슬라이드: 목포해양대학교 -->
+      <div class="hero-slide active">
         <img src="images/banner_mokpo.png" alt="목포해양대학교">
         <div class="banner-overlay">
           <div class="b-tag-wrap"><span class="b-tag">Partner</span></div>
           <div class="b-title">세계를 무대로,<br>미래 해양 리더의 산실</div>
         </div>
       </div>
-      <div class="banner-card">
+      <!-- 2번 슬라이드: 이마린 주식회사 -->
+      <div class="hero-slide">
+        <div class="hero-dummy">
+          <div class="hd-title">이마린 주식회사</div>
+          <div class="hd-sub">해양 IT 솔루션의 글로벌 리더, eMarine</div>
+        </div>
+      </div>
+      <!-- 3번 슬라이드: 한국해운조합 -->
+      <div class="hero-slide">
         <img src="images/banner_ksa.png" alt="한국해운조합">
         <div class="banner-overlay">
           <div class="b-tag-wrap"><span class="b-tag">Partner</span></div>
@@ -396,6 +439,18 @@
               <button class="user-link">쪽지 확인</button>
               <button class="user-link logout" id="btn-logout">로그아웃</button>
             </div>
+          </div>
+        </div>
+
+        <!-- 우측 소형 스폰서 배너 슬라이더 -->
+        <div class="small-banners">
+          <div class="sb-slide sb-1 active">
+            <div class="sb-title">거용선박</div>
+            <div class="sb-sub">중고 선박 부품 및 기부속 전문 수리</div>
+          </div>
+          <div class="sb-slide sb-2">
+            <div class="sb-title">한진전기</div>
+            <div class="sb-sub">선박 전장품 종합 유지보수 및 수리</div>
           </div>
         </div>
 
