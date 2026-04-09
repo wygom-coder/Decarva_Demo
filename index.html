@@ -127,9 +127,15 @@
             const wDesc = document.querySelector('.w-desc');
             const wIcon = document.querySelector('.w-icon');
             
-            // 지명 업데이트 (자동완성일경우 API이름 사용, 아니면 목록 텍스트 사용 반영)
-            // (select ui를 살리기 위해 텍스트는 덮어쓰지 않음)
-
+            // 지명 업데이트 (자동 추적일 경우 API에서 가져온 실제 도시명으로 덮어쓰기)
+            const locSelect = document.getElementById('weather-loc-select');
+            if(locSelect && locSelect.value === 'auto' && data.name) {
+              const autoOption = locSelect.querySelector('option[value="auto"]');
+              if(autoOption) {
+                const country = data.sys && data.sys.country ? data.sys.country : '';
+                autoOption.textContent = `📍자동: ${data.name} ${country ? '('+country+')' : ''}`;
+              }
+            }
             if(wStat && wDesc && wIcon) {
               wStat.innerHTML = `${temp}°<span style="font-size:20px; font-weight:400; opacity:0.8;">C</span>`;
               wDesc.textContent = desc;
