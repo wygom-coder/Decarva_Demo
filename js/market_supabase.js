@@ -991,17 +991,6 @@ function openProfileEdit() {
     
     document.getElementById('edit-avatar-preview').textContent = nameStr.charAt(0).toUpperCase();
 }
-    
-    document.getElementById('edit-avatar-preview').textContent = nameStr.charAt(0).toUpperCase();
-}
-    
-    showPage('profile-edit');
-    
-    const nameStr = metaName ? metaName : currentUser.email.split('@')[0];
-    
-    document.getElementById('edit-nickname-input').value = nameStr;
-    document.getElementById('edit-avatar-preview').textContent = nameStr.charAt(0).toUpperCase();
-}
 
 async function saveProfile() {
     const btn = document.querySelector('#page-profile-edit .submit-btn');
