@@ -155,16 +155,15 @@
     <div class="chat-item" onclick="showChatRoom()"><div class="chat-avatar yellow">여</div><div class="chat-info"><div class="chat-name-row"><span class="chat-name">여수마린서비스</span><span class="chat-time">5일 전</span></div><div class="chat-preview">입금 확인했습니다!</div></div><div class="chat-meta"><div class="chat-thumb"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="12" rx="2" stroke="#D4960A" stroke-width="1.2"/><line x1="3" y1="8" x2="17" y2="8" stroke="#D4960A" stroke-width="1.2"/></svg></div></div></div>
   </div>
   <div class="chatroom" id="chatroom" style="display:none;">
-    <div class="chatroom-header"><span class="back-btn" onclick="hideChatRoom()">‹</span><span style="font-size:15px;font-weight:700;color:#1A2B4A;flex:1;">한국해운 (주)</span></div>
-    <div class="chatroom-product"><div class="cp-img"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="6" stroke="#3A90D9" stroke-width="1.3"/><circle cx="11" cy="11" r="2" fill="#3A90D9"/></svg></div><div><div class="cp-title">JRC 레이더 시스템</div><div class="cp-price">₩ 8,200,000</div></div><button class="cp-btn">구매확정</button></div>
-    <div class="chat-messages">
-      <div class="msg"><div class="msg-avatar">한</div><div><div class="msg-bubble theirs">안녕하세요, JRC 레이더 아직 판매중인가요?</div></div><span class="msg-time">오후 2:10</span></div>
-      <div class="msg mine"><div><div class="msg-bubble mine">네, 아직 판매중입니다. 상태는 매우 양호해요.</div></div><span class="msg-time">오후 2:15</span></div>
-      <div class="msg"><div class="msg-avatar">한</div><div><div class="msg-bubble theirs">혹시 직접 보러 갈 수 있을까요?</div></div><span class="msg-time">오후 2:34</span></div>
+    
+    <div class="chatroom-header"><span class="back-btn" onclick="hideChatRoom()">‹</span><span id="chat-receiver-name" style="font-size:15px;font-weight:700;color:#1A2B4A;flex:1;">판매자와 채팅</span></div>
+    <div class="chatroom-product" id="chat-product-bar" style="display:flex; border-bottom:1px solid #eee; padding:12px 16px; align-items:center; gap:12px; background:#fff;"><div class="cp-img" id="chat-product-img" style="width:40px;height:40px;overflow:hidden;border-radius:4px;background:#f4f9ff;"></div><div style="flex:1;"><div class="cp-title" id="chat-product-title" style="font-size:13px;font-weight:600;color:#1a2b4a;"></div><div class="cp-price" id="chat-product-price" style="font-size:14px;font-weight:700;color:#1a5fa0;"></div></div><button class="cp-btn" style="background:#f4f9ff; color:#1a5fa0; border:none;">거래완료</button></div>
+    <div class="chat-messages" id="chat-messages-container" style="flex:1; overflow-y:auto; padding:16px;">
+      <!-- 동적 메시지 영역 -->
     </div>
-    <div class="chat-input-bar"><input type="text" placeholder="메시지를 입력하세요"><button class="chat-send"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-6-5 6 5 6-12-6z" fill="#7A5200"/></svg></button></div>
+    <div class="chat-input-bar" style="background:#fff; border-top:1px solid #eee; padding:12px 16px; display:flex; gap:8px;"><input type="text" id="chat-input-text" placeholder="메시지를 입력하세요" onkeypress="if(event.key==='Enter') sendChatMessage()" style="flex:1; background:#f4f9ff; border:none; padding:10px 14px; border-radius:20px; font-size:14px; outline:none;"><button class="chat-send" onclick="sendChatMessage()" style="width:40px; height:40px; border-radius:50%; background:var(--yellow-400); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-6-5 6 5 6-12-6z" fill="#7A5200"/></svg></button></div>
+
   </div>
-</div>
 </div>
 
 <!-- 마이페이지 -->

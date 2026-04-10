@@ -261,7 +261,7 @@ function renderProducts() {
     }
 
     let card = `
-      <div class="product-card" ${p.auction ? `onclick="openAuctionModal('${p.id}')"` : ''} style="${p.auction ? 'cursor:pointer;' : ''}">
+      <div class="product-card" onclick="openProductModal('${p.id}')" style="cursor:pointer;">
         <div class="product-img">${p.svg}</div>
         <div class="product-body">
           <div class="product-title">${p.title}</div>
@@ -383,7 +383,7 @@ function openAuctionModal(id) {
     `;
 }
 
-function closeAuctionModal() {
+function closeProductModal() {
     document.getElementById('auction-modal').style.display = 'none';
 }
 
@@ -409,7 +409,7 @@ async function submitBid(id) {
     }
     
     alert('성공적으로 입찰되었습니다!');
-    closeAuctionModal();
+    closeProductModal();
     fetchProducts();
 }
 
@@ -631,3 +631,120 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.addEventListener('click', registerProduct);
     }
 });
+
+// ==== 실시간 채팅 로직 ====
+let currentChatProduct = null;
+let currentChatSubscription = null;
+
+async function startChat(productId) {
+    if(!currentUser) {
+        alert('회원가입 및 로그인이 필요한 기능입니다.');
+        showPage('login');
+        return;
+    }
+    
+    const p = products.find(x => String(x.id) === String(productId));
+    if(!p) return;
+    
+    if(p.seller_id === currentUser.id) {
+        alert('본인이 등록한 매물입니다.');
+        return;
+    }
+    
+    currentChatProduct = p;
+    closeProductModal();
+    
+    // Update Chatroom Header UI
+    document.getElementById('chat-product-title').textContent = p.title;
+    document.getElementById('chat-product-price').textContent = p.price;
+    document.getElementById('chat-product-img').innerHTML = p.svg;
+    
+    showPage('chat');
+    showChatRoom();
+    
+    const container = document.getElementById('chat-messages-container');
+    container.innerHTML = '<div style="text-align:center; padding: 20px; font-size:12px; color:#aaa;">대화 내역을 불러오는 중...</div>';
+    
+    await loadChatHistory(p.id);
+    subscribeToChat(p.id);
+}
+
+async function loadChatHistory(productId) {
+    const { data, error } = await supabaseClient.from('haema_chat_messages')
+        .select('*')
+        .eq('product_id', productId)
+        .order('created_at', { ascending: true });
+        
+    const container = document.getElementById('chat-messages-container');
+    container.innerHTML = '';
+    
+    if(!error && data && data.length > 0) {
+        data.forEach(msg => appendMessageUI(msg));
+    } else {
+        container.innerHTML = '<div style="text-align:center; padding: 30px 20px; font-size:13px; color:#aaa;" id="empty-chat-msg">이 매물에 대한 첫 인사를 건네보세요! 👋</div>';
+    }
+    setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
+}
+
+function appendMessageUI(msg) {
+    const container = document.getElementById('chat-messages-container');
+    const emptyMsg = document.getElementById('empty-chat-msg');
+    if(emptyMsg) emptyMsg.remove();
+    
+    const isMine = msg.sender_id === currentUser.id;
+    const timeStr = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    
+    let html = '';
+    if(isMine) {
+        html = `<div class="msg mine"><div><div class="msg-bubble mine">${msg.content}</div></div><span class="msg-time" style="font-size:10px; color:#999;">${timeStr}</span></div>`;
+    } else {
+        html = `<div class="msg"><div class="msg-avatar" style="background:#EAEDF2; color:#7A93B0; width:30px; height:30px; font-size:12px; display:flex; align-items:center; justify-content:center; border-radius:50%;">👤</div><div><div class="msg-bubble theirs">${msg.content}</div></div><span class="msg-time" style="font-size:10px; color:#999;">${timeStr}</span></div>`;
+    }
+    
+    container.innerHTML += html;
+    container.scrollTop = container.scrollHeight;
+}
+
+function subscribeToChat(productId) {
+    if(currentChatSubscription) {
+        supabaseClient.removeChannel(currentChatSubscription);
+    }
+    
+    currentChatSubscription = supabaseClient
+      .channel('chat_room_' + productId)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'haema_chat_messages', filter: `product_id=eq.${productId}` }, payload => {
+          const newMsg = payload.new;
+          if(newMsg.sender_id !== currentUser.id) {
+              appendMessageUI(newMsg);
+          }
+      })
+      .subscribe();
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chat-input-text');
+    const txt = input.value.trim();
+    if(!txt || !currentChatProduct || !currentUser) return;
+    
+    input.value = '';
+    
+    const localMsg = {
+        sender_id: currentUser.id,
+        content: txt,
+        created_at: new Date().toISOString()
+    };
+    appendMessageUI(localMsg);
+    
+    const receiverId = currentChatProduct.seller_id || null;
+    
+    const { error } = await supabaseClient.from('haema_chat_messages').insert([{
+        product_id: currentChatProduct.id,
+        sender_id: currentUser.id,
+        receiver_id: receiverId,
+        content: txt
+    }]);
+    
+    if(error) {
+        console.error("Chat send error:", error);
+    }
+}
