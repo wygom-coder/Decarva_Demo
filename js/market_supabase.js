@@ -45,10 +45,18 @@ function triggerBottomNav(tab) {
 function showChatRoom() {
   document.getElementById('chat-list').style.display = 'none';
   document.getElementById('chatroom').style.display = 'flex';
+  
+  // Custom KakaoTalk style full screen
+  const fab = document.querySelector('.fab-container');
+  if(fab) fab.style.display = 'none';
 }
+
 function hideChatRoom() {
   document.getElementById('chat-list').style.display = 'block';
   document.getElementById('chatroom').style.display = 'none';
+  
+  const fab = document.querySelector('.fab-container');
+  if(fab) fab.style.display = 'flex';
 }
 
 // ==== Supabase 연동 & 상태 관리 데이터 ====
