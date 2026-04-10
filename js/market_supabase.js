@@ -274,7 +274,7 @@ async function fetchProducts() {
 // 판매자 실 DB 매물 등록
 async function registerProduct() {
   const cat = document.querySelector('#page-register .form-select').value;
-  const title = document.querySelector('#page-register .form-input[placeholder*="상품명"]').value;
+  const title = document.getElementById('title-input').value;
   let tradeType = '직거래';
   document.querySelectorAll('#page-register .trade-chip').forEach(c => {
       if(c.classList.contains('on')) tradeType = c.textContent.trim();
@@ -330,8 +330,8 @@ async function registerProduct() {
   }
 
   // 폼 초기화
-  document.querySelector('#page-register .form-input[placeholder*="상품명"]').value = '';
-  document.querySelector('#page-register .form-input[placeholder*="가격"]').value = '';
+  document.getElementById('title-input').value = '';
+  document.getElementById('price-input').value = '';
   
   alert('매물이 성공적으로 DB에 등록되었습니다!');
   
