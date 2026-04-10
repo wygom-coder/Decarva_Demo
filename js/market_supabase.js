@@ -1,9 +1,21 @@
-function showPage(id) {
+function showPage(id, pushHistory = true) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const targetPage = document.getElementById('page-' + id);
   if(targetPage) targetPage.classList.add('active');
   window.scrollTo({top:0, behavior:'smooth'});
+  if(pushHistory) {
+    window.history.pushState({ pageId: id }, '', '#' + id);
+  }
 }
+
+// 브라우저 뒤로가기 버튼 활성화 (popstate 이벤트)
+window.addEventListener('popstate', (e) => {
+    if(e.state && e.state.pageId) {
+        showPage(e.state.pageId, false);
+    } else {
+        showPage('home', false);
+    }
+});
 
 function triggerBottomNav(tab) {
   // Update Tab UI
@@ -873,7 +885,7 @@ function showMyList() {
                 <div style="font-size:30px; margin-bottom:12px;">🛳️</div>
                 <div>아직 등록하신 판매 매물이 없습니다.</div>
                 <div style="margin-top:16px;">
-                    <button onclick="triggerBottomNav('home')" style="padding: 8px 16px; background:var(--blue-50); color:var(--blue-800); border:1px solid var(--blue-200); border-radius:8px; cursor:pointer; font-weight:700;">첫 판매글 올리러 가기</button>
+                    <button onclick="requireAuthAndShow('register')" style="padding: 8px 16px; background:var(--blue-50); color:var(--blue-800); border:1px solid var(--blue-200); border-radius:8px; cursor:pointer; font-weight:700;">첫 판매글 올리러 가기</button>
                 </div>
             </div>`;
         return;
@@ -1137,7 +1149,7 @@ async function verifyGPSLocation() {
             }
             
             if(isMatch) {
-                alert(`✅ 인증 완료! 현재 접속 위치가 [${geoRegion}]로 확인되었습니다.`);
+                alert(`현재 접속 위치가 [${geoRegion}]로 확인되었습니다.`);
                 tempVerifiedRegion = selectedRegion;
                 btn.textContent = "✓ 인증 완료";
                 btn.style.background = "#E6F4EA";
@@ -1145,7 +1157,7 @@ async function verifyGPSLocation() {
                 btn.style.borderColor = "#1E8E3E";
                 selector.disabled = true; // 락킹
             } else {
-                alert(`❌ 인증 실패! 선택 지역(${selectedRegion})과 현재 위치(${geoRegion})가 다릅니다.`);
+                alert(`선택 지역(${selectedRegion})과 현재 위치(${geoRegion})가 다릅니다.`);
                 btn.textContent = "📍 다시 인증하기";
                 btn.disabled = false;
             }
