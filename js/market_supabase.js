@@ -199,17 +199,15 @@ async function submitAuth() {
     switchAuthMode(authMode);
 }
 
-// 로그아웃 버튼 연결
-document.addEventListener('DOMContentLoaded', () => {
-    const logoutBtn = document.querySelector('.logout-btn');
-    if(logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-            await supabaseClient.auth.signOut();
-            alert('로그아웃 되었습니다.');
-            showPage('home');
-        });
+// 전역 로그아웃 함수
+window.doLogout = async function() {
+    if(confirm("정말 로그아웃 하시겠습니까?")) {
+        await supabaseClient.auth.signOut();
+        alert('로그아웃 되었습니다.');
+        showPage('home');
+        // 로그아웃 후 UI 초기화 등 필요한 경우 여기서 추가
     }
-});
+};
 
 
 let filterState = {
