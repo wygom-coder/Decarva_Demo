@@ -1181,16 +1181,19 @@ function openBusinessAuth() {
     
     const isBiz = currentUser.user_metadata?.is_business;
     const bizNum = currentUser.user_metadata?.biz_number;
+    const bizName = currentUser.user_metadata?.biz_name;
     
     const formBox = document.getElementById('biz-auth-form');
     const authDesc = document.getElementById('biz-auth-desc');
     const verifiedBox = document.getElementById('biz-auth-verified');
     const numDisplay = document.getElementById('biz-verified-number');
+    const nameDisplay = document.getElementById('biz-verified-name');
     
     if(isBiz && bizNum) {
         if(formBox) formBox.style.display = 'none';
         if(authDesc) authDesc.style.display = 'none';
         if(verifiedBox) verifiedBox.style.display = 'block';
+        if(nameDisplay) nameDisplay.textContent = bizName ? bizName : "인증된 해마마켓 기업";
         if(numDisplay) {
             // 안심 마스킹 처리 (예: 123-45-67890 -> 123-45-***** )
             const raw = bizNum.replace(/[^0-9]/g, '');
@@ -1207,8 +1210,15 @@ function openBusinessAuth() {
 async function submitBusinessAuth() {
     if(!currentUser) return;
     
+    const nameEl = document.getElementById('biz-name-input');
     const inputEl = document.getElementById('biz-number-input');
+    const nameVal = nameEl ? nameEl.value.trim() : "";
     const val = inputEl.value.trim();
+    
+    if(!nameVal) {
+        alert("국세청 검증을 위해 상호명(기업명)을 먼저 입력해주세요.");
+        return;
+    }
     
     if(val.length !== 10) {
         alert("하이픈(-)을 분리한 온전한 10자리 사업자등록번호를 입력해주세요.");
@@ -1239,16 +1249,17 @@ async function submitBusinessAuth() {
             if(bizData.b_stt_cd === "01") { 
                 // DB 업데이트 성공
                 const { data, error } = await supabaseClient.auth.updateUser({
-                    data: { is_business: true, biz_number: val }
+                    data: { is_business: true, biz_number: val, biz_name: nameVal }
                 });
                 
                 if(error) throw new Error("서버 프로필 업데이트 에러");
                 
-                alert(`🏢 사업자 인증 성공! [${bizData.tax_type}] 상태의 정상적인 계속사업자임이 확인되었습니다. B2B 신뢰 기업 등급이 부여됩니다!`);
+                alert(`🏢 사업자 인증 성공! [${nameVal}] 기업은 [${bizData.tax_type}] 상태의 정상적인 계속사업자임이 확인되었습니다.`);
                 currentUser = data.user;
                 updateProfileUI(); // Reload UI
                 showPage('mypage');
-                inputEl.value = ""; // Clear input
+                if(inputEl) inputEl.value = "";
+                if(nameEl) nameEl.value = "";
             } else if (bizData.b_stt_cd === "02" || bizData.b_stt_cd === "03") {
                 alert(`❌ 인증 거부: 현재 국세청에 [${bizData.b_stt}] 상태로 조회되어 거래 인증이 불가합니다.`);
             } else {
