@@ -458,8 +458,12 @@ function openProductModal(id) {
             </div>
         </div>
         
+        <div style="margin-top:20px; white-space:pre-wrap; font-size:14px; color:#1A2B4A; line-height:1.6;">${p.content}</div>
         ${actionArea}
     `;
+    
+    // 모달이 열리면 현재 사용자가 찜했는지 검사
+    checkLikeStatus(p.id);
 }
 
 function closeProductModal() {
