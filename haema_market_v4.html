@@ -30,10 +30,10 @@
       <input type="text" id="search-input" placeholder="선박 엔진, 앵커, 레이더 등 검색">
     </div>
     <div class="header-nav">
-      <a href="#">판매하기</a>
-      <a href="#">경매</a>
-      <button class="btn-login">로그인</button>
-      <button class="btn-sell">+ 등록</button>
+      <a href="#" onclick="applySubFilter('tradeType', '경매'); event.preventDefault();">경매장</a>
+      <button class="btn-login" id="header-btn-login" onclick="showPage('login')">로그인</button>
+      <button class="btn-login" id="header-btn-mypage" onclick="showPage('mypage')" style="display:none; background:var(--blue-100); color:var(--blue-800); border:none;">마이페이지</button>
+      <button class="btn-sell" onclick="requireAuthAndShow('register')">+ 등록</button>
     </div>
   </div>
 

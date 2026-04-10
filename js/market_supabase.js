@@ -85,12 +85,24 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         if(loginPage && loginPage.classList.contains('active')) {
             showPage('home');
         }
+        
+        // Header Nav buttons
+        const topLoginBtn = document.getElementById('header-btn-login');
+        const topMypageBtn = document.getElementById('header-btn-mypage');
+        if(topLoginBtn) topLoginBtn.style.display = 'none';
+        if(topMypageBtn) topMypageBtn.style.display = 'inline-block';
     } else {
         // Logged out
         const myNameEl = document.querySelector('.my-name');
         const myEmailEl = document.querySelector('.my-sub');
         if (myNameEl) myNameEl.textContent = '로그인이 필요합니다';
         if (myEmailEl) myEmailEl.innerHTML = '비회원';
+        
+        // Header Nav buttons
+        const topLoginBtn = document.getElementById('header-btn-login');
+        const topMypageBtn = document.getElementById('header-btn-mypage');
+        if(topLoginBtn) topLoginBtn.style.display = 'inline-block';
+        if(topMypageBtn) topMypageBtn.style.display = 'none';
     }
 });
 
