@@ -20,6 +20,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let products = [];
 let auctionInterval = null;
+let uploadedBase64 = null;
 const mockProducts = [
   { id: 1, title: 'MAN B&W 엔진 부품', sub: '부산 · 2024.03', price: '₩ 4,500,000', category: '엔진·동력', tradeType: '직거래', region: '부산', condition: '양호', cert: '전체', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#3A90D9" stroke-width="1.5"/><path d="M16 20v-6a8 8 0 0116 0v6" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="29" r="3" fill="#3A90D9"/></svg>' },
   { id: 2, title: 'JRC 레이더 시스템', sub: '인천 · 2022.11', price: '₩ 8,200,000', category: '항법장비', tradeType: '경매', region: '인천', condition: '최상', cert: 'KR', auth: false, auction: true, remain: '14:32 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="4" fill="#D4960A"/><line x1="24" y1="12" x2="24" y2="8" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="36" y1="24" x2="40" y2="24" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
@@ -310,7 +311,7 @@ async function registerProduct() {
     auth: true, 
     auction: isAuction,
     offer: false,
-    svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M14 20v-4a10 10 0 0120 0v4" stroke="#D4960A" stroke-width="1.5"/></svg>'
+    svg: uploadedBase64 ? `<img src="${uploadedBase64}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">` : '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M14 20v-4a10 10 0 0120 0v4" stroke="#D4960A" stroke-width="1.5"/></svg>'
   };
 
   if(isAuction) {
@@ -332,6 +333,12 @@ async function registerProduct() {
   // 폼 초기화
   document.getElementById('title-input').value = '';
   document.getElementById('price-input').value = '';
+  uploadedBase64 = null;
+  const mainBox = document.getElementById('photo-box-main');
+  if(mainBox) {
+      mainBox.style.backgroundImage = 'none';
+      mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
+  }
   
   alert('매물이 성공적으로 DB에 등록되었습니다!');
   
@@ -423,6 +430,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
+        // 매물 사진 업로드 (Base64 변환)
+    const photoInput = document.getElementById('photo-upload-input');
+    if(photoInput) {
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 400;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    uploadedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                    
+                    const mainBox = document.getElementById('photo-box-main');
+                    mainBox.style.backgroundImage = `url(${uploadedBase64})`;
+                    mainBox.innerHTML = '';
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
     // 매물 등록 버튼 리스너
     const submitBtn = document.querySelector('#page-register .submit-btn');
     if(submitBtn) {
