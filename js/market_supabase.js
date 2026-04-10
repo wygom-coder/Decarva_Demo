@@ -893,6 +893,33 @@ function updateProfileUI() {
         const pAv = document.getElementById('profile-avatar');
         if(pAv) pAv.textContent = "👤";
         const rBadge = document.getElementById('profile-region-badge');
+        if(rBadge) rBadge.style.display = 'none';
+        return;
+    }
+    
+    const email = currentUser.email;
+    const metaName = currentUser.user_metadata?.display_name;
+    const metaBio = currentUser.user_metadata?.bio;
+    const metaRegion = currentUser.user_metadata?.region;
+    const isVerified = currentUser.user_metadata?.is_region_verified;
+    const isBiz = currentUser.user_metadata?.is_business;
+    
+    const nameStr = metaName ? metaName : email.split('@')[0];
+    const firstChar = nameStr.charAt(0).toUpperCase();
+    
+    const pName = document.getElementById('profile-name');
+    if(pName) pName.textContent = nameStr; 
+    
+    const pEmail = document.getElementById('profile-email');
+    if(pEmail) pEmail.textContent = metaBio ? metaBio : email;
+    
+    const sEmail = document.getElementById('settings-email');
+    if(sEmail) sEmail.textContent = email;
+    
+    const pAv = document.getElementById('profile-avatar');
+    if(pAv) pAv.textContent = firstChar;
+    
+    const rBadge = document.getElementById('profile-region-badge');
     if(rBadge) {
         rBadge.style.display = 'inline-flex';
         if(metaRegion && isVerified) {
@@ -911,7 +938,6 @@ function updateProfileUI() {
     }
     
     // 사업자 뱃지 연동
-    const isBiz = currentUser.user_metadata?.is_business;
     const bBadge = document.getElementById('profile-biz-badge');
     const bStatus = document.getElementById('biz-auth-status');
     if(bBadge) {
