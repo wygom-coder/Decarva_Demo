@@ -1175,6 +1175,35 @@ async function verifyGPSLocation() {
 
 
 // ==== 사업자 인증 로직 ====
+function openBusinessAuth() {
+    showPage('business-auth');
+    if(!currentUser) return;
+    
+    const isBiz = currentUser.user_metadata?.is_business;
+    const bizNum = currentUser.user_metadata?.biz_number;
+    
+    const formBox = document.getElementById('biz-auth-form');
+    const authDesc = document.getElementById('biz-auth-desc');
+    const verifiedBox = document.getElementById('biz-auth-verified');
+    const numDisplay = document.getElementById('biz-verified-number');
+    
+    if(isBiz && bizNum) {
+        if(formBox) formBox.style.display = 'none';
+        if(authDesc) authDesc.style.display = 'none';
+        if(verifiedBox) verifiedBox.style.display = 'block';
+        if(numDisplay) {
+            // 안심 마스킹 처리 (예: 123-45-67890 -> 123-45-***** )
+            const raw = bizNum.replace(/[^0-9]/g, '');
+            if(raw.length === 10) numDisplay.textContent = raw.substring(0,3) + "-" + raw.substring(3,5) + "-*****";
+            else numDisplay.textContent = bizNum;
+        }
+    } else {
+        if(formBox) formBox.style.display = 'block';
+        if(authDesc) authDesc.style.display = 'block';
+        if(verifiedBox) verifiedBox.style.display = 'none';
+    }
+}
+
 async function submitBusinessAuth() {
     if(!currentUser) return;
     
