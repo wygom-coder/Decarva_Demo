@@ -438,8 +438,9 @@ function openProductModal(id) {
     }
     
     body.innerHTML = `
-        <div style="width:100%; aspect-ratio:4/3; background:#f4f4f4; border-radius:12px; overflow:hidden; margin-bottom:16px;">
+        <div style="width:100%; aspect-ratio:4/3; background:#f4f4f4; border-radius:12px; overflow:hidden; margin-bottom:16px; position:relative;">
             ${p.svg}
+            <div id="modal-heart-btn" onclick="toggleLike('${p.id}')" style="position:absolute; bottom:12px; right:12px; width:40px; height:40px; background:rgba(255,255,255,0.9); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1); transition:transform 0.1s;">🤍</div>
         </div>
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
             <div style="background:#EAEDF2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#7A93B0;">${p.tradeType}</div>
@@ -1148,7 +1149,35 @@ function updateProfileUI() {
             bBadge.style.color = "#7A93B0";
             if(bStatus) bStatus.style.display = "none";
         }
+        }
     }
+    
+    // 매너온도 비동기 로드
+    fetchAndRenderMannerTemp();
+}
+
+async function fetchAndRenderMannerTemp() {
+    if(!currentUser) return;
+    
+    const { data, error } = await supabaseClient
+        .from('haema_reviews')
+        .select('score')
+        .eq('reviewee_id', currentUser.id);
+        
+    let baseTemp = 36.5;
+    if(data && !error) {
+        let sum = 0;
+        data.forEach(r => sum += (r.score * 0.5)); // +1은 +0.5도, -1은 -0.5도
+        baseTemp += sum;
+    }
+    
+    if(baseTemp < 0) baseTemp = 0;
+    if(baseTemp > 99) baseTemp = 99;
+    
+    const txt = document.getElementById('manner-temp-text');
+    const bar = document.getElementById('manner-temp-bar');
+    if(txt) txt.textContent = baseTemp.toFixed(1) + "°C";
+    if(bar) bar.style.width = baseTemp + "%";
 }
 
 
@@ -1623,6 +1652,26 @@ async function openChatRoom(roomId, pData) {
     const msgContainer = document.getElementById('chat-messages-container');
     msgContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:12px;">메시지 로딩중...</div>';
     
+    // 1. 거래완료 버튼 분기 로직 (매너온도 후기용)
+    const tradeBtn = document.getElementById('chat-trade-btn');
+    if (pData) {
+        if (pData.is_closed) {
+            tradeBtn.textContent = '후기 남기기';
+            tradeBtn.style.background = '#EAEDF2';
+            tradeBtn.style.color = '#7A93B0';
+            tradeBtn.onclick = () => openReviewModal(pData.id, pData.user_id === currentUser.id ? pData.highest_bidder_id || roomId /* fallback */ : pData.user_id);
+        } else {
+            if (pData.user_id === currentUser.id) {
+                tradeBtn.textContent = '거래완료';
+                tradeBtn.style.background = '#f4f9ff';
+                tradeBtn.style.color = '#1a5fa0';
+                tradeBtn.onclick = () => completeTransaction(pData.id, roomId);
+            } else {
+                tradeBtn.style.display = 'none'; // 구매자는 완료 전엔 버튼 숨김
+            }
+        }
+    }
+    
     // 1. 기존 메시지 로드
     const { data: messages, error } = await supabaseClient
         .from('haema_messages')
@@ -1752,3 +1801,161 @@ window.hideChatRoom = function() {
     // 리스트 다시 로드시켜 최신 메시지 반영
     loadChats();
 };
+
+// ----------------------------------------
+// [관심 목록 (찜하기) 로직]
+// ----------------------------------------
+async function toggleLike(productId) {
+    if(!currentUser) {
+        alert('로그인 후 이용 가능합니다.');
+        return;
+    }
+    
+    const btn = document.getElementById('modal-heart-btn');
+    if(!btn) return;
+    
+    btn.style.transform = 'scale(0.8)';
+    setTimeout(() => btn.style.transform = 'scale(1)', 100);
+    
+    // 현재 상태 확인
+    const { data: existing, error: err } = await supabaseClient
+        .from('haema_likes')
+        .select('*')
+        .eq('product_id', productId)
+        .eq('user_id', currentUser.id)
+        .single();
+        
+    if(existing) {
+        // 취소
+        await supabaseClient.from('haema_likes').delete().eq('id', existing.id);
+        btn.textContent = '🤍';
+    } else {
+        // 찜
+        await supabaseClient.from('haema_likes').insert({ product_id: productId, user_id: currentUser.id });
+        btn.textContent = '❤️';
+    }
+}
+
+async function checkLikeStatus(productId) {
+    if(!currentUser || String(productId).startsWith('p')) return;
+    const { data } = await supabaseClient.from('haema_likes').select('id').eq('product_id', productId).eq('user_id', currentUser.id).single();
+    const btn = document.getElementById('modal-heart-btn');
+    if(btn) {
+        btn.textContent = data ? '❤️' : '🤍';
+    }
+}
+
+async function loadLikedProducts() {
+    triggerBottomNav('mypage'); // 탭 이동
+    openMyListCommon("내 관심 목록 (찜)");
+    
+    // haema_likes와 haema_products 조인 (Supabase View나 RPC 없이 클라이언트 사이드로 처리)
+    const { data: likes, error } = await supabaseClient
+        .from('haema_likes')
+        .select('product_id')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
+        
+    if(error || !likes || likes.length === 0) {
+        document.getElementById('mylist-container').innerHTML = '<div style="padding:40px; text-align:center; color:#999; font-size:13px;">찜한 상품이 없습니다.</div>';
+        return;
+    }
+    
+    const pIds = likes.map(l => l.product_id);
+    const { data: pData } = await supabaseClient.from('haema_products').select('*').in('id', pIds);
+    
+    // 최신순 유지
+    const sortedProducts = pIds.map(id => pData.find(x => x.id === id)).filter(Boolean);
+    
+    const container = document.getElementById('mylist-container');
+    container.innerHTML = '';
+    
+    sortedProducts.forEach((p, idx) => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.style.cursor = 'pointer';
+        card.onclick = () => openProductModal(p.id);
+        
+        card.innerHTML = `
+          <div class="product-img" style="position:relative;">
+             ${p.svg}
+             <div style="position:absolute; bottom:8px; right:8px; font-size:12px;">❤️</div>
+          </div>
+          <div class="product-body">
+            <div class="product-title">${p.title}</div>
+             <div class="product-price">${p.price}</div>
+          </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function openMyListCommon(titleText) {
+    document.getElementById('page-mylist').style.display = 'block';
+    const subTitle = document.querySelector('#page-mylist .sub-title');
+    if(subTitle) subTitle.textContent = titleText;
+    document.getElementById('mylist-container').innerHTML = '<div style="padding:40px; text-align:center; color:#999; font-size:13px;">로딩 중...</div>';
+}
+
+// ----------------------------------------
+// [매너온도 (거래 후기) 로직]
+// ----------------------------------------
+let activeReviewProductId = null;
+let activeReviewTargetId = null;
+
+async function completeTransaction(productId, roomId) {
+    if(!confirm("정말 이 방의 유저와 거래를 완료하시겠습니까? 거래가 마감 처리됩니다.")) return;
+    
+    const p = products.find(x => x.id === productId);
+    if(!p) return;
+    
+    // 판매자가 누른 경우만
+    const { data: roomData } = await supabaseClient.from('haema_chat_rooms').select('buyer_id').eq('id', roomId).single();
+    if(!roomData) return;
+    const buyerId = roomData.buyer_id;
+    
+    // 상품 마감 처리
+    await supabaseClient.from('haema_products').update({ is_closed: true, highest_bidder_id: buyerId }).eq('id', productId);
+    
+    p.is_closed = true;
+    document.getElementById('chat-trade-btn').textContent = '후기 남기기';
+    document.getElementById('chat-trade-btn').onclick = () => openReviewModal(productId, buyerId);
+    
+    // 바로 리뷰 띄우기
+    openReviewModal(productId, buyerId);
+}
+
+function openReviewModal(productId, targetUserId) {
+    activeReviewProductId = productId;
+    activeReviewTargetId = targetUserId;
+    if(document.getElementById('review-content')) document.getElementById('review-content').value = '';
+    document.getElementById('review-modal').style.display = 'flex';
+}
+
+async function submitReview(score) {
+    if(!activeReviewProductId || !activeReviewTargetId) return;
+    
+    const content = document.getElementById('review-content') ? document.getElementById('review-content').value.trim() : '';
+    
+    const obj = {
+        product_id: activeReviewProductId,
+        reviewer_id: currentUser.id,
+        reviewee_id: activeReviewTargetId,
+        score: score,
+        content: content
+    };
+    
+    const { error } = await supabaseClient.from('haema_reviews').insert(obj);
+    if(error) {
+        if(error.code === '23505') {
+            alert('이미 이 거래에 대해 후기를 남기셨습니다!');
+        } else {
+            console.error(error);
+            alert('후기 등록 중 오류가 발생했습니다.');
+        }
+    } else {
+        alert('소중한 후기가 등록되었습니다. 매너온도에 반영됩니다!');
+    }
+    
+    document.getElementById('review-modal').style.display = 'none';
+}

@@ -156,7 +156,7 @@
   <div class="chatroom" id="chatroom" style="display:none;">
     
     <div class="chatroom-header"><span class="back-btn" onclick="hideChatRoom()">‹</span><span id="chat-receiver-name" style="font-size:15px;font-weight:700;color:#1A2B4A;flex:1;">판매자와 채팅</span></div>
-    <div class="chatroom-product" id="chat-product-bar" style="display:flex; border-bottom:1px solid #eee; padding:12px 16px; align-items:center; gap:12px; background:#fff;"><div class="cp-img" id="chat-product-img" style="width:40px;height:40px;overflow:hidden;border-radius:4px;background:#f4f9ff;"></div><div style="flex:1;"><div class="cp-title" id="chat-product-title" style="font-size:13px;font-weight:600;color:#1a2b4a;"></div><div class="cp-price" id="chat-product-price" style="font-size:14px;font-weight:700;color:#1a5fa0;"></div></div><button class="cp-btn" style="background:#f4f9ff; color:#1a5fa0; border:none;">거래완료</button></div>
+    <div class="chatroom-product" id="chat-product-bar" style="display:flex; border-bottom:1px solid #eee; padding:12px 16px; align-items:center; gap:12px; background:#fff;"><div class="cp-img" id="chat-product-img" style="width:40px;height:40px;overflow:hidden;border-radius:4px;background:#f4f9ff;"></div><div style="flex:1;"><div class="cp-title" id="chat-product-title" style="font-size:13px;font-weight:600;color:#1a2b4a;"></div><div class="cp-price" id="chat-product-price" style="font-size:14px;font-weight:700;color:#1a5fa0;"></div></div><button id="chat-trade-btn" class="cp-btn" style="background:#f4f9ff; color:#1a5fa0; border:none; border-radius:6px; padding:6px 12px; font-weight:700; cursor:pointer;">거래완료</button></div>
     <div class="chat-messages" id="chat-messages-container" style="flex:1; overflow-y:auto; padding:16px;">
       <!-- 동적 메시지 영역 -->
     </div>
@@ -171,13 +171,25 @@
 <div class="wrap">
   <div class="sub-header"><span class="sub-title">마이페이지</span><span class="sub-action" onclick="showPage('settings')">설정</span></div>
   <div>
-    <div class="my-profile"><div class="my-avatar" id="profile-avatar">👤</div><div><div style="display:flex; align-items:center;"><div class="my-name" id="profile-name">해마 유저</div><span id="profile-rating" style="margin-left: 6px; font-size: 13px; font-weight:700; color:#D4960A;">⭐️ 4.9</span><div id="profile-region-badge" style="display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; background:#EAEDF2; color:#7A93B0;">📍 미설정</div></div><div class="my-sub" id="profile-email">이메일 정보 없음</div><div class="my-badge" id="profile-biz-badge">일반 회원</div></div><button class="my-edit-btn" onclick="openProfileEdit()">편집</button></div>
-    <div class="my-stats"><div class="stat-item"><span class="stat-num">24</span><span class="stat-label">판매완료</span></div><div class="stat-item" onclick="showPage('mylist')" style="cursor:pointer;"><span class="stat-num">3</span><span class="stat-label">판매중</span></div><div class="stat-item"><span class="stat-num">4.9</span><span class="stat-label">거래 평점</span></div></div>
+    <div class="my-profile"><div class="my-avatar" id="profile-avatar">👤</div><div><div style="display:flex; align-items:center;"><div class="my-name" id="profile-name">해마 유저</div><div id="profile-region-badge" style="display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; background:#EAEDF2; color:#7A93B0;">📍 미설정</div></div><div class="my-sub" id="profile-email">이메일 정보 없음</div><div class="my-badge" id="profile-biz-badge">일반 회원</div></div><button class="my-edit-btn" onclick="openProfileEdit()">편집</button></div>
+    
+    <!-- 매너온도 섹션 -->
+    <div class="manner-temp-box" style="padding:16px 20px; background:#fff; border-bottom:8px solid #f4f9ff;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-size:13px; font-weight:700; color:#1A2B4A; text-decoration:underline;">매너온도</span>
+        <span id="manner-temp-text" style="font-size:22px; font-weight:800; color:#1A5FA0;">36.5°C</span>
+      </div>
+      <div style="width:100%; height:8px; background:#EAEDF2; border-radius:4px; overflow:hidden;">
+        <div id="manner-temp-bar" style="width:36.5%; height:100%; background:#1A5FA0; border-radius:4px; transition:width 0.8s ease-in-out;"></div>
+      </div>
+    </div>
+    
+    <div class="my-stats" style="border-top:none;"><div class="stat-item"><span class="stat-num">24</span><span class="stat-label">판매완료</span></div><div class="stat-item" onclick="showPage('mylist')" style="cursor:pointer;"><span class="stat-num">3</span><span class="stat-label">판매중</span></div><div class="stat-item"><span class="stat-num">4.9</span><span class="stat-label">거래 평점</span></div></div>
     <div class="my-menu-section">
       <div class="my-menu-title">나의 거래</div>
       <div class="my-menu-item" onclick="showMyList()"><div class="menu-icon" style="background:#DAEEFF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="5" width="14" height="10" rx="2" stroke="#1A5FA0" stroke-width="1.2"/><path d="M5 5V4a4 4 0 018 0v1" stroke="#1A5FA0" stroke-width="1.2" stroke-linecap="round"/></svg></div><span class="menu-text">판매 목록</span><span class="menu-arrow">›</span></div>
       <div class="my-menu-item" onclick="triggerBottomNav('auction')"><div class="menu-icon" style="background:#FFF3C0;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l1.8 5.4H17l-4.5 3.3 1.7 5.3L9 13l-4.2 3 1.7-5.3L2 7.4h5.2L9 2z" stroke="#D4960A" stroke-width="1.1" stroke-linejoin="round"/></svg></div><span class="menu-text">경매 참여 내역</span><span class="menu-arrow">›</span></div>
-      <div class="my-menu-item" onclick="alert('관심 목록은 개발 예정입니다.');"><div class="menu-icon" style="background:#DAEEFF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 15s-7-4.5-7-9a7 7 0 0114 0c0 4.5-7 9-7 9z" stroke="#1A5FA0" stroke-width="1.2"/><circle cx="9" cy="6" r="2" stroke="#1A5FA0" stroke-width="1.2"/></svg></div><span class="menu-text">관심 목록</span><span class="menu-arrow">›</span></div>
+      <div class="my-menu-item" onclick="loadLikedProducts()"><div class="menu-icon" style="background:#FFF0F5;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 15s-7-4.5-7-9a7 7 0 0114 0c0 4.5-7 9-7 9z" stroke="#D81B60" stroke-width="1.2" fill="#FFE0EB"/><circle cx="9" cy="6" r="2" stroke="#D81B60" stroke-width="1.2"/></svg></div><span class="menu-text">관심 목록 (찜)</span><span class="menu-arrow">›</span></div>
       <div class="my-menu-item" onclick="loadChats()"><div class="menu-icon" style="background:#FFF3C0;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4h14v9a2 2 0 01-2 2H4a2 2 0 01-2-2V4z" stroke="#D4960A" stroke-width="1.2"/><path d="M2 4l7 6 7-6" stroke="#D4960A" stroke-width="1.2"/></svg></div><span class="menu-text">채팅</span><span class="menu-badge-red" id="chat-badge" style="display:none;">N</span><span class="menu-arrow" style="margin-left:6px;">›</span></div>
     </div>
     <div class="my-menu-section">
@@ -463,6 +475,20 @@
   <button class="fab-btn fab-register" onclick="requireAuthAndShow('register')" title="매물 등록">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
   </button>
+</div>
+
+<!-- 평가 남기기 모달 -->
+<div id="review-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+  <div class="modal-box" style="width:320px; background:#fff; border-radius:16px; padding:24px; text-align:center;">
+    <h3 style="margin-top:0; color:#1A2B4A; font-size:18px;">거래 후기 남기기</h3>
+    <p style="font-size:13px; color:#7A93B0; line-height:1.4;">상대방과의 거래는 어떠셨나요?<br>이후 사용자들에게 큰 도움이 됩니다!</p>
+    <div style="display:flex; gap:12px; margin:24px 0;">
+      <button onclick="submitReview(1)" style="flex:1; padding:16px 0; border:1px solid #1E8E3E; border-radius:12px; background:#E6F4EA; cursor:pointer;"><div style="font-size:24px;margin-bottom:8px;">😊</div><div style="font-size:12px;font-weight:700;color:#1E8E3E;">최고예요</div></button>
+      <button onclick="submitReview(0)" style="flex:1; padding:16px 0; border:1px solid #eee; border-radius:12px; background:#f9f9f9; cursor:pointer;"><div style="font-size:24px;margin-bottom:8px;">😐</div><div style="font-size:12px;font-weight:700;color:#555;">보통이에요</div></button>
+      <button onclick="submitReview(-1)" style="flex:1; padding:16px 0; border:1px solid #eee; border-radius:12px; background:#f9f9f9; cursor:pointer;"><div style="font-size:24px;margin-bottom:8px;">😞</div><div style="font-size:12px;font-weight:700;color:#555;">별로예요</div></button>
+    </div>
+    <button onclick="document.getElementById('review-modal').style.display='none'" style="width:100%; padding:14px; background:#EAEDF2; color:#7A93B0; font-weight:700; border:none; border-radius:12px; cursor:pointer;">나중에 하기</button>
+  </div>
 </div>
 
 </body>
