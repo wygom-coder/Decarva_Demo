@@ -959,15 +959,15 @@ function updateProfileUI() {
     if(rBadge) {
         rBadge.style.display = 'inline-flex';
         if(metaRegion && isVerified) {
-            rBadge.textContent = "📍 " + metaRegion + " (인증됨)";
+            rBadge.textContent = metaRegion + " (인증됨)";
             rBadge.style.background = "#E6F4EA";
             rBadge.style.color = "#1E8E3E";
         } else if(metaRegion) {
-            rBadge.textContent = "📍 " + metaRegion + " (미인증)";
+            rBadge.textContent = metaRegion + " (미인증)";
             rBadge.style.background = "#FFFBEA";
             rBadge.style.color = "#D4960A";
         } else {
-            rBadge.textContent = "📍 지역 미설정";
+            rBadge.textContent = "지역 미설정";
             rBadge.style.background = "#EAEDF2";
             rBadge.style.color = "#7A93B0";
         }
@@ -1002,7 +1002,7 @@ function openProfileEdit() {
     // 리셋
     tempVerifiedRegion = null;
     const btn = document.getElementById('btn-gps-verify');
-    btn.textContent = "📍 내 위치 검증";
+    btn.textContent = "내 위치 검증";
     btn.style.background = "#F4F9FF";
     btn.style.color = "#1A5FA0";
     btn.style.borderColor = "#1A5FA0";
@@ -1119,7 +1119,7 @@ async function verifyGPSLocation() {
         return;
     }
     
-    btn.textContent = "🌍 위성망 렌더링 중...";
+    btn.textContent = "위치 스캔 중...";
     btn.disabled = true;
     
     navigator.geolocation.getCurrentPosition(async (position) => {
@@ -1151,14 +1151,14 @@ async function verifyGPSLocation() {
             if(isMatch) {
                 alert(`현재 접속 위치가 [${geoRegion}]로 확인되었습니다.`);
                 tempVerifiedRegion = selectedRegion;
-                btn.textContent = "✓ 인증 완료";
+                btn.textContent = "위치 확인 완료";
                 btn.style.background = "#E6F4EA";
                 btn.style.color = "#1E8E3E";
                 btn.style.borderColor = "#1E8E3E";
                 selector.disabled = true; // 락킹
             } else {
                 alert(`선택 지역(${selectedRegion})과 현재 위치(${geoRegion})가 다릅니다.`);
-                btn.textContent = "📍 다시 인증하기";
+                btn.textContent = "다시 인증하기";
                 btn.disabled = false;
             }
         } catch(e) {
