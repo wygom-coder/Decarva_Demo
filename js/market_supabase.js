@@ -895,9 +895,10 @@ function updateProfileUI() {
         return;
     }
     
-    // 이메일 파싱보다 user_metadata.display_name 이 최우선
+// 이메일 파싱보다 user_metadata.display_name 이 최우선
     const email = currentUser.email;
     const metaName = currentUser.user_metadata?.display_name;
+    const metaBio = currentUser.user_metadata?.bio;
     const nameStr = metaName ? metaName : email.split('@')[0];
     
     // 첫 글자로 아바타 이니셜 추출
@@ -907,7 +908,7 @@ function updateProfileUI() {
     if(pName) pName.textContent = nameStr; // '님' 제거, 이름만 깔끔하게
     
     const pEmail = document.getElementById('profile-email');
-    if(pEmail) pEmail.textContent = email;
+    if(pEmail) pEmail.textContent = metaBio ? metaBio : email;
     
     const sEmail = document.getElementById('settings-email');
     if(sEmail) sEmail.textContent = email;
@@ -919,12 +920,30 @@ function updateProfileUI() {
 // ==== 프로필 관련 동작 ====
 function openProfileEdit() {
     if(!currentUser) return;
+    showPage('profile-edit');
     
     const metaName = currentUser.user_metadata?.display_name;
+    const metaBio = currentUser.user_metadata?.bio || '';
+    const nameStr = metaName ? metaName : currentUser.email.split('@')[0];
+    
+    const nameInput = document.getElementById('edit-nickname-input');
+    const bioInput = document.getElementById('edit-bio-input');
+    
+    nameInput.value = nameStr;
+    if(bioInput) bioInput.value = metaBio;
+    
     if(metaName) {
-        alert('닉네임은 최초 1회만 설정 및 변경이 가능합니다. 이미 설정 완료된 닉네임은 안정을 위해 수정할 수 없습니다.');
-        return;
+        nameInput.disabled = true;
+        nameInput.style.backgroundColor = '#EAEDF2';
+        nameInput.style.color = '#7A93B0';
+    } else {
+        nameInput.disabled = false;
+        nameInput.style.backgroundColor = '#fff';
+        nameInput.style.color = '#1A2B4A';
     }
+    
+    document.getElementById('edit-avatar-preview').textContent = nameStr.charAt(0).toUpperCase();
+}
     
     showPage('profile-edit');
     
@@ -936,9 +955,13 @@ function openProfileEdit() {
 
 async function saveProfile() {
     const btn = document.querySelector('#page-profile-edit .submit-btn');
-    const input = document.getElementById('edit-nickname-input').value.trim();
+    const nameInput = document.getElementById('edit-nickname-input');
+    const bioInput = document.getElementById('edit-bio-input');
     
-    if(!input) {
+    const inputName = nameInput.value.trim();
+    const inputBio = bioInput ? bioInput.value.trim() : '';
+    
+    if(!nameInput.disabled && !inputName) {
         alert('닉네임을 입력해주세요.');
         return;
     }
@@ -946,9 +969,14 @@ async function saveProfile() {
     btn.textContent = '저장 중...';
     btn.disabled = true;
     
+    let updatePayload = { bio: inputBio };
+    if(!nameInput.disabled) {
+        updatePayload.display_name = inputName;
+    }
+    
     // Supabase Auth 계정 내부 메타데이터 업데이트 API 통신
     const { data, error } = await supabaseClient.auth.updateUser({
-        data: { display_name: input }
+        data: updatePayload
     });
     
     btn.disabled = false;
