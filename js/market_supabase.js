@@ -1,9 +1,38 @@
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  const ids = ['home','register','chat','mypage','settings'];
-  document.querySelectorAll('.page-nav button').forEach((b,i) => b.classList.toggle('on', ids[i] === id));
+  const targetPage = document.getElementById('page-' + id);
+  if(targetPage) targetPage.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
 }
+
+function triggerBottomNav(tab) {
+  // Update Tab UI
+  document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
+  // Find the exact clicked tab by checking the onclick attribute
+  const clickedTab = Array.from(document.querySelectorAll('.tab-item')).find(btn => btn.getAttribute('onclick').includes(tab));
+  if(clickedTab) clickedTab.classList.add('active');
+
+  // Trigger Logic
+  if(tab === 'home') {
+    showPage('home');
+    resetFilters();
+  } else if(tab === 'search') {
+    showPage('home');
+    const input = document.getElementById('search-input');
+    if(input) {
+      input.focus();
+    }
+  } else if(tab === 'auction') {
+    showPage('home');
+    resetFilters();
+    applySubFilter('tradeType', '경매');
+  } else if(tab === 'chat') {
+    showPage('chat');
+  } else if(tab === 'mypage') {
+    showPage('mypage');
+  }
+}
+
 function showChatRoom() {
   document.getElementById('chat-list').style.display = 'none';
   document.getElementById('chatroom').style.display = 'flex';
@@ -340,7 +369,7 @@ async function registerProduct() {
       mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
   }
   
-  alert('매물이 성공적으로 DB에 등록되었습니다!');
+  alert('매물이 성공적으로 등록되었습니다! 🚀\n(하단 경매 탭에서도 바로 확인하실 수 있습니다.)');
   
   setCategory('전체'); 
   resetFilters();
