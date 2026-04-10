@@ -83,6 +83,7 @@ let authMode = 'signin';
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     currentUser = session ? session.user : null;
+    updateProfileUI();
     if (currentUser) {
         // Logged in UI updates
         const myNameEl = document.querySelector('.my-name');
@@ -822,4 +823,92 @@ async function sendChatMessage() {
     if(error) {
         console.error("Chat send error:", error);
     }
+}
+
+
+// ==== 내가 올린 매물 (판매 목록) 로직 ====
+function showMyList() {
+    if(!currentUser) {
+        alert("로그인이 필요한 기능입니다.");
+        showPage('login');
+        return;
+    }
+    
+    showPage('mylist');
+    
+    const myProducts = products.filter(p => p.seller_id === currentUser.id);
+    const container = document.getElementById('mylist-grid');
+    
+    if(!container) return;
+    container.innerHTML = '';
+    
+    if(myProducts.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: span 3; text-align:center; padding: 40px; color:#aaa; font-size:13px;">
+                <div style="font-size:30px; margin-bottom:12px;">🛳️</div>
+                <div>아직 등록하신 판매 매물이 없습니다.</div>
+                <div style="margin-top:16px;">
+                    <button onclick="triggerBottomNav('home')" style="padding: 8px 16px; background:var(--blue-50); color:var(--blue-800); border:1px solid var(--blue-200); border-radius:8px; cursor:pointer; font-weight:700;">첫 판매글 올리러 가기</button>
+                </div>
+            </div>`;
+        return;
+    }
+    
+    myProducts.forEach((p, idx) => {
+        const adNum = idx + 1;
+        
+        let tagsHtml = '';
+        if(p.auction) {
+            tagsHtml += `<span class="ptag ptag-y" style="background:#1A2B4A; color:#fff;">경매 ${p.bid_count}회</span> `;
+        }
+        if(p.offer) tagsHtml += `<span class="ptag ptag-b">가격제안</span> `;
+        if(!p.auction && !p.offer) tagsHtml += `<span class="ptag" style="background:#EAEDF2; color:#7A93B0;">직거래</span> `;
+
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.style.cursor = 'pointer';
+        card.onclick = () => openProductModal(p.id);
+        
+        card.innerHTML = `
+          <div class="product-img">${p.svg}</div>
+          <div class="product-body">
+            <div class="product-sub">${p.region} · ${p.condition}</div>
+            <div class="product-title">${p.title}</div>
+            <div class="product-price">${p.price}</div>
+            <div class="product-tags">${tagsHtml}</div>
+          </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+
+// ==== 프로필 UI 자동 렌더링 ====
+function updateProfileUI() {
+    if(!currentUser) {
+        // Init to default if logged out
+        const pName = document.getElementById('profile-name');
+        if(pName) pName.textContent = "로그인 해주세요";
+        const pEmail = document.getElementById('profile-email');
+        if(pEmail) pEmail.textContent = "";
+        const pAv = document.getElementById('profile-avatar');
+        if(pAv) pAv.textContent = "👤";
+        return;
+    }
+    
+    const email = currentUser.email;
+    const nameStr = email.split('@')[0]; // simple split for display
+    const firstChar = nameStr.charAt(0).toUpperCase();
+    
+    const pName = document.getElementById('profile-name');
+    if(pName) pName.textContent = nameStr + " 님";
+    
+    const pEmail = document.getElementById('profile-email');
+    if(pEmail) pEmail.textContent = email;
+    
+    const sEmail = document.getElementById('settings-email');
+    if(sEmail) sEmail.textContent = email;
+    
+    const pAv = document.getElementById('profile-avatar');
+    if(pAv) pAv.textContent = firstChar;
 }
