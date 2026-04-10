@@ -29,6 +29,7 @@ const mockProducts = [
 ];
 
 let filterState = {
+  keyword: '',
   category: '전체',
   region: '전체',
   condition: '전체',
@@ -45,6 +46,12 @@ function renderProducts() {
   grid.innerHTML = '';
   
   let filtered = products.filter(p => {
+    // 0. 키워드 매칭
+    if (filterState.keyword) {
+        const kw = filterState.keyword.toLowerCase();
+        const bodyTxt = (p.title + ' ' + (p.category || '')).toLowerCase();
+        if(!bodyTxt.includes(kw)) return false;
+    }
     // 1. 대분류 카테고리 체크
     if (filterState.category !== '전체' && p.category !== filterState.category) return false;
     // 2. 다중 필터 체크
@@ -144,6 +151,7 @@ function applySubFilter(key, val) {
 }
 
 function resetFilters() {
+    filterState.keyword = '';
     filterState.region = '전체';
     filterState.condition = '전체';
     filterState.cert = '전체';
@@ -153,8 +161,10 @@ function resetFilters() {
 
     const minInput = document.getElementById('min-price');
     const maxInput = document.getElementById('max-price');
+    const searchInput = document.getElementById('search-input');
     if(minInput) minInput.value = '';
     if(maxInput) maxInput.value = '';
+    if(searchInput) searchInput.value = '';
 
     // 닫기
     document.querySelector('.filter-panels').classList.remove('show');
@@ -247,6 +257,15 @@ async function registerProduct() {
 document.addEventListener('DOMContentLoaded', () => {
     fetchProducts();
     updateFilterStyles();
+
+    // 키워드 라이브 검색
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            filterState.keyword = e.target.value.trim();
+            renderProducts();
+        });
+    }
 
     // 메뉴 클릭
     document.querySelectorAll('.cat-item').forEach(el => {
