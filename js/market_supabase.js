@@ -1153,9 +1153,8 @@ function updateProfileUI() {
             bBadge.style.color = "#7A93B0";
             if(bStatus) bStatus.style.display = "none";
         }
-        }
     }
-    
+
     // 매너온도 비동기 로드
     fetchAndRenderMannerTemp();
 }
