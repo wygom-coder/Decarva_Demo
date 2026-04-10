@@ -1123,28 +1123,53 @@ async function submitBusinessAuth() {
         return;
     }
     
-    // MVP: 10자리 숫자가 정상적으로 맞으면 인증을 통과시킵니다.
     const btn = document.querySelector('#page-business-auth .submit-btn');
-    btn.textContent = "국세청 인증 통신 중...";
+    btn.textContent = "국세청 Live DB 조회 중...";
     btn.disabled = true;
     
-    // Fake Network delay
-    await new Promise(r => setTimeout(r, 800));
-    
-    const { data, error } = await supabaseClient.auth.updateUser({
-        data: { is_business: true, biz_number: val }
-    });
-    
-    btn.disabled = false;
-    btn.textContent = "국세청 진위 확인 및 인증 (Demo)";
-    
-    if(error) {
-        alert("에러가 발생했습니다. 잠시 후 재시도 해주세요.");
-    } else {
-        alert("🏢 성공적으로 해양/조선 B2B 사업자 인증이 완료되었습니다!");
-        currentUser = data.user;
-        updateProfileUI(); // Reload UI
-        showPage('mypage');
-        inputEl.value = ""; // Clear input
+    try {
+        const apiKey = "1fab7ffc37b6751c35449bc0179057e847708d7b1517791217a048566c385380";
+        const response = await fetch(`https://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ "b_no": [ val ] })
+        });
+        
+        const result = await response.json();
+        
+        if(result && result.data && result.data.length > 0) {
+            const bizData = result.data[0];
+            
+            // 01: 계속사업자, 02: 휴업자, 03: 폐업자
+            if(bizData.b_stt_cd === "01") { 
+                // DB 업데이트 성공
+                const { data, error } = await supabaseClient.auth.updateUser({
+                    data: { is_business: true, biz_number: val }
+                });
+                
+                if(error) throw new Error("서버 프로필 업데이트 에러");
+                
+                alert(`🏢 사업자 인증 성공! [${bizData.tax_type}] 상태의 정상적인 계속사업자임이 확인되었습니다. B2B 신뢰 기업 등급이 부여됩니다!`);
+                currentUser = data.user;
+                updateProfileUI(); // Reload UI
+                showPage('mypage');
+                inputEl.value = ""; // Clear input
+            } else if (bizData.b_stt_cd === "02" || bizData.b_stt_cd === "03") {
+                alert(`❌ 인증 거부: 현재 국세청에 [${bizData.b_stt}] 상태로 조회되어 거래 인증이 불가합니다.`);
+            } else {
+                alert(`❌ 인증 실패: 국세청에 등록되지 않은 허위 사업자등록번호이거나 조회할 수 없습니다. (응답: ${bizData.tax_type})`);
+            }
+        } else {
+            throw new Error("Invalid API Response");
+        }
+    } catch(err) {
+        console.error("NTS API 연동 에러:", err);
+        alert("국세청 서버 장애 또는 통신 에러가 발생했습니다. 잠시 후 시도해주세요.");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "국세청 실시간 진위 확인 (Live)";
     }
 }
