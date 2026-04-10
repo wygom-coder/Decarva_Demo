@@ -86,7 +86,7 @@ body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-s
 .ptag-r { background: #FDECEA; color: #B71C1C; }
 .auction-badge { background: var(--blue-600); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 5px; font-weight: 700; }
 
-.tabbar { background: #fff; border-top: 1px solid var(--border); display: flex; padding: 8px 0 4px; }
+
 .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
 .tab-icon { width: 20px; height: 20px; }
 .tab-label { font-size: 10px; color: var(--text-muted); font-weight: 500; }
