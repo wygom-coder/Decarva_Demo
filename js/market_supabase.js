@@ -8,12 +8,21 @@ function showPage(id) {
 function triggerBottomNav(tab) {
   // Update Tab UI
   document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
-  // Find the exact clicked tab by checking the onclick attribute
   const clickedTab = Array.from(document.querySelectorAll('.tab-item')).find(btn => btn.getAttribute('onclick').includes(tab));
   if(clickedTab) clickedTab.classList.add('active');
 
+  // Guard Logic
+  if(tab === 'chat' || tab === 'mypage') {
+      if(!currentUser) {
+          alert('로그인이 필요한 기능입니다.');
+          showPage('login');
+          return;
+      }
+  }
+
   // Trigger Logic
   if(tab === 'home') {
+
     showPage('home');
     resetFilters();
   } else if(tab === 'search') {
@@ -58,6 +67,115 @@ const mockProducts = [
   { id: 5, title: '구명정 진수장치', sub: '광양 · 2020.04', price: '₩ 5,600,000', category: '안전장비', tradeType: '경매', region: '여수', condition: '양호', cert: '기타선급', auth: false, auction: true, remain: '8:14 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="22" r="8" stroke="#3A90D9" stroke-width="1.5"/><path d="M18 30l-4 8M30 30l4 8" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="38" x2="34" y2="38" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
   { id: 6, title: '선박용 압력계 세트', sub: '목포 · 2023.12', price: '₩ 680,000', category: '전기·계측', tradeType: '직거래', region: '목포', condition: '보통', cert: 'KR', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="12" width="28" height="24" rx="3" stroke="#D4960A" stroke-width="1.5"/><line x1="10" y1="20" x2="38" y2="20" stroke="#D4960A" stroke-width="1.5"/><line x1="24" y1="12" x2="24" y2="36" stroke="#D4960A" stroke-width="1.5"/></svg>' }
 ];
+
+let currentUser = null;
+let authMode = 'signin';
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    currentUser = session ? session.user : null;
+    if (currentUser) {
+        // Logged in UI updates
+        const myNameEl = document.querySelector('.my-name');
+        const myEmailEl = document.querySelector('.my-sub');
+        if (myNameEl) myNameEl.textContent = (currentUser.email ? currentUser.email.split('@')[0] : '유저') + '님';
+        if (myEmailEl) myEmailEl.innerHTML = (currentUser.email || '') + ' · 부산';
+        
+        // Hide login page if visible
+        const loginPage = document.getElementById('page-login');
+        if(loginPage && loginPage.classList.contains('active')) {
+            showPage('home');
+        }
+    } else {
+        // Logged out
+        const myNameEl = document.querySelector('.my-name');
+        const myEmailEl = document.querySelector('.my-sub');
+        if (myNameEl) myNameEl.textContent = '로그인이 필요합니다';
+        if (myEmailEl) myEmailEl.innerHTML = '비회원';
+    }
+});
+
+function requireAuthAndShow(id) {
+    if(!currentUser) {
+        alert('회원가입 및 로그인이 필요한 기능입니다.');
+        showPage('login');
+    } else {
+        showPage(id);
+    }
+}
+
+function switchAuthMode(mode) {
+    authMode = mode;
+    document.getElementById('tab-signin').classList.toggle('active', mode === 'signin');
+    document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
+    document.getElementById('auth-pw-confirm-row').style.display = mode === 'signup' ? 'block' : 'none';
+    document.getElementById('btn-auth-submit').textContent = mode === 'signup' ? '해마 시작하기' : '로그인';
+    document.getElementById('auth-error').textContent = '';
+}
+
+async function submitAuth() {
+    const email = document.getElementById('auth-email').value;
+    const pw = document.getElementById('auth-pw').value;
+    const errObj = document.getElementById('auth-error');
+    const btn = document.getElementById('btn-auth-submit');
+    errObj.textContent = '';
+    
+    if(!email || !pw) { errObj.textContent = '이메일과 비밀번호를 모두 입력해주세요.'; return; }
+    
+    btn.disabled = true;
+    btn.textContent = '처리 중...';
+
+    if(authMode === 'signup') {
+        const pwConfirm = document.getElementById('auth-pw-confirm').value;
+        if(pw !== pwConfirm) { 
+            errObj.textContent = '비밀번호가 일치하지 않습니다.'; 
+            btn.disabled = false; switchAuthMode('signup'); return; 
+        }
+        
+        const { data, error } = await supabaseClient.auth.signUp({
+            email: email,
+            password: pw
+        });
+        
+        if(error) {
+            errObj.textContent = error.message;
+        } else {
+            alert('회원가입이 완료되었습니다!');
+            showPage('home');
+            document.getElementById('auth-email').value = '';
+            document.getElementById('auth-pw').value = '';
+            document.getElementById('auth-pw-confirm').value = '';
+        }
+    } else {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: pw
+        });
+        
+        if(error) {
+            errObj.textContent = '로그인 실패: 이메일 또는 비밀번호를 확인해주세요.';
+        } else {
+            showPage('home');
+            document.getElementById('auth-email').value = '';
+            document.getElementById('auth-pw').value = '';
+        }
+    }
+    
+    btn.disabled = false;
+    switchAuthMode(authMode);
+}
+
+// 로그아웃 버튼 연결
+document.addEventListener('DOMContentLoaded', () => {
+    const logoutBtn = document.querySelector('.logout-btn');
+    if(logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            alert('로그아웃 되었습니다.');
+            showPage('home');
+        });
+    }
+});
+
 
 let filterState = {
   keyword: '',
@@ -338,6 +456,7 @@ async function registerProduct() {
     category: cat,
     "tradeType": tradeType,
     region: regionVal, // 사용자 선택
+    seller_id: currentUser ? currentUser.id : null,
     condition: conditionStr,
     cert: '없음',
     auth: true, 

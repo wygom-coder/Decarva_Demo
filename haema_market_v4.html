@@ -229,6 +229,45 @@
   </div>
 </div>
 </div>
+
+<!-- 로그인 / 회원가입 -->
+<div class="page" id="page-login">
+<div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
+  <div class="sub-header" style="border:none;"><span class="back-btn" onclick="showPage('home')">✕</span><span class="sub-title"></span></div>
+  <div class="login-container">
+    <div class="login-logo">
+      <img src="images/seahorse_logo.png" alt="logo" width="60">
+      <h2>해마 마켓 시작하기</h2>
+      <p>중고 선박 기자재의 안전한 거래</p>
+    </div>
+    
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-signin" onclick="switchAuthMode('signin')">로그인</div>
+      <div class="auth-tab" id="tab-signup" onclick="switchAuthMode('signup')">회원가입</div>
+    </div>
+    
+    <div class="auth-form-wrap">
+      <div class="form-row">
+        <label class="form-label">이메일</label>
+        <input class="form-input" type="email" id="auth-email" placeholder="이메일 주소를 입력해주세요">
+      </div>
+      <div class="form-row">
+        <label class="form-label">비밀번호</label>
+        <input class="form-input" type="password" id="auth-pw" placeholder="비밀번호 6자리 이상">
+      </div>
+      <div class="form-row" id="auth-pw-confirm-row" style="display:none;">
+        <label class="form-label">비밀번호 확인</label>
+        <input class="form-input" type="password" id="auth-pw-confirm" placeholder="비밀번호를 한번 더 입력해주세요">
+      </div>
+      
+      <div id="auth-error" class="auth-error"></div>
+      
+      <button class="submit-btn" id="btn-auth-submit" onclick="submitAuth()" style="margin-top:16px;">로그인</button>
+    </div>
+  </div>
+</div>
+</div>
+
 <!-- Auction Modal -->
 <div id="auction-modal" class="modal-overlay" style="display:none;">
   <div class="modal-box">
@@ -270,7 +309,7 @@
   <button class="fab-btn fab-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="최상단으로 이동">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
-  <button class="fab-btn fab-register" onclick="showPage('register')" title="매물 등록">
+  <button class="fab-btn fab-register" onclick="requireAuthAndShow('register')" title="매물 등록">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
   </button>
 </div>
