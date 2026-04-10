@@ -37,6 +37,8 @@ function triggerBottomNav(tab) {
     applySubFilter('tradeType', '경매');
   } else if(tab === 'chat') {
     showPage('chat');
+    hideChatRoom();
+    loadChatRooms();
   } else if(tab === 'mypage') {
     showPage('mypage');
   }
@@ -643,6 +645,71 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==== 실시간 채팅 로직 ====
 let currentChatProduct = null;
 let currentChatSubscription = null;
+
+async function loadChatRooms() {
+    if(!currentUser) return;
+    
+    const container = document.getElementById('chat-list');
+    container.innerHTML = '<div style="text-align:center; padding: 40px; color:#aaa; font-size:13px;">채팅 목록을 불러오는 중...</div>';
+    
+    const { data: rawMessages, error } = await supabaseClient.from('haema_chat_messages')
+        .select('*')
+        .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+        .order('created_at', { ascending: false });
+        
+    if(error || !rawMessages || rawMessages.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding: 60px 20px; color:#aaa;">
+                <div style="font-size:30px; margin-bottom:12px;">💬</div>
+                <div style="font-size:14px; font-weight:600; color:#4a6080;">진행 중인 대화가 없습니다.</div>
+                <div style="font-size:12px; margin-top:4px;">관심 있는 매물에 연락을 남겨보세요!</div>
+            </div>`;
+        return;
+    }
+
+    const grouped = {};
+    rawMessages.forEach(msg => {
+        const pid = msg.product_id;
+        if(!grouped[pid]) {
+            grouped[pid] = {
+                latestMsg: msg.content,
+                time: msg.created_at,
+                otherUserId: msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id
+            };
+        }
+    });
+
+    let htmlBuf = '';
+    
+    Object.keys(grouped).forEach(pid => {
+        const room = grouped[pid];
+        const p = products.find(x => String(x.id) === String(pid));
+        
+        let title = p ? p.title : '삭제된 매물';
+        let svg = p ? p.svg : '<div style="background:#eee; width:100%; height:100%;"></div>';
+        
+        const timeStr = new Date(room.time).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        const otherName = "해마 회원";
+        
+        htmlBuf += `
+            <div class="chat-item" onclick="startChat('${pid}')" style="cursor:pointer;">
+                <div class="chat-avatar" style="background:#EAEDF2; color:#7A93B0; font-size:14px;">👤</div>
+                <div class="chat-info">
+                    <div class="chat-name-row">
+                        <span class="chat-name">${otherName} <span style="font-size:11px; font-weight:400; color:#7A93B0;">(${title})</span></span>
+                        <span class="chat-time">${timeStr}</span>
+                    </div>
+                    <div class="chat-preview">${room.latestMsg}</div>
+                </div>
+                <div class="chat-meta">
+                    <div class="chat-thumb" style="overflow:hidden;">${svg}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = htmlBuf;
+}
 
 async function startChat(productId) {
     if(!currentUser) {
