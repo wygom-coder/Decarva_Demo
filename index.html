@@ -278,9 +278,10 @@
     .shop-price { font-size: 16px; font-weight: 700; color: #185FA5; margin-top: auto; padding-top: 8px; }
 
     /* News Teaser Slider */
-    .news-teaser { position: relative; aspect-ratio: 16/9; max-height: 300px; }
-    .news-page { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; opacity: 0; transition: opacity 0.6s ease-in-out; pointer-events: none; }
-    .news-page.active { opacity: 1; z-index: 2; pointer-events: auto; }
+    .news-teaser { position: relative; height: auto; display: flex; flex-direction: column; overflow: hidden; }
+    .news-page { display: none; flex-direction: column; gap: 8px; animation: fadeIn 0.4s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .news-page.active { display: flex; }
     .te-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #fff; border-radius: 8px; border: 1px solid #E3E5E8; text-decoration: none; transition: border-color 0.2s; }
     .te-item:hover { border-color: #185FA5; background: #fafaf8; }
     .te-badge { background: #E6F1FB; color: #185FA5; font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; flex-shrink: 0; }
@@ -369,7 +370,7 @@
       .b-title { font-size: 20px; }
       .sb-title { font-size: 18px; }
       .hd-title { font-size: 24px; }
-      .news-teaser { aspect-ratio: 16/9; }
+      .news-teaser { height: auto; }
       .ticker-bar { padding: 0 12px; }
       .hero-banners { aspect-ratio: 16/5; }
       .small-banners { aspect-ratio: 16/5; }
@@ -481,6 +482,11 @@
                 <div class="te-title">부산항 3월 전체 컨테이너 물동량 전년 대비 4.2% 증가 확정</div>
                 <div class="te-time">4시간 전</div>
               </a>
+              <a href="/news" class="te-item">
+                <div class="te-badge" style="color:#A32D2D; background:#FCEBEB;">긴급</div>
+                <div class="te-title">후티 반군 추가 공격 위협에 홍해 통항 선박 비상 탈출 훈련 강화</div>
+                <div class="te-time">5시간 전</div>
+              </a>
             </div>
             
             <!-- 페이지 2 -->
@@ -519,6 +525,11 @@
                 <div class="te-title">중국 춘제 이후 공장 가동률 94% 회복, 아시아 물동량 급등</div>
                 <div class="te-time">8시간 전</div>
               </a>
+              <a href="/news" class="te-item">
+                <div class="te-badge">물류</div>
+                <div class="te-title">아시아-북미 항로, 선복 부족 사태 본격화 조짐</div>
+                <div class="te-time">10시간 전</div>
+              </a>
             </div>
           </div>
         </div>
@@ -530,7 +541,7 @@
             <a href="/haema_market_v4.html" class="sec-more" target="_blank" rel="noopener noreferrer">전체보기 →</a>
           </div>
           <div class="shop-grid">
-            <a href="/haema_market_v4.html" class="shop-item" target="_blank" rel="noopener noreferrer">
+            <a href="/haema_market_v4.html?product_id=p1" class="shop-item" target="_blank" rel="noopener noreferrer">
               <div class="shop-img">
                 <img src="images/equip_engine.png" alt="선박 엔진">
               </div>
@@ -540,7 +551,7 @@
                 <span class="shop-price">협의 요망</span>
               </div>
             </a>
-            <a href="/haema_market_v4.html" class="shop-item" target="_blank" rel="noopener noreferrer">
+            <a href="/haema_market_v4.html?product_id=p2" class="shop-item" target="_blank" rel="noopener noreferrer">
               <div class="shop-img">
                 <img src="images/equip_propeller.png" alt="알루미늄 프로펠러">
               </div>
@@ -550,14 +561,24 @@
                 <span class="shop-price">₩ 52,000,000</span>
               </div>
             </a>
-            <a href="/haema_market_v4.html" class="shop-item" target="_blank" rel="noopener noreferrer">
-              <div class="shop-img" style="background:#0C2340; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; opacity:0.8;">
-                + 더 많은 사진 및 부품
+            <a href="/haema_market_v4.html?product_id=p3" class="shop-item" target="_blank" rel="noopener noreferrer">
+              <div class="shop-img" style="background:#0C2340; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:700;">
+                X-Band 레이더 사진
               </div>
               <div class="shop-info">
                 <span class="shop-cat">항해 통신 장비</span>
                 <span class="shop-title">X-Band 레이더 시스템 풀세트 (모니터 포함)</span>
                 <span class="shop-price">₩ 18,500,000</span>
+              </div>
+            </a>
+            <a href="/haema_market_v4.html?product_id=p4" class="shop-item" target="_blank" rel="noopener noreferrer">
+              <div class="shop-img" style="background:#EAF3DE; display:flex; align-items:center; justify-content:center; color:#3B6D11; font-size:12px; font-weight:700;">
+                BWTS 장치 사진
+              </div>
+              <div class="shop-info">
+                <span class="shop-cat">친환경 기자재</span>
+                <span class="shop-title">선박용 평형수 처리 장치 (BWTS, 시운전 완료)</span>
+                <span class="shop-price">₩ 28,000,000</span>
               </div>
             </a>
           </div>

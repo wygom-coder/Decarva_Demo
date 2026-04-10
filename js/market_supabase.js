@@ -1434,3 +1434,29 @@ async function submitBusinessAuth() {
         btn.textContent = "국세청 실시간 진위 확인 (Live)";
     }
 }
+
+// ----------------------------------------
+// [URL Parameter 처리: 더미 상품 페이지 연동]
+// ----------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pid = urlParams.get('product_id');
+    if (pid && pid.startsWith('p')) {
+        const dummies = {
+            p1: { title: "대형 선박용 고출력 디젤 엔진 (상태 A급)", price: "협의 요망", location: "부산 감천항", seller_name: "엔진마스터", type: "standard", content: "22년 정비 완료된 완벽한 상태의 엔진입니다." },
+            p2: { title: "특수 합금 청동 프로펠러 세트", price: "52,000,000", location: "울산 앞바다", seller_name: "선체부속", type: "standard", content: "미사용 신품급 특수 합금 프로펠러입니다." },
+            p3: { title: "X-Band 레이더 시스템 풀세트", price: "18,500,000", location: "인천 연안부두", seller_name: "통신전문기업", type: "auction", current_bid: 18500000, auction_end: new Date(Date.now() + 86400000).toISOString(), content: "모니터 포함된 레이더 시스템입니다." },
+            p4: { title: "선박용 평형수 처리 장치(BWTS)", price: "28,000,000", location: "목포 신항", seller_name: "에코환경", type: "standard", content: "설치 및 시운전 지원 가능한 폐수 처리 장치입니다." },
+        };
+        if(dummies[pid]) {
+            setTimeout(() => {
+                openProductModal({ 
+                    id: pid, 
+                    ...dummies[pid], 
+                    svg: '<div style="background:#EAEAEA; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555; border-radius:12px; font-weight:700;">추천 기자재 상세 이미지</div>', 
+                    user_id: 'dummy_user' 
+                });
+            }, 600); // UI 로딩 후 모달 오픈
+        }
+    }
+});
