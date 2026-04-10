@@ -318,6 +318,9 @@ async function registerProduct() {
   const priceInput = document.getElementById('price-input').value || '';
   const priceParsed = parseInt(priceInput.replace(/[^0-9]/g, '')) || 0;
   
+  const regionInput = document.getElementById('region-input');
+  const regionVal = regionInput ? regionInput.value : '부산';
+  
   if (!title || cat === '카테고리 선택') { alert('상품명과 카테고리는 필수입니다.'); return; }
   
   const isAuction = tradeType === '경매';
@@ -334,7 +337,7 @@ async function registerProduct() {
     price: priceInput ? ('₩ ' + priceInput.replace('₩','').trim()) : '₩ 협의 가능',
     category: cat,
     "tradeType": tradeType,
-    region: '부산', // 추후 회원 정보 연동
+    region: regionVal, // 사용자 선택
     condition: conditionStr,
     cert: '없음',
     auth: true, 
