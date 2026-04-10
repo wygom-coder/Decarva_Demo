@@ -81,6 +81,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let products = [];
 let auctionInterval = null;
 let uploadedBase64 = null;
+let uploadedBlob = null;
 const mockProducts = [
   { id: 1, title: 'MAN B&W 엔진 부품', sub: '부산 · 2024.03', price: '₩ 4,500,000', category: '엔진·동력', tradeType: '직거래', region: '부산', condition: '양호', cert: '전체', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#3A90D9" stroke-width="1.5"/><path d="M16 20v-6a8 8 0 0116 0v6" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="29" r="3" fill="#3A90D9"/></svg>' },
   { id: 2, title: 'JRC 레이더 시스템', sub: '인천 · 2022.11', price: '₩ 8,200,000', category: '항법장비', tradeType: '경매', region: '인천', condition: '최상', cert: 'KR', auth: false, auction: true, remain: '14:32 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="4" fill="#D4960A"/><line x1="24" y1="12" x2="24" y2="8" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="36" y1="24" x2="40" y2="24" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
@@ -479,8 +480,33 @@ async function registerProduct() {
   if(isAuction && !endInput) { alert('경매 마감일시를 설정해주세요.'); return; }
 
   const submitBtn = document.querySelector('#page-register .submit-btn');
-  submitBtn.textContent = '등록 중...';
+  submitBtn.textContent = '저장소 연결 중...';
   submitBtn.disabled = true;
+
+  let finalImageUrl = null;
+  
+  if (uploadedBlob) {
+      submitBtn.textContent = '사진 클라우드 업로드 중...';
+      const fileName = `public/product_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+      
+      const { data: uploadData, error: uploadError } = await supabaseClient.storage
+          .from('market_images')
+          .upload(fileName, uploadedBlob, {
+              contentType: 'image/jpeg'
+          });
+          
+      if (uploadError) {
+          alert('사진 업로드 실패 (버킷이 Public 상태인지 확인해주세요): ' + uploadError.message);
+          submitBtn.textContent = '등록하기';
+          submitBtn.disabled = false;
+          return;
+      }
+      
+      const { data: publicData } = supabaseClient.storage.from('market_images').getPublicUrl(fileName);
+      finalImageUrl = publicData.publicUrl;
+  }
+  
+  let finalSvg = finalImageUrl ? `<img src="${finalImageUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">` : '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M14 20v-4a10 10 0 0120 0v4" stroke="#D4960A" stroke-width="1.5"/></svg>';
 
   let newProd = {
     title: title,
@@ -495,7 +521,7 @@ async function registerProduct() {
     auth: true, 
     auction: isAuction,
     offer: false,
-    svg: uploadedBase64 ? `<img src="${uploadedBase64}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">` : '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M14 20v-4a10 10 0 0120 0v4" stroke="#D4960A" stroke-width="1.5"/></svg>'
+    svg: finalSvg
   };
 
   if(isAuction) {
@@ -517,7 +543,9 @@ async function registerProduct() {
   // 폼 초기화
   document.getElementById('title-input').value = '';
   document.getElementById('price-input').value = '';
+  document.getElementById('photo-upload-input').value = '';
   uploadedBase64 = null;
+  uploadedBlob = null;
   const mainBox = document.getElementById('photo-box-main');
   if(mainBox) {
       mainBox.style.backgroundImage = 'none';
@@ -660,6 +688,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
                     uploadedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                    canvas.toBlob((blob) => {
+                        uploadedBlob = blob;
+                    }, 'image/jpeg', 0.8);
                     
                     const mainBox = document.getElementById('photo-box-main');
                     mainBox.style.backgroundImage = `url(${uploadedBase64})`;
