@@ -936,28 +936,7 @@ function updateProfileUI() {
         }
     }
 }
-    
-// 이메일 파싱보다 user_metadata.display_name 이 최우선
-    const email = currentUser.email;
-    const metaName = currentUser.user_metadata?.display_name;
-    const metaBio = currentUser.user_metadata?.bio;
-    const nameStr = metaName ? metaName : email.split('@')[0];
-    
-    // 첫 글자로 아바타 이니셜 추출
-    const firstChar = nameStr.charAt(0).toUpperCase();
-    
-    const pName = document.getElementById('profile-name');
-    if(pName) pName.textContent = nameStr; // '님' 제거, 이름만 깔끔하게
-    
-    const pEmail = document.getElementById('profile-email');
-    if(pEmail) pEmail.textContent = metaBio ? metaBio : email;
-    
-    const sEmail = document.getElementById('settings-email');
-    if(sEmail) sEmail.textContent = email;
-    
-    const pAv = document.getElementById('profile-avatar');
-    if(pAv) pAv.textContent = firstChar;
-}
+
 
 // ==== 프로필 관련 동작 ====
 function openProfileEdit() {
