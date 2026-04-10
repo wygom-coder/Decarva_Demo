@@ -19,6 +19,7 @@ const SUPABASE_KEY = 'sb_publishable_n2kbcfymcwb4Nna5hN7wsA_TRKixOG5';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let products = [];
+let auctionInterval = null;
 const mockProducts = [
   { id: 1, title: 'MAN B&W 엔진 부품', sub: '부산 · 2024.03', price: '₩ 4,500,000', category: '엔진·동력', tradeType: '직거래', region: '부산', condition: '양호', cert: '전체', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#3A90D9" stroke-width="1.5"/><path d="M16 20v-6a8 8 0 0116 0v6" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="29" r="3" fill="#3A90D9"/></svg>' },
   { id: 2, title: 'JRC 레이더 시스템', sub: '인천 · 2022.11', price: '₩ 8,200,000', category: '항법장비', tradeType: '경매', region: '인천', condition: '최상', cert: 'KR', auth: false, auction: true, remain: '14:32 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="4" fill="#D4960A"/><line x1="24" y1="12" x2="24" y2="8" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="36" y1="24" x2="40" y2="24" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
@@ -78,20 +79,28 @@ function renderProducts() {
     return;
   }
 
+  if(auctionInterval) clearInterval(auctionInterval);
   filtered.forEach(p => {
     let tagsHTML = '';
     if (p.auth) tagsHTML += '<span class="ptag ptag-b">인증</span>';
     if (p.tradeType === '직거래' || p.tradeType === '모두') tagsHTML += '<span class="ptag ptag-y">직거래</span>';
     if (p.offer) tagsHTML += '<span class="ptag ptag-r">가격제안</span>';
-    if (p.auction && p.remain) tagsHTML += `<span class="ptag ptag-b">${p.remain}</span>`;
+    if (p.auction) {
+        if(p.auction_end) {
+            tagsHTML += `<span class="ptag ptag-b auction-timer-tag" data-end="${p.auction_end}">계산중...</span>`;
+        } else if (p.remain) {
+            tagsHTML += `<span class="ptag ptag-b">${p.remain}</span>`;
+        }
+    }
 
     let priceHTML = `<div class="product-price">${p.price}</div>`;
     if (p.auction) {
-      priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${p.price}</span></div>`;
+      const showPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : p.price;
+      priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${showPrice}</span></div>`;
     }
 
     let card = `
-      <div class="product-card">
+      <div class="product-card" ${p.auction ? `onclick="openAuctionModal('${p.id}')"` : ''} style="${p.auction ? 'cursor:pointer;' : ''}">
         <div class="product-img">${p.svg}</div>
         <div class="product-body">
           <div class="product-title">${p.title}</div>
@@ -103,6 +112,24 @@ function renderProducts() {
     `;
     grid.innerHTML += card;
   });
+
+  auctionInterval = setInterval(() => {
+    const timeNow = new Date().getTime();
+    document.querySelectorAll('.auction-timer-tag').forEach(tag => {
+       const end = new Date(tag.getAttribute('data-end')).getTime();
+       const diff = end - timeNow;
+       if(diff <= 0) {
+          tag.textContent = '경매 종료';
+          tag.style.background = '#eee';
+          tag.style.color = '#999';
+       } else {
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const secs = Math.floor((diff % (1000 * 60)) / 1000);
+          tag.textContent = `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')} 남음`;
+       }
+    });
+  }, 1000);
 }
 
 function setCategory(cat, el) {
@@ -173,6 +200,54 @@ function resetFilters() {
 
     updateFilterStyles();
     renderProducts();
+}
+
+
+function openAuctionModal(id) {
+    // string == string (supabase id)
+    const p = products.find(x => String(x.id) === String(id));
+    if(!p) return;
+    
+    document.getElementById('auction-modal').style.display = 'flex';
+    const body = document.getElementById('auction-modal-body');
+    const displayPrice = p.current_bid ? p.current_bid.toLocaleString() : p.price.replace(/[^0-9]/g, '');
+    
+    body.innerHTML = `
+      <div class="auction-info-row"><span class="auction-info-label">상품명</span><span class="auction-info-val">${p.title}</span></div>
+      <div class="auction-info-row"><span class="auction-info-label">입찰 횟수</span><span class="auction-info-val">${p.bid_count || 0}회</span></div>
+      <div class="auction-current-price">₩ ${displayPrice}</div>
+      <button class="auction-bid-btn" onclick="submitBid('${p.id}')">+ 10,000원 입찰하기</button>
+    `;
+}
+
+function closeAuctionModal() {
+    document.getElementById('auction-modal').style.display = 'none';
+}
+
+async function submitBid(id) {
+    const p = products.find(x => String(x.id) === String(id));
+    if(!p) return;
+    
+    const curr = p.current_bid || parseInt(p.price.replace(/[^0-9]/g, '')) || 0;
+    const count = p.bid_count || 0;
+    const newBid = curr + 10000;
+    
+    const btn = document.querySelector('.auction-bid-btn');
+    if(btn) btn.textContent = '입찰 처리중...';
+    
+    const { error } = await supabaseClient.from('haema_products')
+        .update({ current_bid: newBid, bid_count: count + 1 })
+        .eq('id', id);
+        
+    if(error) {
+        alert('입찰 중 오류가 발생했습니다.');
+        if(btn) btn.textContent = '+ 10,000원 입찰하기';
+        return;
+    }
+    
+    alert('성공적으로 입찰되었습니다!');
+    closeAuctionModal();
+    fetchProducts();
 }
 
 // 서버에서 매물 불러오기
@@ -303,37 +378,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 서브 칩 상호작용
     document.querySelectorAll('.f-sub-chip').forEach(chip => {
         chip.addEventListener('click', () => {
-            const key = chip.getAttribute('data-key');
-            const val = chip.getAttribute('data-val');
-            applySubFilter(key, val);
-        });
-    });
-
-    // 커스텀 가격대 필터
-    const priceApplyBtn = document.getElementById('price-apply');
-    if(priceApplyBtn) {
-        priceApplyBtn.addEventListener('click', () => {
-             const minVal = parseInt(document.getElementById('min-price').value);
-             const maxVal = parseInt(document.getElementById('max-price').value);
-             filterState.minPrice = isNaN(minVal) ? null : minVal;
-             filterState.maxPrice = isNaN(maxVal) ? null : maxVal;
-             updateFilterStyles();
-             renderProducts();
-             // 패널 닫기
-             document.querySelector('.filter-panels').classList.remove('show');
-             document.querySelectorAll('.filter-dropdown').forEach(b => b.classList.remove('open'));
-        });
-    }
-
-    // 등록
-    const submitBtn = document.querySelector('#page-register .submit-btn');
-    if(submitBtn) submitBtn.addEventListener('click', registerProduct);
-    
-    const tradeChips = document.querySelectorAll('#page-register .trade-chip');
-    tradeChips.forEach(chip => {
-        chip.addEventListener('click', () => {
             tradeChips.forEach(c => c.classList.remove('on'));
             chip.classList.add('on');
+            
+            const isAuction = chip.textContent.trim() === '경매';
+            document.getElementById('auction-date-row').style.display = isAuction ? 'block' : 'none';
+            document.getElementById('price-label').innerHTML = isAuction ? '경매 시작가<span>*</span>' : '판매 희망가<span>*</span>';
         });
     });
 
@@ -341,8 +391,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const condChips = document.querySelectorAll('#page-register .cond-chip');
     condChips.forEach(chip => {
         chip.addEventListener('click', () => {
-            condChips.forEach(c => c.classList.remove('on'));
+            tradeChips.forEach(c => c.classList.remove('on'));
             chip.classList.add('on');
+            
+            const isAuction = chip.textContent.trim() === '경매';
+            document.getElementById('auction-date-row').style.display = isAuction ? 'block' : 'none';
+            document.getElementById('price-label').innerHTML = isAuction ? '경매 시작가<span>*</span>' : '판매 희망가<span>*</span>';
         });
     });
 });
