@@ -269,7 +269,9 @@ function renderProducts() {
     if (p.tradeType === '직거래' || p.tradeType === '모두') tagsHTML += '<span class="ptag ptag-y">직거래</span>';
     if (p.offer) tagsHTML += '<span class="ptag ptag-r">가격제안</span>';
     if (p.auction) {
-        if(p.auction_end) {
+        if(p.is_closed) {
+            tagsHTML += `<span class="ptag ptag-b" style="background:#eee;color:#999;border:none;">낙찰 완료</span>`;
+        } else if(p.auction_end) {
             tagsHTML += `<span class="ptag ptag-b auction-timer-tag" data-end="${p.auction_end}">계산중...</span>`;
         } else if (p.remain) {
             tagsHTML += `<span class="ptag ptag-b">${p.remain}</span>`;
@@ -278,8 +280,13 @@ function renderProducts() {
 
     let priceHTML = `<div class="product-price">${p.price}</div>`;
     if (p.auction) {
-      const showPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : p.price;
-      priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${showPrice}</span></div>`;
+      if(p.is_closed) {
+          const finalPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : '유찰됨';
+          priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge" style="background:#7A93B0;">종료</span><span style="font-size:14px;font-weight:700;color:#7A93B0;text-decoration:line-through;">${finalPrice}</span></div>`;
+      } else {
+          const showPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : p.price;
+          priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${showPrice}</span></div>`;
+      }
     }
 
     let card = `
@@ -410,22 +417,46 @@ function closeProductModal() {
 }
 
 async function submitBid(id) {
+    if(!currentUser) {
+        alert("경매 입찰은 로그인이 필요합니다.");
+        showPage('login');
+        return;
+    }
+
     const p = products.find(x => String(x.id) === String(id));
     if(!p) return;
+    
+    if(p.is_closed) {
+        alert("이미 마감된 경매입니다.");
+        return;
+    }
+    
+    if(p.seller_id === currentUser.id) {
+        alert("당사자의 매물에는 입찰할 수 없습니다.");
+        return;
+    }
     
     const curr = p.current_bid || parseInt(p.price.replace(/[^0-9]/g, '')) || 0;
     const count = p.bid_count || 0;
     const newBid = curr + 10000;
     
+    const bidderName = currentUser.user_metadata?.biz_name || currentUser.user_metadata?.display_name || currentUser.email.split('@')[0];
+    
     const btn = document.querySelector('.auction-bid-btn');
     if(btn) btn.textContent = '입찰 처리중...';
     
     const { error } = await supabaseClient.from('haema_products')
-        .update({ current_bid: newBid, bid_count: count + 1 })
+        .update({ 
+            current_bid: newBid, 
+            bid_count: count + 1,
+            highest_bidder_id: currentUser.id,
+            highest_bidder_name: bidderName
+        })
         .eq('id', id);
         
     if(error) {
-        alert('입찰 중 오류가 발생했습니다.');
+        console.error(error);
+        alert('입찰 중 오류가 발생했습니다: ' + error.message);
         if(btn) btn.textContent = '+ 10,000원 입찰하기';
         return;
     }
@@ -452,6 +483,42 @@ async function fetchProducts() {
     }
     renderProducts();
 }
+
+async function closeAuction(p) {
+    if(p.is_closed) return;
+    
+    // DB 업데이트 시도 (Atomic)
+    const { error } = await supabaseClient.from('haema_products')
+        .update({ is_closed: true })
+        .eq('id', p.id)
+        .eq('is_closed', false);
+        
+    if(!error) {
+        p.is_closed = true; // 로컬 반영
+        if (currentUser && currentUser.id === p.highest_bidder_id) {
+            alert(`🎉 축하합니다! [${p.title}] 경매에 최종 낙찰되셨습니다!\\n(낙찰가: ₩ ${p.current_bid ? p.current_bid.toLocaleString() : '확인 불가'})`);
+        }
+        else if (currentUser && currentUser.id === p.seller_id) {
+            alert(`🔔 등록하신 [${p.title}] 경매가 마감되었습니다.\\n(최종 입찰자: ${p.highest_bidder_name})`);
+        }
+        fetchProducts(); // 리스트 갱신
+        closeProductModal(); // 열려있다면 닫기
+    }
+}
+
+// 5초 주기로 모든 매물의 마감 시간을 체크하여 셔터를 닫는 감시자
+setInterval(() => {
+    const now = new Date().getTime();
+    products.forEach(p => {
+        if(p.auction && !p.is_closed && p.auction_end) {
+            const end = new Date(p.auction_end).getTime();
+            if(now >= end) {
+                closeAuction(p);
+            }
+        }
+    });
+}, 5000);
+
 
 // 판매자 실 DB 매물 등록
 async function registerProduct() {
