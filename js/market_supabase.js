@@ -395,25 +395,74 @@ function resetFilters() {
 }
 
 
-function openAuctionModal(id) {
-    // string == string (supabase id)
+function openProductModal(id) {
     const p = products.find(x => String(x.id) === String(id));
     if(!p) return;
     
-    document.getElementById('auction-modal').style.display = 'flex';
-    const body = document.getElementById('auction-modal-body');
-    const displayPrice = p.current_bid ? p.current_bid.toLocaleString() : p.price.replace(/[^0-9]/g, '');
+    document.getElementById('product-modal').style.display = 'flex';
+    const body = document.getElementById('product-modal-body');
+    
+    let actionArea = '';
+    
+    if (p.auction) {
+        const displayPrice = p.current_bid ? p.current_bid.toLocaleString() : p.price.replace(/[^0-9]/g, '');
+        const remainText = p.is_closed ? '경매 종료됨' : (p.auction_end ? '마감: ' + new Date(p.auction_end).toLocaleString() : '진행중');
+        
+        actionArea = `
+            <div style="background:#F4F9FF; border:1px solid #1A5FA0; padding:16px; border-radius:12px; margin-top:20px;">
+                <div style="color:#1A5FA0; font-size:12px; font-weight:700; margin-bottom:8px;">🔥 최고 입찰자만이 낙찰자가 됩니다!</div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="font-size:13px; color:#7A93B0;">현재 최고가 (입찰 ${p.bid_count || 0}회)</span>
+                    <span style="font-size:20px; font-weight:800; color:#1A2B4A;">₩ ${displayPrice}</span>
+                </div>
+                <div style="font-size:12px; color:#E53E3E; font-weight:600; margin-bottom:16px;">${remainText}</div>
+                
+                ${p.is_closed ? `<button style="width:100%; padding:14px; border-radius:12px; background:#EAEDF2; color:#7A93B0; font-size:15px; font-weight:700; border:none;" disabled>마감된 경매입니다</button>` : `
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <button type="button" onclick="document.getElementById('bid-amount').value = ${parseInt(displayPrice.replace(/,/g,'')) + 10000}" style="flex:1; padding:10px; background:#fff; border:1px solid #1A5FA0; color:#1A5FA0; border-radius:8px; font-weight:600; cursor:pointer;">+ 1만원</button>
+                    <button type="button" onclick="document.getElementById('bid-amount').value = ${parseInt(displayPrice.replace(/,/g,'')) + 50000}" style="flex:1; padding:10px; background:#fff; border:1px solid #1A5FA0; color:#1A5FA0; border-radius:8px; font-weight:600; cursor:pointer;">+ 5만원</button>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <input type="number" id="bid-amount" placeholder="희망가 입력" style="flex:1; padding:12px 14px; border:1px solid #ccc; border-radius:8px; outline:none; font-size:15px; font-weight:600;">
+                    <button onclick="submitBid('${p.id}')" class="auction-bid-btn" style="background:#D4960A; color:#fff; border:none; border-radius:8px; padding:0 24px; font-weight:700; font-size:15px; cursor:pointer;">입찰</button>
+                </div>
+                `}
+            </div>
+        `;
+    } else {
+        actionArea = `
+            <div style="margin-top:20px; display:flex; gap:12px;">
+                <button style="flex:1; padding:14px; border-radius:12px; background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="triggerBottomNav('chat'); closeProductModal();">판매자와 채팅하기</button>
+            </div>
+        `;
+    }
     
     body.innerHTML = `
-      <div class="auction-info-row"><span class="auction-info-label">상품명</span><span class="auction-info-val">${p.title}</span></div>
-      <div class="auction-info-row"><span class="auction-info-label">입찰 횟수</span><span class="auction-info-val">${p.bid_count || 0}회</span></div>
-      <div class="auction-current-price">₩ ${displayPrice}</div>
-      <button class="auction-bid-btn" onclick="submitBid('${p.id}')">+ 10,000원 입찰하기</button>
+        <div style="width:100%; aspect-ratio:4/3; background:#f4f4f4; border-radius:12px; overflow:hidden; margin-bottom:16px;">
+            ${p.svg}
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <div style="background:#EAEDF2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#7A93B0;">${p.tradeType}</div>
+            <div style="background:#E6F4EA; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#1E8E3E;">${p.condition}</div>
+        </div>
+        <h2 style="margin:0 0 4px 0; font-size:20px; color:#1A2B4A;">${p.title}</h2>
+        <div style="color:#7A93B0; font-size:13px; margin-bottom:16px;">${p.sub}</div>
+        <div style="font-size:24px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">${p.price}</div>
+        
+        <div style="padding:16px; background:#fff; border:1px solid rgba(0,0,0,0.05); border-radius:12px; display:flex; align-items:center; gap:12px; margin-top:20px;">
+            <div style="width:40px; height:40px; border-radius:50%; background:#1A5FA0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">판</div>
+            <div>
+                <div style="font-size:13px; font-weight:700; color:#1A2B4A;">판매자 정보 (보호됨)</div>
+                <div style="font-size:11px; color:#7A93B0;">안전거래 사용 우수 판매자</div>
+            </div>
+        </div>
+        
+        ${actionArea}
     `;
 }
 
 function closeProductModal() {
-    document.getElementById('auction-modal').style.display = 'none';
+    document.getElementById('product-modal').style.display = 'none';
 }
 
 async function submitBid(id) {
@@ -436,9 +485,22 @@ async function submitBid(id) {
         return;
     }
     
+    const bidInput = document.getElementById('bid-amount');
+    const newBidStr = bidInput ? bidInput.value : null;
+    if(!newBidStr) {
+        alert("입찰 희망가를 입력해주세요.");
+        return;
+    }
+    
+    const newBid = parseInt(newBidStr, 10);
     const curr = p.current_bid || parseInt(p.price.replace(/[^0-9]/g, '')) || 0;
+    
+    if(newBid <= curr) {
+        alert(`현재 최고가(₩${curr.toLocaleString()})보다 높은 금액을 입력하셔야 합니다.`);
+        return;
+    }
+
     const count = p.bid_count || 0;
-    const newBid = curr + 10000;
     
     const bidderName = currentUser.user_metadata?.biz_name || currentUser.user_metadata?.display_name || currentUser.email.split('@')[0];
     
@@ -457,7 +519,7 @@ async function submitBid(id) {
     if(error) {
         console.error(error);
         alert('입찰 중 오류가 발생했습니다: ' + error.message);
-        if(btn) btn.textContent = '+ 10,000원 입찰하기';
+        if(btn) btn.textContent = '입찰';
         return;
     }
     
@@ -1350,7 +1412,7 @@ async function submitBusinessAuth() {
                 
                 if(error) throw new Error("서버 프로필 업데이트 에러");
                 
-                alert(`🏢 사업자 인증 성공! [${nameVal}] 기업은 [${bizData.tax_type}] 상태의 정상적인 계속사업자임이 확인되었습니다.`);
+                alert('사업자 인증 성공!');
                 currentUser = data.user;
                 updateProfileUI(); // Reload UI
                 showPage('mypage');

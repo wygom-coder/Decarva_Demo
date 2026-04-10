@@ -32,7 +32,6 @@
       <input type="text" id="search-input" placeholder="선박 엔진, 앵커, 레이더 등 검색">
     </div>
     <div class="header-nav">
-      <a href="#" onclick="applySubFilter('tradeType', '경매'); event.preventDefault();">경매장</a>
       <button class="btn-login" id="header-btn-login" onclick="showPage('login')">로그인</button>
       
       <button class="btn-sell" onclick="requireAuthAndShow('register')">+ 등록</button>
@@ -52,6 +51,7 @@
   </div>
 
   <div class="filter-bar">
+    <div class="filter-chip" onclick="applySubFilter('tradeType', '경매')" style="background:#FFF3C0; color:#D4960A; border-color:#D4960A;">🔥 진행중인 경매</div>
     <div class="filter-dropdown" data-target="region">지역 ▾</div>
     <div class="filter-dropdown" data-target="condition">상태 ▾</div>
     <div class="filter-dropdown" data-target="cert">인증 ▾</div>
@@ -422,14 +422,17 @@
 </div>
 </div>
 
-<!-- Auction Modal -->
-<div id="auction-modal" class="modal-overlay" style="display:none;">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3 class="modal-title">경매 입찰 및 상세</h3>
-      <button class="modal-close" onclick="closeAuctionModal()">✕</button>
+<!-- Product Detail Modal (Bottom Sheet style) -->
+<style>
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+</style>
+<div id="product-modal" class="modal-overlay" style="display:none; align-items:flex-end;">
+  <div class="modal-box" style="width: 100%; max-width: 480px; background: #fff; border-radius: 20px 20px 0 0; padding: 0; min-height: 80vh; max-height: 90vh; overflow-y: auto; position: relative; animation: slideUp 0.2s ease-out;">
+    <div style="position: sticky; top: 0; background: #fff; z-index: 10; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 20px 20px 0 0;">
+      <h3 class="modal-title" style="margin: 0; font-size: 16px;">매물 상세 정보</h3>
+      <button class="modal-close" onclick="closeProductModal()" style="background: none; border: none; font-size: 20px; color: #7A93B0; cursor: pointer; line-height: 1;">✕</button>
     </div>
-    <div class="modal-body" id="auction-modal-body">
+    <div id="product-modal-body" style="padding: 0; padding-bottom: 100px;">
       <!-- 렌더링 영역 -->
     </div>
   </div>
