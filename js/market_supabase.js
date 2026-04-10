@@ -604,6 +604,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
+    // 가격 범위 지정(Price Filter) 적용
+    const priceApplyBtn = document.getElementById('price-apply');
+    if(priceApplyBtn) {
+        priceApplyBtn.addEventListener('click', () => {
+            const minVal = document.getElementById('min-price').value;
+            const maxVal = document.getElementById('max-price').value;
+            filterState.minPrice = minVal ? parseInt(minVal, 10) : null;
+            filterState.maxPrice = maxVal ? parseInt(maxVal, 10) : null;
+            updateFilterStyles();
+            renderProducts();
+            
+            // 시각적 피드백
+            priceApplyBtn.textContent = '적용됨✓';
+            priceApplyBtn.style.background = '#1E8E3E';
+            setTimeout(() => {
+                priceApplyBtn.textContent = '범위 적용';
+                priceApplyBtn.style.background = 'var(--blue-800)';
+            }, 1000);
+        });
+    }
+    
         // 매물 사진 업로드 (Base64 변환)
     const photoInput = document.getElementById('photo-upload-input');
     if(photoInput) {
