@@ -88,9 +88,9 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         
         // Header Nav buttons
         const topLoginBtn = document.getElementById('header-btn-login');
-        const topMypageBtn = document.getElementById('header-btn-mypage');
+        
         if(topLoginBtn) topLoginBtn.style.display = 'none';
-        if(topMypageBtn) topMypageBtn.style.display = 'inline-block';
+        
     } else {
         // Logged out
         const myNameEl = document.querySelector('.my-name');
@@ -100,9 +100,9 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         
         // Header Nav buttons
         const topLoginBtn = document.getElementById('header-btn-login');
-        const topMypageBtn = document.getElementById('header-btn-mypage');
+        
         if(topLoginBtn) topLoginBtn.style.display = 'inline-block';
-        if(topMypageBtn) topMypageBtn.style.display = 'none';
+        
     }
 });
 
