@@ -1093,7 +1093,7 @@ async function verifyGPSLocation() {
             }
             
             if(isMatch) {
-                alert(`✅ 인증 100% 일치! 접속하신 장비의 위치가 [${geoRegion}] 물리망 내에 있음이 판독되었습니다.`);
+                alert(`✅ 인증 완료! 현재 접속 위치가 [${geoRegion}]로 확인되었습니다.`);
                 tempVerifiedRegion = selectedRegion;
                 btn.textContent = "✓ 인증 완료";
                 btn.style.background = "#E6F4EA";
@@ -1101,17 +1101,17 @@ async function verifyGPSLocation() {
                 btn.style.borderColor = "#1E8E3E";
                 selector.disabled = true; // 락킹
             } else {
-                alert(`❌ 허위 감지! 선택하신 지역(${selectedRegion})과 현재 물리적인 GPS 접속 위치(${geoRegion}) 단위가 다릅니다.`);
+                alert(`❌ 인증 실패! 선택 지역(${selectedRegion})과 현재 위치(${geoRegion})가 다릅니다.`);
                 btn.textContent = "📍 다시 인증하기";
                 btn.disabled = false;
             }
         } catch(e) {
-            alert("지오코딩 메인 서버와 통신 중 장애가 발생했습니다. 잠시 후 시도해주세요.");
+            alert("서버와 통신 중 오류가 발생했습니다. 잠시 후 시도해주세요.");
             btn.textContent = "📍 위치 재검증";
             btn.disabled = false;
         }
     }, (error) => {
-        alert("GPS 위치 정보를 강제로 차단하셨거나 가져올 수 없습니다. 브라우저 위치 권한을 승인해주세요.");
+        alert("위치 정보를 가져올 수 없습니다. 기기의 위치 권한을 허용해주세요.");
         btn.textContent = "📍 위치 권한 재요청";
         btn.disabled = false;
     });
