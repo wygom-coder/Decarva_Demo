@@ -886,7 +886,6 @@ function showMyList() {
 // ==== 프로필 UI 자동 렌더링 ====
 function updateProfileUI() {
     if(!currentUser) {
-        // Init to default if logged out
         const pName = document.getElementById('profile-name');
         if(pName) pName.textContent = "로그인 해주세요";
         const pEmail = document.getElementById('profile-email');
@@ -895,6 +894,70 @@ function updateProfileUI() {
         if(pAv) pAv.textContent = "👤";
         return;
     }
+    
+    // 이메일 파싱보다 user_metadata.display_name 이 최우선
+    const email = currentUser.email;
+    const metaName = currentUser.user_metadata?.display_name;
+    const nameStr = metaName ? metaName : email.split('@')[0];
+    
+    // 첫 글자로 아바타 이니셜 추출
+    const firstChar = nameStr.charAt(0).toUpperCase();
+    
+    const pName = document.getElementById('profile-name');
+    if(pName) pName.textContent = nameStr; // '님' 제거, 이름만 깔끔하게
+    
+    const pEmail = document.getElementById('profile-email');
+    if(pEmail) pEmail.textContent = email;
+    
+    const sEmail = document.getElementById('settings-email');
+    if(sEmail) sEmail.textContent = email;
+    
+    const pAv = document.getElementById('profile-avatar');
+    if(pAv) pAv.textContent = firstChar;
+}
+
+// ==== 프로필 관련 동작 ====
+function openProfileEdit() {
+    if(!currentUser) return;
+    showPage('profile-edit');
+    
+    const metaName = currentUser.user_metadata?.display_name;
+    const nameStr = metaName ? metaName : currentUser.email.split('@')[0];
+    
+    document.getElementById('edit-nickname-input').value = nameStr;
+    document.getElementById('edit-avatar-preview').textContent = nameStr.charAt(0).toUpperCase();
+}
+
+async function saveProfile() {
+    const btn = document.querySelector('#page-profile-edit .submit-btn');
+    const input = document.getElementById('edit-nickname-input').value.trim();
+    
+    if(!input) {
+        alert('닉네임을 입력해주세요.');
+        return;
+    }
+    
+    btn.textContent = '저장 중...';
+    btn.disabled = true;
+    
+    // Supabase Auth 계정 내부 메타데이터 업데이트 API 통신
+    const { data, error } = await supabaseClient.auth.updateUser({
+        data: { display_name: input }
+    });
+    
+    btn.disabled = false;
+    btn.textContent = '저장하고 돌아가기';
+    
+    if(error) {
+        console.error("Profile save error:", error);
+        alert('프로필 변경 중 오류가 발생했습니다.');
+    } else {
+        // 성공 시 세션 즉각 동기화 및 뒤로가기
+        currentUser = data.user;
+        updateProfileUI();
+        showPage('mypage');
+    }
+}
     
     const email = currentUser.email;
     const nameStr = email.split('@')[0]; // simple split for display
