@@ -437,29 +437,34 @@ function openProductModal(id) {
         `;
     }
     
+    const safeContent = p.content && p.content !== 'undefined' ? p.content : '상세 설명이 없습니다.';
+    
     body.innerHTML = `
-        <div style="width:100%; aspect-ratio:4/3; background:#f4f4f4; border-radius:12px; overflow:hidden; margin-bottom:16px; position:relative;">
+        <div style="width:100%; aspect-ratio:4/3; background:#f4f4f4; border-radius:0 0 12px 12px; overflow:hidden; margin-bottom:16px; position:relative;">
             ${p.svg}
             <div id="modal-heart-btn" onclick="toggleLike('${p.id}')" style="position:absolute; bottom:12px; right:12px; width:40px; height:40px; background:rgba(255,255,255,0.9); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1); transition:transform 0.1s;">🤍</div>
         </div>
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-            <div style="background:#EAEDF2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#7A93B0;">${p.tradeType}</div>
-            <div style="background:#E6F4EA; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#1E8E3E;">${p.condition}</div>
-        </div>
-        <h2 style="margin:0 0 4px 0; font-size:20px; color:#1A2B4A;">${p.title}</h2>
-        <div style="color:#7A93B0; font-size:13px; margin-bottom:16px;">${p.sub}</div>
-        <div style="font-size:24px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">${p.price}</div>
         
-        <div style="padding:16px; background:#fff; border:1px solid rgba(0,0,0,0.05); border-radius:12px; display:flex; align-items:center; gap:12px; margin-top:20px;">
-            <div style="width:40px; height:40px; border-radius:50%; background:#1A5FA0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">판</div>
-            <div>
-                <div style="font-size:13px; font-weight:700; color:#1A2B4A;">판매자 정보 (보호됨)</div>
-                <div style="font-size:11px; color:#7A93B0;">안전거래 사용 우수 판매자</div>
+        <div style="padding: 0 20px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <div style="background:#EAEDF2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#7A93B0;">${p.tradeType}</div>
+                <div style="background:#E6F4EA; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#1E8E3E;">${p.condition}</div>
             </div>
+            <h2 style="margin:0 0 4px 0; font-size:20px; color:#1A2B4A;">${p.title}</h2>
+            <div style="color:#7A93B0; font-size:13px; margin-bottom:16px;">${p.sub}</div>
+            <div style="font-size:24px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">${p.price}</div>
+            
+            <div style="padding:16px; background:#fff; border:1px solid rgba(0,0,0,0.05); border-radius:12px; display:flex; align-items:center; gap:12px; margin-top:20px;">
+                <div style="width:40px; height:40px; border-radius:50%; background:#1A5FA0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">판</div>
+                <div>
+                    <div style="font-size:13px; font-weight:700; color:#1A2B4A;">판매자 정보 (보호됨)</div>
+                    <div style="font-size:11px; color:#7A93B0;">안전거래 사용 우수 판매자</div>
+                </div>
+            </div>
+            
+            <div style="margin-top:20px; white-space:pre-wrap; font-size:14px; color:#1A2B4A; line-height:1.6;">${safeContent}</div>
+            ${actionArea}
         </div>
-        
-        <div style="margin-top:20px; white-space:pre-wrap; font-size:14px; color:#1A2B4A; line-height:1.6;">${p.content}</div>
-        ${actionArea}
     `;
     
     // 모달이 열리면 현재 사용자가 찜했는지 검사
@@ -1874,8 +1879,8 @@ async function loadLikedProducts() {
     const pIds = likes.map(l => l.product_id);
     const { data: pData } = await supabaseClient.from('haema_products').select('*').in('id', pIds);
     
-    // 최신순 유지
-    const sortedProducts = pIds.map(id => pData.find(x => x.id === id)).filter(Boolean);
+    // 최신순 유지 및 자료형 충돌 방지 (String 전환 후 비교)
+    const sortedProducts = pIds.map(id => pData ? pData.find(x => String(x.id) === String(id)) : null).filter(Boolean);
     
     const container = document.getElementById('mylist-container');
     container.innerHTML = '';
