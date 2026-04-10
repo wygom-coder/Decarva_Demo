@@ -919,9 +919,15 @@ function updateProfileUI() {
 // ==== 프로필 관련 동작 ====
 function openProfileEdit() {
     if(!currentUser) return;
-    showPage('profile-edit');
     
     const metaName = currentUser.user_metadata?.display_name;
+    if(metaName) {
+        alert('닉네임은 최초 1회만 설정 및 변경이 가능합니다. 이미 설정 완료된 닉네임은 안정을 위해 수정할 수 없습니다.');
+        return;
+    }
+    
+    showPage('profile-edit');
+    
     const nameStr = metaName ? metaName : currentUser.email.split('@')[0];
     
     document.getElementById('edit-nickname-input').value = nameStr;
@@ -957,21 +963,4 @@ async function saveProfile() {
         updateProfileUI();
         showPage('mypage');
     }
-}
-    
-    const email = currentUser.email;
-    const nameStr = email.split('@')[0]; // simple split for display
-    const firstChar = nameStr.charAt(0).toUpperCase();
-    
-    const pName = document.getElementById('profile-name');
-    if(pName) pName.textContent = nameStr + " 님";
-    
-    const pEmail = document.getElementById('profile-email');
-    if(pEmail) pEmail.textContent = email;
-    
-    const sEmail = document.getElementById('settings-email');
-    if(sEmail) sEmail.textContent = email;
-    
-    const pAv = document.getElementById('profile-avatar');
-    if(pAv) pAv.textContent = firstChar;
 }
