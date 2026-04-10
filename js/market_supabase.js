@@ -349,9 +349,14 @@ async function registerProduct() {
       if(c.classList.contains('on')) conditionStr = c.textContent.trim();
   });
 
-  const price = document.querySelector('#page-register .form-input[placeholder*="가격"]').value || '₩ 협의 가능';
+  const priceInput = document.getElementById('price-input').value || '';
+  const priceParsed = parseInt(priceInput.replace(/[^0-9]/g, '')) || 0;
   
   if (!title || cat === '카테고리 선택') { alert('상품명과 카테고리는 필수입니다.'); return; }
+  
+  const isAuction = tradeType === '경매';
+  const endInput = document.getElementById('auction-end-input').value;
+  if(isAuction && !endInput) { alert('경매 마감일시를 설정해주세요.'); return; }
 
   const submitBtn = document.querySelector('#page-register .submit-btn');
   submitBtn.textContent = '등록 중...';
@@ -360,17 +365,23 @@ async function registerProduct() {
   let newProd = {
     title: title,
     sub: '방금 전 등록',
-    price: price.includes('₩') ? price : '₩ ' + price,
+    price: priceInput ? ('₩ ' + priceInput.replace('₩','').trim()) : '₩ 협의 가능',
     category: cat,
     "tradeType": tradeType,
     region: '부산', // 추후 회원 정보 연동
     condition: conditionStr,
     cert: '없음',
     auth: true, 
-    auction: tradeType === '경매',
+    auction: isAuction,
     offer: false,
     svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M14 20v-4a10 10 0 0120 0v4" stroke="#D4960A" stroke-width="1.5"/></svg>'
   };
+
+  if(isAuction) {
+      newProd.auction_end = new Date(endInput).toISOString();
+      newProd.current_bid = priceParsed;
+      newProd.bid_count = 0;
+  }
 
   const { error } = await supabaseClient.from('haema_products').insert([newProd]);
   
@@ -443,10 +454,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetBtn = document.querySelector('.filter-reset');
     if(resetBtn) resetBtn.addEventListener('click', resetFilters);
 
-    // 서브 칩 상호작용
-    document.querySelectorAll('.f-sub-chip').forEach(chip => {
+    // 이벤트 리스너 등록 시 사용할 tradeChips (Registration Form 용)
+    const formTradeChips = document.querySelectorAll('#page-register .trade-chip');
+    
+    // 거래 방식 칩 로직
+    formTradeChips.forEach(chip => {
         chip.addEventListener('click', () => {
-            tradeChips.forEach(c => c.classList.remove('on'));
+            formTradeChips.forEach(c => c.classList.remove('on'));
             chip.classList.add('on');
             
             const isAuction = chip.textContent.trim() === '경매';
@@ -455,16 +469,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 매물등록 폼 상태 칩 클릭 연동
+    // 매물 상태 칩
     const condChips = document.querySelectorAll('#page-register .cond-chip');
     condChips.forEach(chip => {
         chip.addEventListener('click', () => {
-            tradeChips.forEach(c => c.classList.remove('on'));
+            condChips.forEach(c => c.classList.remove('on'));
             chip.classList.add('on');
-            
-            const isAuction = chip.textContent.trim() === '경매';
-            document.getElementById('auction-date-row').style.display = isAuction ? 'block' : 'none';
-            document.getElementById('price-label').innerHTML = isAuction ? '경매 시작가<span>*</span>' : '판매 희망가<span>*</span>';
         });
     });
+    
+    // 서브 칩 상호작용 (필터)
+    document.querySelectorAll('.f-sub-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const key = chip.getAttribute('data-key');
+            const val = chip.getAttribute('data-val');
+            applySubFilter(key, val);
+        });
+    });
+    
+    // 매물 등록 버튼 리스너
+    const submitBtn = document.querySelector('#page-register .submit-btn');
+    if(submitBtn) {
+        submitBtn.addEventListener('click', registerProduct);
+    }
 });
