@@ -529,12 +529,16 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchProducts();
     updateFilterStyles();
 
-    // 키워드 라이브 검색
+    // 키워드 라이브 검색 (디바운스 최적화 도입 - 메모리 절약)
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
+        let debounceTimer;
         searchInput.addEventListener('input', (e) => {
-            filterState.keyword = e.target.value.trim();
-            renderProducts();
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                filterState.keyword = e.target.value.trim();
+                renderProducts();
+            }, 250); // 250ms 대기 후 렌더링 호출
         });
     }
 
