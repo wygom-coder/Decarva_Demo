@@ -169,7 +169,7 @@
 <div class="wrap">
   <div class="sub-header"><span class="sub-title">마이페이지</span><span class="sub-action" onclick="showPage('settings')">설정</span></div>
   <div>
-    <div class="my-profile"><div class="my-avatar" id="profile-avatar">👤</div><div><div class="my-name" id="profile-name">해마 유저</div><div class="my-sub" id="profile-email">이메일 정보 없음</div><div class="my-badge">인증 판매자</div></div><button class="my-edit-btn" onclick="openProfileEdit()">편집</button></div>
+    <div class="my-profile"><div class="my-avatar" id="profile-avatar">👤</div><div><div style="display:flex; align-items:center;"><div class="my-name" id="profile-name">해마 유저</div><div id="profile-region-badge" style="display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; background:#EAEDF2; color:#7A93B0;">📍 미설정</div></div><div class="my-sub" id="profile-email">이메일 정보 없음</div><div class="my-badge">인증 판매자</div></div><button class="my-edit-btn" onclick="openProfileEdit()">편집</button></div>
     <div class="my-stats"><div class="stat-item"><span class="stat-num">24</span><span class="stat-label">판매완료</span></div><div class="stat-item"><span class="stat-num">3</span><span class="stat-label">판매중</span></div><div class="stat-item"><span class="stat-num">4.9</span><span class="stat-label">거래 평점</span></div></div>
     <div class="my-menu-section">
       <div class="my-menu-title">나의 거래</div>
@@ -267,6 +267,27 @@
       <label class="form-label">내 상점 한 줄 소개</label>
       <input class="form-input" type="text" id="edit-bio-input" placeholder="(선택) 마켓 이용자들에게 보여질 소개말을 적어주세요">
     </div>
+
+    <div class="form-row" style="margin-top:16px;">
+      <label class="form-label">활동 지역 (시/도)</label>
+      <div style="display:flex; gap:8px;">
+          <select class="form-select" id="edit-region-select" style="flex:1;">
+              <option value="">지역을 선택하세요</option>
+              <option value="서울">서울특별시</option><option value="부산">부산광역시</option>
+              <option value="대구">대구광역시</option><option value="인천">인천광역시</option>
+              <option value="광주">광주광역시</option><option value="대전">대전광역시</option>
+              <option value="울산">울산광역시</option><option value="세종">세종특별자치시</option>
+              <option value="경기">경기도</option><option value="강원">강원특별자치도</option>
+              <option value="충북">충청북도</option><option value="충남">충청남도</option>
+              <option value="전북">전북특별자치도</option><option value="전남">전라남도</option>
+              <option value="경북">경상북도</option><option value="경남">경상남도</option>
+              <option value="제주">제주특별자치도</option>
+          </select>
+          <button id="btn-gps-verify" onclick="verifyGPSLocation()" style="background:#F4F9FF; border:1px solid #1A5FA0; color:#1A5FA0; border-radius:8px; padding:0 12px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;">📍 내 위치 검증</button>
+      </div>
+      <div style="font-size:10px; color:#7A93B0; margin-top:4px;">* 전국 통합 인증 시스템: 가짜 지역 선택을 방지하기 위해 스마트폰/PC의 GPS 위치와 교차 검증합니다.</div>
+    </div>
+
     
     <button class="submit-btn" onclick="saveProfile()" style="margin-top: 10px;">저장하고 돌아가기</button>
   </div>

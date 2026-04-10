@@ -892,8 +892,50 @@ function updateProfileUI() {
         if(pEmail) pEmail.textContent = "";
         const pAv = document.getElementById('profile-avatar');
         if(pAv) pAv.textContent = "👤";
+        const rBadge = document.getElementById('profile-region-badge');
+        if(rBadge) rBadge.style.display = 'none';
         return;
     }
+    
+    const email = currentUser.email;
+    const metaName = currentUser.user_metadata?.display_name;
+    const metaBio = currentUser.user_metadata?.bio;
+    const metaRegion = currentUser.user_metadata?.region;
+    const isVerified = currentUser.user_metadata?.is_region_verified;
+    
+    const nameStr = metaName ? metaName : email.split('@')[0];
+    const firstChar = nameStr.charAt(0).toUpperCase();
+    
+    const pName = document.getElementById('profile-name');
+    if(pName) pName.textContent = nameStr; 
+    
+    const pEmail = document.getElementById('profile-email');
+    if(pEmail) pEmail.textContent = metaBio ? metaBio : email;
+    
+    const sEmail = document.getElementById('settings-email');
+    if(sEmail) sEmail.textContent = email;
+    
+    const pAv = document.getElementById('profile-avatar');
+    if(pAv) pAv.textContent = firstChar;
+    
+    const rBadge = document.getElementById('profile-region-badge');
+    if(rBadge) {
+        rBadge.style.display = 'inline-flex';
+        if(metaRegion && isVerified) {
+            rBadge.textContent = "📍 " + metaRegion + " (인증됨)";
+            rBadge.style.background = "#E6F4EA";
+            rBadge.style.color = "#1E8E3E";
+        } else if(metaRegion) {
+            rBadge.textContent = "📍 " + metaRegion + " (미인증)";
+            rBadge.style.background = "#FFFBEA";
+            rBadge.style.color = "#D4960A";
+        } else {
+            rBadge.textContent = "📍 지역 미설정";
+            rBadge.style.background = "#EAEDF2";
+            rBadge.style.color = "#7A93B0";
+        }
+    }
+}
     
 // 이메일 파싱보다 user_metadata.display_name 이 최우선
     const email = currentUser.email;
@@ -922,15 +964,41 @@ function openProfileEdit() {
     if(!currentUser) return;
     showPage('profile-edit');
     
+    // 리셋
+    tempVerifiedRegion = null;
+    const btn = document.getElementById('btn-gps-verify');
+    btn.textContent = "📍 내 위치 검증";
+    btn.style.background = "#F4F9FF";
+    btn.style.color = "#1A5FA0";
+    btn.style.borderColor = "#1A5FA0";
+    btn.disabled = false;
+    
     const metaName = currentUser.user_metadata?.display_name;
     const metaBio = currentUser.user_metadata?.bio || '';
+    const metaRegion = currentUser.user_metadata?.region || '';
+    const isVerified = currentUser.user_metadata?.is_region_verified || false;
+    
     const nameStr = metaName ? metaName : currentUser.email.split('@')[0];
     
     const nameInput = document.getElementById('edit-nickname-input');
     const bioInput = document.getElementById('edit-bio-input');
+    const regionSelector = document.getElementById('edit-region-select');
     
     nameInput.value = nameStr;
     if(bioInput) bioInput.value = metaBio;
+    if(regionSelector) {
+        regionSelector.value = metaRegion;
+        regionSelector.disabled = false;
+        if(metaRegion && isVerified) {
+            // 이미 이전에 인증한 기록이 있다면
+            tempVerifiedRegion = metaRegion;
+            regionSelector.disabled = true;
+            btn.textContent = "✓ 기인증 지역";
+            btn.style.background = "#E6F4EA";
+            btn.style.color = "#1E8E3E";
+            btn.style.borderColor = "#1E8E3E";
+        }
+    }
     
     if(metaName) {
         nameInput.disabled = true;
@@ -941,6 +1009,9 @@ function openProfileEdit() {
         nameInput.style.backgroundColor = '#fff';
         nameInput.style.color = '#1A2B4A';
     }
+    
+    document.getElementById('edit-avatar-preview').textContent = nameStr.charAt(0).toUpperCase();
+}
     
     document.getElementById('edit-avatar-preview').textContent = nameStr.charAt(0).toUpperCase();
 }
@@ -957,24 +1028,36 @@ async function saveProfile() {
     const btn = document.querySelector('#page-profile-edit .submit-btn');
     const nameInput = document.getElementById('edit-nickname-input');
     const bioInput = document.getElementById('edit-bio-input');
+    const regionSelector = document.getElementById('edit-region-select');
     
     const inputName = nameInput.value.trim();
     const inputBio = bioInput ? bioInput.value.trim() : '';
+    const selectedRegion = regionSelector ? regionSelector.value : '';
     
     if(!nameInput.disabled && !inputName) {
-        alert('닉네임을 입력해주세요.');
+        alert('닉네임을 먼저 입력해주세요.');
         return;
     }
     
-    btn.textContent = '저장 중...';
+    btn.textContent = '메타데이터 굽는 중...';
     btn.disabled = true;
     
-    let updatePayload = { bio: inputBio };
+    let isVeri = (tempVerifiedRegion !== null && tempVerifiedRegion === selectedRegion);
+    if(selectedRegion && !isVeri) {
+        // 지역을 골랐는데 인증버튼을 안눌렀거나 실패한 경우, 일단 저장은 하되 미인증 상태로 기록
+        isVeri = false;
+    }
+    
+    let updatePayload = { 
+        bio: inputBio,
+        region: selectedRegion,
+        is_region_verified: isVeri
+    };
+    
     if(!nameInput.disabled) {
         updatePayload.display_name = inputName;
     }
     
-    // Supabase Auth 계정 내부 메타데이터 업데이트 API 통신
     const { data, error } = await supabaseClient.auth.updateUser({
         data: updatePayload
     });
@@ -991,4 +1074,77 @@ async function saveProfile() {
         updateProfileUI();
         showPage('mypage');
     }
+}
+
+
+// ==== 위치 인증 로직 ====
+let tempVerifiedRegion = null;
+
+async function verifyGPSLocation() {
+    const selector = document.getElementById('edit-region-select');
+    const selectedRegion = selector.value;
+    const btn = document.getElementById('btn-gps-verify');
+    
+    if(!selectedRegion) {
+        alert("원하시는 활동 지역(시/도)을 우선 선택해주세요.");
+        return;
+    }
+    
+    if (!navigator.geolocation) {
+        alert("접속하신 기기 또는 브라우저가 위치 스캔 기능을 지원하지 않습니다.");
+        return;
+    }
+    
+    btn.textContent = "🌍 위성망 렌더링 중...";
+    btn.disabled = true;
+    
+    navigator.geolocation.getCurrentPosition(async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        
+        try {
+            // 무료 Reverse Geocoding API 체인 호출
+            const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`);
+            const data = await response.json();
+            
+            // principalSubdivision : "서울특별시", "경기도", "부산광역시" 등 추출
+            const geoRegion = data.principalSubdivision || data.city || "";
+            
+            let isMatch = false;
+            if(geoRegion.includes(selectedRegion)) {
+                isMatch = true;
+            } else {
+                // 단축어 안전장치
+                const shortcuts = {
+                    "경기": "경기도", "강원": "강원", "충북": "충청북도", "충남": "충청남도",
+                    "전북": "전라북도", "전남": "전라남도", "경북": "경상북도", "경남": "경상남도", "제주": "제주"
+                };
+                if(shortcuts[selectedRegion] && geoRegion.includes(shortcuts[selectedRegion])) {
+                    isMatch = true;
+                }
+            }
+            
+            if(isMatch) {
+                alert(`✅ 인증 100% 일치! 접속하신 장비의 위치가 [${geoRegion}] 물리망 내에 있음이 판독되었습니다.`);
+                tempVerifiedRegion = selectedRegion;
+                btn.textContent = "✓ 인증 완료";
+                btn.style.background = "#E6F4EA";
+                btn.style.color = "#1E8E3E";
+                btn.style.borderColor = "#1E8E3E";
+                selector.disabled = true; // 락킹
+            } else {
+                alert(`❌ 허위 감지! 선택하신 지역(${selectedRegion})과 현재 물리적인 GPS 접속 위치(${geoRegion}) 단위가 다릅니다.`);
+                btn.textContent = "📍 다시 인증하기";
+                btn.disabled = false;
+            }
+        } catch(e) {
+            alert("지오코딩 메인 서버와 통신 중 장애가 발생했습니다. 잠시 후 시도해주세요.");
+            btn.textContent = "📍 위치 재검증";
+            btn.disabled = false;
+        }
+    }, (error) => {
+        alert("GPS 위치 정보를 강제로 차단하셨거나 가져올 수 없습니다. 브라우저 위치 권한을 승인해주세요.");
+        btn.textContent = "📍 위치 권한 재요청";
+        btn.disabled = false;
+    });
 }
