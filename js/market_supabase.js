@@ -1579,9 +1579,9 @@ async function loadChats() {
     container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999; font-size:14px;">채팅 목록 불러오는 중...</div>';
     
     // 구매자 혹은 판매자로 참여 중인 모든 방 로드
-    const { data, error } = await supabaseClient
+    const { data: rooms, error } = await supabaseClient
         .from('haema_chat_rooms')
-        .select('*, haema_products(*)')
+        .select('*')
         .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
         .order('last_updated_at', { ascending: false });
         
@@ -1591,12 +1591,19 @@ async function loadChats() {
         return;
     }
     
-    myChats = data;
-    
-    if(myChats.length === 0) {
+    if(!rooms || rooms.length === 0) {
          container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999; font-size:14px;">참여 중인 대화가 없습니다.</div>';
          return;
     }
+    
+    // JS 릴레이션 (haema_products) 수동 연결 (Foreign Key 제약 없이 작동하게 함)
+    const pIds = rooms.map(r => r.product_id);
+    const { data: pData } = await supabaseClient.from('haema_products').select('*').in('id', pIds);
+    
+    myChats = rooms.map(r => ({
+        ...r,
+        haema_products: pData ? pData.find(x => String(x.id) === String(r.product_id)) : null
+    }));
     
     let html = '';
     myChats.forEach(room => {
