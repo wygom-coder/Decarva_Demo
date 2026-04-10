@@ -169,7 +169,7 @@
 <div class="wrap">
   <div class="sub-header"><span class="sub-title">마이페이지</span><span class="sub-action" onclick="showPage('settings')">설정</span></div>
   <div>
-    <div class="my-profile"><div class="my-avatar" id="profile-avatar">👤</div><div><div style="display:flex; align-items:center;"><div class="my-name" id="profile-name">해마 유저</div><div id="profile-region-badge" style="display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; background:#EAEDF2; color:#7A93B0;">📍 미설정</div></div><div class="my-sub" id="profile-email">이메일 정보 없음</div><div class="my-badge">인증 판매자</div></div><button class="my-edit-btn" onclick="openProfileEdit()">편집</button></div>
+    <div class="my-profile"><div class="my-avatar" id="profile-avatar">👤</div><div><div style="display:flex; align-items:center;"><div class="my-name" id="profile-name">해마 유저</div><div id="profile-region-badge" style="display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; background:#EAEDF2; color:#7A93B0;">📍 미설정</div></div><div class="my-sub" id="profile-email">이메일 정보 없음</div><div class="my-badge" id="profile-biz-badge">일반 회원</div></div><button class="my-edit-btn" onclick="openProfileEdit()">편집</button></div>
     <div class="my-stats"><div class="stat-item"><span class="stat-num">24</span><span class="stat-label">판매완료</span></div><div class="stat-item"><span class="stat-num">3</span><span class="stat-label">판매중</span></div><div class="stat-item"><span class="stat-num">4.9</span><span class="stat-label">거래 평점</span></div></div>
     <div class="my-menu-section">
       <div class="my-menu-title">나의 거래</div>
@@ -181,13 +181,82 @@
     <div class="my-menu-section">
       <div class="my-menu-title">계정 관리</div>
       <div class="my-menu-item" onclick="openProfileEdit()"><div class="menu-icon" style="background:#F4F9FF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="7" r="4" stroke="#7A93B0" stroke-width="1.2"/><path d="M2 16c0-3.3 3.1-5 7-5s7 1.7 7 5" stroke="#7A93B0" stroke-width="1.2" stroke-linecap="round"/></svg></div><span class="menu-text">프로필 편집</span><span class="menu-arrow">›</span></div>
-      <div class="my-menu-item"><div class="menu-icon" style="background:#F4F9FF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2" stroke="#7A93B0" stroke-width="1.2"/><path d="M6 9l2 2 4-4" stroke="#7A93B0" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="menu-text">사업자 인증</span><span style="font-size:11px;color:#D4960A;margin-right:6px;font-weight:700;">완료</span><span class="menu-arrow">›</span></div>
-      <div class="my-menu-item"><div class="menu-icon" style="background:#F4F9FF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="#7A93B0" stroke-width="1.2"/><path d="M9 6v3l2 2" stroke="#7A93B0" stroke-width="1.2" stroke-linecap="round"/></svg></div><span class="menu-text">거래 후기</span><span class="menu-arrow">›</span></div>
+      <div class="my-menu-item" onclick="showPage('business-auth')"><div class="menu-icon" style="background:#F4F9FF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2" stroke="#7A93B0" stroke-width="1.2"/><path d="M6 9l2 2 4-4" stroke="#7A93B0" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="menu-text">사업자 인증</span><span id="biz-auth-status" style="font-size:11px;color:#1E8E3E;margin-right:6px;font-weight:700;display:none;">✓ 승인완료</span><span class="menu-arrow">›</span></div>
+      <div class="my-menu-item" onclick="showPage('reviews')"><div class="menu-icon" style="background:#F4F9FF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="#7A93B0" stroke-width="1.2"/><path d="M9 6v3l2 2" stroke="#7A93B0" stroke-width="1.2" stroke-linecap="round"/></svg></div><span class="menu-text">거래 후기</span><span class="menu-arrow">›</span></div>
     </div>
   </div>
 </div>
 </div>
 
+
+
+<!-- 사업자 인증 페이지 -->
+<div class="page" id="page-business-auth">
+<div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
+  <div class="sub-header">
+    <span class="back-btn" onclick="showPage('mypage')">‹</span>
+    <span class="sub-title">사업자 인증</span>
+  </div>
+  <div style="padding: 40px 20px; flex:1;">
+    <div style="text-align:center; font-size:40px; margin-bottom:16px;">🏢</div>
+    <div style="text-align:center; font-size:20px; font-weight:700; color:#1A2B4A; margin-bottom:8px;">B2B 신뢰 기업 인증</div>
+    <div style="text-align:center; font-size:13px; color:#7A93B0; margin-bottom:40px; line-height:1.5;">해마 마켓은 조선/해양 도매 거래의 신뢰를 위해<br>사업자 인증을 권장하고 있습니다.</div>
+    
+    <div class="form-row">
+      <label class="form-label">사업자등록번호 (10자리 숫자)</label>
+      <input class="form-input" type="number" id="biz-number-input" placeholder="'-' 제외 10자리 숫자 입력">
+    </div>
+    
+    <button class="submit-btn" onclick="submitBusinessAuth()" style="margin-top: 30px;">국세청 진위 확인 및 인증 (Demo)</button>
+  </div>
+</div>
+</div>
+
+<!-- 거래 후기 뷰 페이지 -->
+<div class="page" id="page-reviews">
+<div class="wrap" style="background:#f4f9ff; height:100vh; display:flex; flex-direction:column;">
+  <div class="sub-header" style="background:#fff;">
+    <span class="back-btn" onclick="showPage('mypage')">‹</span>
+    <span class="sub-title">받은 거래 후기</span>
+  </div>
+  <div style="padding: 20px; flex:1; overflow-y:auto;">
+    
+    <div style="background:#fff; border-radius:12px; padding:20px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:32px; height:32px; border-radius:50%; background:#1A5FA0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">인</div>
+                <div><div style="font-weight:700; font-size:13px;">인천마린보이</div><div style="font-size:11px; color:#7A93B0;">3일 전 · JRC 레이더 시스템 구매</div></div>
+            </div>
+            <div style="color:#D4960A; font-size:12px; font-weight:700;">⭐️ 5.0</div>
+        </div>
+        <div style="font-size:14px; color:#1a2b4a; line-height:1.5;">"포장도 너무 깔끔하게 잘 해주시고, 장비 상태가 설명하신 그대로 S급입니다. 다음에도 꼭 여기서 발주 넣겠습니다. 번창하세요 사장님!"</div>
+    </div>
+    
+    <div style="background:#fff; border-radius:12px; padding:20px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:32px; height:32px; border-radius:50%; background:#1E8E3E; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">부</div>
+                <div><div style="font-weight:700; font-size:13px;">부산조선기자재</div><div style="font-size:11px; color:#7A93B0;">2주일 전 · MAN B&W 엔진 부품 구매</div></div>
+            </div>
+            <div style="color:#D4960A; font-size:12px; font-weight:700;">⭐️ 4.5</div>
+        </div>
+        <div style="font-size:14px; color:#1a2b4a; line-height:1.5;">"직거래로 인천항에서 수령했습니다. 시간에 딱 맞게 나와주셔서 일정에 차질이 없었네요. 엔진 부품도 무사히 장착 완료했습니다."</div>
+    </div>
+    
+    <div style="background:#fff; border-radius:12px; padding:20px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:32px; height:32px; border-radius:50%; background:#7A93B0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">목</div>
+                <div><div style="font-weight:700; font-size:13px;">목포제일선박</div><div style="font-size:11px; color:#7A93B0;">1개월 전 · 선박용 압력계 세트 구매</div></div>
+            </div>
+            <div style="color:#D4960A; font-size:12px; font-weight:700;">⭐️ 5.0</div>
+        </div>
+        <div style="font-size:14px; color:#1a2b4a; line-height:1.5;">"믿고 거래하는 업체입니다. 서류 처리(세금계산서)도 깔끔해서 경리과에서 좋아하네요."</div>
+    </div>
+    
+  </div>
+</div>
+</div>
 
 <!-- 내가 올린 판매 목록 -->
 <div class="page" id="page-mylist">

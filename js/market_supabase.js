@@ -893,32 +893,6 @@ function updateProfileUI() {
         const pAv = document.getElementById('profile-avatar');
         if(pAv) pAv.textContent = "👤";
         const rBadge = document.getElementById('profile-region-badge');
-        if(rBadge) rBadge.style.display = 'none';
-        return;
-    }
-    
-    const email = currentUser.email;
-    const metaName = currentUser.user_metadata?.display_name;
-    const metaBio = currentUser.user_metadata?.bio;
-    const metaRegion = currentUser.user_metadata?.region;
-    const isVerified = currentUser.user_metadata?.is_region_verified;
-    
-    const nameStr = metaName ? metaName : email.split('@')[0];
-    const firstChar = nameStr.charAt(0).toUpperCase();
-    
-    const pName = document.getElementById('profile-name');
-    if(pName) pName.textContent = nameStr; 
-    
-    const pEmail = document.getElementById('profile-email');
-    if(pEmail) pEmail.textContent = metaBio ? metaBio : email;
-    
-    const sEmail = document.getElementById('settings-email');
-    if(sEmail) sEmail.textContent = email;
-    
-    const pAv = document.getElementById('profile-avatar');
-    if(pAv) pAv.textContent = firstChar;
-    
-    const rBadge = document.getElementById('profile-region-badge');
     if(rBadge) {
         rBadge.style.display = 'inline-flex';
         if(metaRegion && isVerified) {
@@ -933,6 +907,25 @@ function updateProfileUI() {
             rBadge.textContent = "📍 지역 미설정";
             rBadge.style.background = "#EAEDF2";
             rBadge.style.color = "#7A93B0";
+        }
+    }
+    
+    // 사업자 뱃지 연동
+    const isBiz = currentUser.user_metadata?.is_business;
+    const bBadge = document.getElementById('profile-biz-badge');
+    const bStatus = document.getElementById('biz-auth-status');
+    if(bBadge) {
+        if(isBiz) {
+            bBadge.textContent = "🏢 신뢰 기업";
+            bBadge.style.background = "var(--blue-600)";
+            bBadge.style.color = "white";
+            bBadge.style.border = "none";
+            if(bStatus) bStatus.style.display = "inline-block";
+        } else {
+            bBadge.textContent = "일반 회원";
+            bBadge.style.background = "#EAEDF2";
+            bBadge.style.color = "#7A93B0";
+            if(bStatus) bStatus.style.display = "none";
         }
     }
 }
@@ -1115,4 +1108,43 @@ async function verifyGPSLocation() {
         btn.textContent = "📍 위치 권한 재요청";
         btn.disabled = false;
     });
+}
+
+
+// ==== 사업자 인증 로직 ====
+async function submitBusinessAuth() {
+    if(!currentUser) return;
+    
+    const inputEl = document.getElementById('biz-number-input');
+    const val = inputEl.value.trim();
+    
+    if(val.length !== 10) {
+        alert("하이픈(-)을 분리한 온전한 10자리 사업자등록번호를 입력해주세요.");
+        return;
+    }
+    
+    // MVP: 10자리 숫자가 정상적으로 맞으면 인증을 통과시킵니다.
+    const btn = document.querySelector('#page-business-auth .submit-btn');
+    btn.textContent = "국세청 인증 통신 중...";
+    btn.disabled = true;
+    
+    // Fake Network delay
+    await new Promise(r => setTimeout(r, 800));
+    
+    const { data, error } = await supabaseClient.auth.updateUser({
+        data: { is_business: true, biz_number: val }
+    });
+    
+    btn.disabled = false;
+    btn.textContent = "국세청 진위 확인 및 인증 (Demo)";
+    
+    if(error) {
+        alert("에러가 발생했습니다. 잠시 후 재시도 해주세요.");
+    } else {
+        alert("🏢 성공적으로 해양/조선 B2B 사업자 인증이 완료되었습니다!");
+        currentUser = data.user;
+        updateProfileUI(); // Reload UI
+        showPage('mypage');
+        inputEl.value = ""; // Clear input
+    }
 }
