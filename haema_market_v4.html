@@ -7,12 +7,21 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛳️</text></svg>">
   <title>해마 마켓 - 중고 선박 기자재 거래 플랫폼</title>
 
-  <!-- Supabase & Custom Script -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/market_supabase.js" defer></script>
-  
-  <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="./css/market.css">
+
+  <!-- 대카테고리 탭 스타일 -->
+  <style>
+    .big-cat-btn.active {
+      color: #1A2B4A !important;
+      border-bottom: 3px solid #1A5FA0 !important;
+    }
+    .big-cat-btn:hover {
+      color: #1A5FA0 !important;
+      background: #F4F9FF !important;
+    }
+  </style>
 </head>
 <body>
 
@@ -33,9 +42,17 @@
     </div>
     <div class="header-nav">
       <button class="btn-login" id="header-btn-login" onclick="showPage('login')">로그인</button>
-      
       <button class="btn-sell" onclick="requireAuthAndShow('register')">+ 등록</button>
     </div>
+  </div>
+
+  <!-- 대카테고리 탭 -->
+  <div class="big-cat-bar" style="display:flex; gap:0; border-bottom:2px solid #eee; background:#fff; position:sticky; top:56px; z-index:90;">
+    <button class="big-cat-btn active" onclick="setBigCategory('전체', this)" style="flex:1; padding:13px 0; font-size:14px; font-weight:700; border:none; background:none; border-bottom:3px solid transparent; cursor:pointer; color:#7A93B0; transition:all 0.2s;">전체</button>
+    <button class="big-cat-btn" onclick="setBigCategory('중고기부속', this)" style="flex:1; padding:13px 0; font-size:14px; font-weight:700; border:none; background:none; border-bottom:3px solid transparent; cursor:pointer; color:#7A93B0; transition:all 0.2s;">중고기부속</button>
+    <button class="big-cat-btn" onclick="setBigCategory('선용품', this)" style="flex:1; padding:13px 0; font-size:14px; font-weight:700; border:none; background:none; border-bottom:3px solid transparent; cursor:pointer; color:#7A93B0; transition:all 0.2s;">선용품</button>
+    <button class="big-cat-btn" onclick="setBigCategory('주/부식', this)" style="flex:1; padding:13px 0; font-size:14px; font-weight:700; border:none; background:none; border-bottom:3px solid transparent; cursor:pointer; color:#7A93B0; transition:all 0.2s;">주/부식</button>
+    <button class="big-cat-btn" onclick="setBigCategory('안전장비', this)" style="flex:1; padding:13px 0; font-size:14px; font-weight:700; border:none; background:none; border-bottom:3px solid transparent; cursor:pointer; color:#7A93B0; transition:all 0.2s;">안전장비</button>
   </div>
 
   <div class="cat-bar">
@@ -120,12 +137,7 @@
 
     <div class="section-header"><span class="section-title">최신 매물</span><span class="section-more">더보기 →</span></div>
     <div class="product-grid">
-      <div class="product-card"><div class="product-img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#3A90D9" stroke-width="1.5"/><path d="M16 20v-6a8 8 0 0116 0v6" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="29" r="3" fill="#3A90D9"/></svg></div><div class="product-body"><div class="product-title">MAN B&W 엔진 부품</div><div class="product-sub">부산 · 2024.03</div><div class="product-price">₩ 4,500,000</div><div class="product-tags"><span class="ptag ptag-b">인증</span><span class="ptag ptag-y">직거래</span></div></div></div>
-      <div class="product-card"><div class="product-img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="4" fill="#D4960A"/><line x1="24" y1="12" x2="24" y2="8" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="36" y1="24" x2="40" y2="24" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="product-body"><div class="product-title">JRC 레이더 시스템</div><div class="product-sub">인천 · 2022.11</div><div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">₩ 8,200,000</span></div><div class="product-tags"><span class="ptag ptag-b">14:32 남음</span></div></div></div>
-      <div class="product-card"><div class="product-img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 36L24 12l12 24H12z" stroke="#3A90D9" stroke-width="1.5" stroke-linejoin="round"/><line x1="24" y1="36" x2="24" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="42" x2="30" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="product-body"><div class="product-title">앵커 체인 50m</div><div class="product-sub">울산 · 2021.06</div><div class="product-price">₩ 1,200,000</div><div class="product-tags"><span class="ptag ptag-y">직거래</span><span class="ptag ptag-r">가격제안</span></div></div></div>
-      <div class="product-card"><div class="product-img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="16" width="28" height="20" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M18 16v-4h12v4" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="26" x2="32" y2="26" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="24" y1="22" x2="24" y2="30" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="product-body"><div class="product-title">ICOM 위성통신 장비</div><div class="product-sub">여수 · 2023.08</div><div class="product-price">₩ 2,800,000</div><div class="product-tags"><span class="ptag ptag-b">인증</span></div></div></div>
-      <div class="product-card"><div class="product-img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="22" r="8" stroke="#3A90D9" stroke-width="1.5"/><path d="M18 30l-4 8M30 30l4 8" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="38" x2="34" y2="38" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="product-body"><div class="product-title">구명정 진수장치</div><div class="product-sub">광양 · 2020.04</div><div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">₩ 5,600,000</span></div><div class="product-tags"><span class="ptag ptag-b">8:14 남음</span></div></div></div>
-      <div class="product-card"><div class="product-img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="12" width="28" height="24" rx="3" stroke="#D4960A" stroke-width="1.5"/><line x1="10" y1="20" x2="38" y2="20" stroke="#D4960A" stroke-width="1.5"/><line x1="24" y1="12" x2="24" y2="36" stroke="#D4960A" stroke-width="1.5"/></svg></div><div class="product-body"><div class="product-title">선박용 압력계 세트</div><div class="product-sub">목포 · 2023.12</div><div class="product-price">₩ 680,000</div><div class="product-tags"><span class="ptag ptag-y">직거래</span><span class="ptag ptag-b">인증</span></div></div></div>
+      <!-- Supabase에서 동적 렌더링 -->
     </div>
   </div>
 
@@ -138,7 +150,38 @@
   <div class="sub-header"><span class="back-btn">‹</span><span class="sub-title">매물 등록</span><span class="sub-action">임시저장</span></div>
   <div class="sub-body">
     <div class="form-section"><div class="form-section-title">사진 등록</div><div class="photo-upload"><input type="file" id="photo-upload-input" accept="image/*" style="display:none;"><div class="photo-box main" id="photo-box-main" onclick="document.getElementById('photo-upload-input').click()" style="background-size:cover; background-position:center; cursor:pointer;"><span class="photo-plus">+</span><span class="photo-main-label">대표사진</span></div><div class="photo-box"><span class="photo-plus">+</span><span class="photo-label">추가</span></div><div class="photo-box"><span class="photo-plus">+</span><span class="photo-label">추가</span></div><div class="photo-box"><span class="photo-plus">+</span><span class="photo-label">추가</span></div></div></div>
-    <div class="form-section"><div class="form-section-title">기본 정보</div><div class="form-row"><label class="form-label">카테고리<span>*</span></label><select class="form-select"><option>카테고리 선택</option><option>엔진·동력</option><option>항법장비</option><option>갑판장비</option><option>통신장비</option><option>안전장비</option></select></div><div class="form-row"><label class="form-label">상품명<span>*</span></label><input class="form-input" id="title-input" type="text" placeholder="예) JRC 레이더 JMA-5212-6"></div><div class="form-row-2"><div><label class="form-label">제조사</label><input class="form-input" type="text" placeholder="예) JRC"></div><div><label class="form-label">제조연도</label><input class="form-input" type="text" placeholder="예) 2018" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div></div></div>
+
+    <div class="form-section">
+      <div class="form-section-title">기본 정보</div>
+
+      <!-- ✅ 대카테고리 선택 (새로 추가) -->
+      <div class="form-row">
+        <label class="form-label">대카테고리<span>*</span></label>
+        <select class="form-select" id="big-category-input">
+          <option value="중고기부속">중고기부속</option>
+          <option value="선용품">선용품</option>
+          <option value="주/부식">주/부식</option>
+          <option value="안전장비">안전장비</option>
+        </select>
+      </div>
+
+      <!-- 소카테고리 -->
+      <div class="form-row">
+        <label class="form-label">카테고리<span>*</span></label>
+        <select class="form-select">
+          <option>카테고리 선택</option>
+          <option>엔진·동력</option>
+          <option>항법장비</option>
+          <option>갑판장비</option>
+          <option>통신장비</option>
+          <option>안전장비</option>
+        </select>
+      </div>
+
+      <div class="form-row"><label class="form-label">상품명<span>*</span></label><input class="form-input" id="title-input" type="text" placeholder="예) JRC 레이더 JMA-5212-6"></div>
+      <div class="form-row-2"><div><label class="form-label">제조사</label><input class="form-input" type="text" placeholder="예) JRC"></div><div><label class="form-label">제조연도</label><input class="form-input" type="text" placeholder="예) 2018" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div></div>
+    </div>
+
     <div class="form-section"><div class="form-section-title">상태 및 가격</div><div class="form-row"><label class="form-label">기자재 상태<span>*</span></label><div class="condition-row"><div class="cond-chip on">최상</div><div class="cond-chip">양호</div><div class="cond-chip">보통</div><div class="cond-chip">부품용</div></div></div><div class="form-row"><label class="form-label">거래 방식<span>*</span></label><div class="trade-row"><div class="trade-chip on">직거래</div><div class="trade-chip">경매</div><div class="trade-chip">모두</div></div></div><div class="form-row"><label class="form-label" id="price-label">판매 희망가<span>*</span></label><input class="form-input" id="price-input" type="text" placeholder="₩ 가격 입력"></div><div class="form-row" id="auction-date-row" style="display:none; margin-top:16px;"><label class="form-label">경매 마감일시<span>*</span></label><input class="form-input" id="auction-end-input" type="datetime-local" onclick="this.showPicker()"></div></div>
     <div class="form-section"><div class="form-section-title">상세 설명</div><div class="form-row"><label class="form-label">설명<span>*</span></label><textarea class="form-textarea" placeholder="기자재의 사용 이력, 하자 유무, 보관 상태 등을 자세히 적어주세요."></textarea></div><div class="form-row"><label class="form-label">거래 지역</label><select class="form-select" id="region-input"><option value="부산">부산/경남</option><option value="인천">인천/수도권</option><option value="울산">울산/포항</option><option value="여수">여수/광양</option><option value="목포">목포/전남</option></select></div></div>
     <button class="submit-btn">등록하기</button>
@@ -150,18 +193,12 @@
 <div class="page" id="page-chat">
 <div class="wrap">
   <div class="sub-header"><span class="back-btn" onclick="triggerBottomNav('home')">‹</span><span class="sub-title">채팅</span></div>
-  <div class="chat-list" id="chat-list" style="padding-bottom: 20px;">
-    <!-- 동적 채팅 목록 렌더링 영역 -->
-  </div>
+  <div class="chat-list" id="chat-list" style="padding-bottom: 20px;"></div>
   <div class="chatroom" id="chatroom" style="display:none;">
-    
     <div class="chatroom-header"><span class="back-btn" onclick="hideChatRoom()">‹</span><span id="chat-receiver-name" style="font-size:15px;font-weight:700;color:#1A2B4A;flex:1;">판매자와 채팅</span></div>
     <div class="chatroom-product" id="chat-product-bar" style="display:flex; border-bottom:1px solid #eee; padding:12px 16px; align-items:center; gap:12px; background:#fff;"><div class="cp-img" id="chat-product-img" style="width:40px;height:40px;overflow:hidden;border-radius:4px;background:#f4f9ff;"></div><div style="flex:1;"><div class="cp-title" id="chat-product-title" style="font-size:13px;font-weight:600;color:#1a2b4a;"></div><div class="cp-price" id="chat-product-price" style="font-size:14px;font-weight:700;color:#1a5fa0;"></div></div><button id="chat-trade-btn" class="cp-btn" style="background:#f4f9ff; color:#1a5fa0; border:none; border-radius:6px; padding:6px 12px; font-weight:700; cursor:pointer;">거래완료</button></div>
-    <div class="chat-messages" id="chat-messages-container" style="flex:1; overflow-y:auto; padding:16px;">
-      <!-- 동적 메시지 영역 -->
-    </div>
+    <div class="chat-messages" id="chat-messages-container" style="flex:1; overflow-y:auto; padding:16px;"></div>
     <div class="chat-input-bar" style="background:#fff; border-top:1px solid #eee; padding:12px 16px; display:flex; gap:8px;"><input type="text" id="chat-input-text" placeholder="메시지를 입력하세요" onkeypress="if(event.key==='Enter') sendChatMessage()" style="flex:1; background:#f4f9ff; border:none; padding:10px 14px; border-radius:20px; font-size:14px; outline:none;"><button class="chat-send" onclick="sendChatMessage()" style="width:40px; height:40px; border-radius:50%; background:var(--yellow-400); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-6-5 6 5 6-12-6z" fill="#7A5200"/></svg></button></div>
-
   </div>
 </div>
 </div>
@@ -172,18 +209,10 @@
   <div class="sub-header"><span class="sub-title">마이페이지</span><span class="sub-action" onclick="showPage('settings')">설정</span></div>
   <div>
     <div class="my-profile"><div class="my-avatar" id="profile-avatar">👤</div><div><div style="display:flex; align-items:center;"><div class="my-name" id="profile-name">해마 유저</div><div id="profile-region-badge" style="display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; background:#EAEDF2; color:#7A93B0;">📍 미설정</div></div><div class="my-sub" id="profile-email">이메일 정보 없음</div><div class="my-badge" id="profile-biz-badge">일반 회원</div></div><button class="my-edit-btn" onclick="openProfileEdit()">편집</button></div>
-    
-    <!-- 매너온도 섹션 -->
     <div class="manner-temp-box" style="padding:16px 20px; background:#fff; border-bottom:8px solid #f4f9ff;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span style="font-size:13px; font-weight:700; color:#1A2B4A; text-decoration:underline;">매너온도</span>
-        <span id="manner-temp-text" style="font-size:22px; font-weight:800; color:#1A5FA0;">36.5°C</span>
-      </div>
-      <div style="width:100%; height:8px; background:#EAEDF2; border-radius:4px; overflow:hidden;">
-        <div id="manner-temp-bar" style="width:36.5%; height:100%; background:#1A5FA0; border-radius:4px; transition:width 0.8s ease-in-out;"></div>
-      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-size:13px; font-weight:700; color:#1A2B4A; text-decoration:underline;">매너온도</span><span id="manner-temp-text" style="font-size:22px; font-weight:800; color:#1A5FA0;">36.5°C</span></div>
+      <div style="width:100%; height:8px; background:#EAEDF2; border-radius:4px; overflow:hidden;"><div id="manner-temp-bar" style="width:36.5%; height:100%; background:#1A5FA0; border-radius:4px; transition:width 0.8s ease-in-out;"></div></div>
     </div>
-    
     <div class="my-stats" style="border-top:none;"><div class="stat-item"><span class="stat-num">24</span><span class="stat-label">판매완료</span></div><div class="stat-item" onclick="showPage('mylist')" style="cursor:pointer;"><span class="stat-num">3</span><span class="stat-label">판매중</span></div><div class="stat-item"><span class="stat-num">4.9</span><span class="stat-label">거래 평점</span></div></div>
     <div class="my-menu-section">
       <div class="my-menu-title">나의 거래</div>
@@ -203,105 +232,56 @@
 </div>
 </div>
 
-
-
-<!-- 사업자 인증 페이지 -->
+<!-- 사업자 인증 -->
 <div class="page" id="page-business-auth">
 <div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
-  <div class="sub-header">
-    <span class="back-btn" onclick="showPage('mypage')">‹</span>
-    <span class="sub-title">사업자 인증</span>
-  </div>
+  <div class="sub-header"><span class="back-btn" onclick="showPage('mypage')">‹</span><span class="sub-title">사업자 인증</span></div>
   <div style="padding: 40px 20px; flex:1;">
     <div style="text-align:center; font-size:40px; margin-bottom:16px;">🏢</div>
     <div style="text-align:center; font-size:20px; font-weight:700; color:#1A2B4A; margin-bottom:8px;">B2B 신뢰 기업 인증</div>
     <div id="biz-auth-desc" style="text-align:center; font-size:13px; color:#7A93B0; margin-bottom:40px; line-height:1.5;">해마 마켓은 조선/해양 도매 거래의 신뢰를 위해<br>사업자 인증을 권장하고 있습니다.</div>
-    
     <div id="biz-auth-form">
-      <div class="form-row">
-        <label class="form-label">상호명 (기업명)</label>
-        <input class="form-input" type="text" id="biz-name-input" placeholder="예: 해마조선">
-      </div>
-      <div class="form-row">
-        <label class="form-label">사업자등록번호 (10자리 숫자)</label>
-        <input class="form-input" type="number" id="biz-number-input" placeholder="'-' 제외 10자리 숫자 입력">
-      </div>
+      <div class="form-row"><label class="form-label">상호명 (기업명)</label><input class="form-input" type="text" id="biz-name-input" placeholder="예: 해마조선"></div>
+      <div class="form-row"><label class="form-label">사업자등록번호 (10자리 숫자)</label><input class="form-input" type="number" id="biz-number-input" placeholder="'-' 제외 10자리 숫자 입력"></div>
       <button class="submit-btn" onclick="submitBusinessAuth()" style="margin-top: 30px;">국세청 실시간 진위 확인 (Live)</button>
     </div>
-
     <div id="biz-auth-verified" style="display:none; background:#E6F4EA; border:1px solid #1E8E3E; border-radius:12px; padding:24px; text-align:center;">
        <div style="font-size:24px; font-weight:700; color:#1E8E3E; margin-bottom:4px;">🏢 인증된 기업입니다</div>
        <div id="biz-verified-name" style="font-size:16px; font-weight:700; color:#1A2B4A; margin-bottom:16px;"></div>
-       <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid rgba(0,0,0,0.05);">
-           <span style="color:#7A93B0;">사업자등록번호</span>
-           <span id="biz-verified-number" style="font-weight:700; color:#1a2b4a;">123-45-67890</span>
-       </div>
-       <div style="display:flex; justify-content:space-between; font-size:14px;">
-           <span style="color:#7A93B0;">국세청(NTS) 연동 상태</span>
-           <span style="font-weight:700; color:#1E8E3E;">정상 (계속사업자)</span>
-       </div>
+       <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid rgba(0,0,0,0.05);"><span style="color:#7A93B0;">사업자등록번호</span><span id="biz-verified-number" style="font-weight:700; color:#1a2b4a;">123-45-67890</span></div>
+       <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#7A93B0;">국세청(NTS) 연동 상태</span><span style="font-weight:700; color:#1E8E3E;">정상 (계속사업자)</span></div>
     </div>
   </div>
 </div>
 </div>
 
-<!-- 거래 후기 뷰 페이지 -->
+<!-- 거래 후기 -->
 <div class="page" id="page-reviews">
 <div class="wrap" style="background:#f4f9ff; height:100vh; display:flex; flex-direction:column;">
-  <div class="sub-header" style="background:#fff;">
-    <span class="back-btn" onclick="showPage('mypage')">‹</span>
-    <span class="sub-title">받은 거래 후기</span>
-  </div>
+  <div class="sub-header" style="background:#fff;"><span class="back-btn" onclick="showPage('mypage')">‹</span><span class="sub-title">받은 거래 후기</span></div>
   <div style="padding: 20px; flex:1; overflow-y:auto;">
-    
     <div style="background:#fff; border-radius:12px; padding:20px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <div style="width:32px; height:32px; border-radius:50%; background:#1A5FA0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">인</div>
-                <div><div style="font-weight:700; font-size:13px;">인천마린보이</div><div style="font-size:11px; color:#7A93B0;">3일 전 · JRC 레이더 시스템 구매</div></div>
-            </div>
-            <div style="color:#D4960A; font-size:12px; font-weight:700;">⭐️ 5.0</div>
-        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="display:flex; align-items:center; gap:8px;"><div style="width:32px; height:32px; border-radius:50%; background:#1A5FA0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">인</div><div><div style="font-weight:700; font-size:13px;">인천마린보이</div><div style="font-size:11px; color:#7A93B0;">3일 전 · JRC 레이더 시스템 구매</div></div></div><div style="color:#D4960A; font-size:12px; font-weight:700;">⭐️ 5.0</div></div>
         <div style="font-size:14px; color:#1a2b4a; line-height:1.5;">"포장도 너무 깔끔하게 잘 해주시고, 장비 상태가 설명하신 그대로 S급입니다. 다음에도 꼭 여기서 발주 넣겠습니다. 번창하세요 사장님!"</div>
     </div>
-    
     <div style="background:#fff; border-radius:12px; padding:20px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <div style="width:32px; height:32px; border-radius:50%; background:#1E8E3E; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">부</div>
-                <div><div style="font-weight:700; font-size:13px;">부산조선기자재</div><div style="font-size:11px; color:#7A93B0;">2주일 전 · MAN B&W 엔진 부품 구매</div></div>
-            </div>
-            <div style="color:#D4960A; font-size:12px; font-weight:700;">⭐️ 4.5</div>
-        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="display:flex; align-items:center; gap:8px;"><div style="width:32px; height:32px; border-radius:50%; background:#1E8E3E; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">부</div><div><div style="font-weight:700; font-size:13px;">부산조선기자재</div><div style="font-size:11px; color:#7A93B0;">2주일 전 · MAN B&W 엔진 부품 구매</div></div></div><div style="color:#D4960A; font-size:12px; font-weight:700;">⭐️ 4.5</div></div>
         <div style="font-size:14px; color:#1a2b4a; line-height:1.5;">"직거래로 인천항에서 수령했습니다. 시간에 딱 맞게 나와주셔서 일정에 차질이 없었네요. 엔진 부품도 무사히 장착 완료했습니다."</div>
     </div>
-    
     <div style="background:#fff; border-radius:12px; padding:20px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <div style="width:32px; height:32px; border-radius:50%; background:#7A93B0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">목</div>
-                <div><div style="font-weight:700; font-size:13px;">목포제일선박</div><div style="font-size:11px; color:#7A93B0;">1개월 전 · 선박용 압력계 세트 구매</div></div>
-            </div>
-            <div style="color:#D4960A; font-size:12px; font-weight:700;">⭐️ 5.0</div>
-        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="display:flex; align-items:center; gap:8px;"><div style="width:32px; height:32px; border-radius:50%; background:#7A93B0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">목</div><div><div style="font-weight:700; font-size:13px;">목포제일선박</div><div style="font-size:11px; color:#7A93B0;">1개월 전 · 선박용 압력계 세트 구매</div></div></div><div style="color:#D4960A; font-size:12px; font-weight:700;">⭐️ 5.0</div></div>
         <div style="font-size:14px; color:#1a2b4a; line-height:1.5;">"믿고 거래하는 업체입니다. 서류 처리(세금계산서)도 깔끔해서 경리과에서 좋아하네요."</div>
     </div>
-    
   </div>
 </div>
 </div>
 
-<!-- 내가 올린 판매 목록 -->
+<!-- 판매 목록 -->
 <div class="page" id="page-mylist">
 <div class="wrap">
-  <div class="sub-header">
-    <span class="back-btn" onclick="showPage('mypage')">‹</span>
-    <span class="sub-title">판매 목록</span>
-  </div>
+  <div class="sub-header"><span class="back-btn" onclick="showPage('mypage')">‹</span><span class="sub-title">판매 목록</span></div>
   <div class="main" style="min-height: 400px; padding: 20px;">
-    <div class="product-grid" id="mylist-grid">
-      <!-- 동적 렌더링 영역 -->
-    </div>
+    <div class="product-grid" id="mylist-grid"></div>
   </div>
 </div>
 </div>
@@ -345,31 +325,15 @@
 </div>
 </div>
 
-
 <!-- 프로필 편집 -->
 <div class="page" id="page-profile-edit">
 <div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
-  <div class="sub-header">
-    <span class="back-btn" onclick="showPage('mypage')">‹</span>
-    <span class="sub-title">프로필 편집</span>
-  </div>
+  <div class="sub-header"><span class="back-btn" onclick="showPage('mypage')">‹</span><span class="sub-title">프로필 편집</span></div>
   <div style="padding: 30px 20px;">
-    <div style="display:flex; justify-content:center; margin-bottom: 24px;">
-      <div id="edit-avatar-preview" style="width: 80px; height: 80px; border-radius: 50%; background: var(--blue-100); color: var(--blue-800); font-size: 32px; font-weight: bold; display: flex; align-items:center; justify-content:center; border: 3px solid var(--blue-200);">👤</div>
-    </div>
+    <div style="display:flex; justify-content:center; margin-bottom: 24px;"><div id="edit-avatar-preview" style="width: 80px; height: 80px; border-radius: 50%; background: var(--blue-100); color: var(--blue-800); font-size: 32px; font-weight: bold; display: flex; align-items:center; justify-content:center; border: 3px solid var(--blue-200);">👤</div></div>
     <div style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom: 30px;">프로필 이미지는 닉네임 첫 글자로 자동 생성됩니다.</div>
-    
-    <div class="form-row">
-      <label class="form-label">사용할 닉네임</label>
-      <input class="form-input" type="text" id="edit-nickname-input" placeholder="새로운 닉네임을 입력하세요">
-      <div style="font-size:10px; color:#E53E3E; margin-top:4px;">* 닉네임은 최초 1회만 설정 가능하며 이후 변경이 불가합니다.</div>
-    </div>
-    
-    <div class="form-row" style="margin-top:16px;">
-      <label class="form-label">내 상점 한 줄 소개</label>
-      <input class="form-input" type="text" id="edit-bio-input" placeholder="(선택) 마켓 이용자들에게 보여질 소개말을 적어주세요">
-    </div>
-
+    <div class="form-row"><label class="form-label">사용할 닉네임</label><input class="form-input" type="text" id="edit-nickname-input" placeholder="새로운 닉네임을 입력하세요"><div style="font-size:10px; color:#E53E3E; margin-top:4px;">* 닉네임은 최초 1회만 설정 가능하며 이후 변경이 불가합니다.</div></div>
+    <div class="form-row" style="margin-top:16px;"><label class="form-label">내 상점 한 줄 소개</label><input class="form-input" type="text" id="edit-bio-input" placeholder="(선택) 마켓 이용자들에게 보여질 소개말을 적어주세요"></div>
     <div class="form-row" style="margin-top:16px;">
       <label class="form-label">활동 지역 (시/도)</label>
       <div style="display:flex; gap:8px;">
@@ -389,8 +353,6 @@
       </div>
       <div style="font-size:10px; color:#7A93B0; margin-top:4px;">* 전국 통합 인증 시스템: 가짜 지역 선택을 방지하기 위해 스마트폰/PC의 GPS 위치와 교차 검증합니다.</div>
     </div>
-
-    
     <button class="submit-btn" onclick="saveProfile()" style="margin-top: 10px;">저장하고 돌아가기</button>
   </div>
 </div>
@@ -401,40 +363,20 @@
 <div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
   <div class="sub-header" style="border:none;"><span class="back-btn" onclick="showPage('home')">✕</span><span class="sub-title"></span></div>
   <div class="login-container">
-    <div class="login-logo">
-      <img src="images/seahorse_logo.png" alt="logo" width="60">
-      <h2>해마 마켓 시작하기</h2>
-      <p>중고 선박 기자재의 안전한 거래</p>
-    </div>
-    
-    <div class="auth-tabs">
-      <div class="auth-tab active" id="tab-signin" onclick="switchAuthMode('signin')">로그인</div>
-      <div class="auth-tab" id="tab-signup" onclick="switchAuthMode('signup')">회원가입</div>
-    </div>
-    
+    <div class="login-logo"><img src="images/seahorse_logo.png" alt="logo" width="60"><h2>해마 마켓 시작하기</h2><p>중고 선박 기자재의 안전한 거래</p></div>
+    <div class="auth-tabs"><div class="auth-tab active" id="tab-signin" onclick="switchAuthMode('signin')">로그인</div><div class="auth-tab" id="tab-signup" onclick="switchAuthMode('signup')">회원가입</div></div>
     <div class="auth-form-wrap">
-      <div class="form-row">
-        <label class="form-label">이메일</label>
-        <input class="form-input" type="email" id="auth-email" placeholder="이메일 주소를 입력해주세요">
-      </div>
-      <div class="form-row">
-        <label class="form-label">비밀번호</label>
-        <input class="form-input" type="password" id="auth-pw" placeholder="비밀번호 6자리 이상">
-      </div>
-      <div class="form-row" id="auth-pw-confirm-row" style="display:none;">
-        <label class="form-label">비밀번호 확인</label>
-        <input class="form-input" type="password" id="auth-pw-confirm" placeholder="비밀번호를 한번 더 입력해주세요">
-      </div>
-      
+      <div class="form-row"><label class="form-label">이메일</label><input class="form-input" type="email" id="auth-email" placeholder="이메일 주소를 입력해주세요"></div>
+      <div class="form-row"><label class="form-label">비밀번호</label><input class="form-input" type="password" id="auth-pw" placeholder="비밀번호 6자리 이상"></div>
+      <div class="form-row" id="auth-pw-confirm-row" style="display:none;"><label class="form-label">비밀번호 확인</label><input class="form-input" type="password" id="auth-pw-confirm" placeholder="비밀번호를 한번 더 입력해주세요"></div>
       <div id="auth-error" class="auth-error"></div>
-      
       <button class="submit-btn" id="btn-auth-submit" onclick="submitAuth()" style="margin-top:16px;">로그인</button>
     </div>
   </div>
 </div>
 </div>
 
-<!-- Product Detail Modal (Bottom Sheet style) -->
+<!-- 매물 상세 모달 -->
 <style>
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 </style>
@@ -444,19 +386,16 @@
       <h3 class="modal-title" style="margin: 0; font-size: 16px;">매물 상세 정보</h3>
       <button class="modal-close" onclick="closeProductModal()" style="background: none; border: none; font-size: 20px; color: #7A93B0; cursor: pointer; line-height: 1;">✕</button>
     </div>
-    <div id="product-modal-body" style="padding: 0; padding-bottom: 100px;">
-      <!-- 렌더링 영역 -->
-    </div>
+    <div id="product-modal-body" style="padding: 0; padding-bottom: 100px;"></div>
   </div>
 </div>
+
 <!-- 하단 탭 바 -->
 <nav class="bottom-tab-bar">
   <button class="tab-item active" onclick="triggerBottomNav('home')">
     <div class="tab-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1V9.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
     <div class="tab-label">홈</div>
   </button>
-  
-  
   <button class="tab-item" onclick="loadChats()">
     <div class="tab-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
     <div class="tab-label">채팅</div>
@@ -467,7 +406,7 @@
   </button>
 </nav>
 
-<!-- 우측 하단 플로팅 액션 버튼 (Top 이동 및 매물 등록) -->
+<!-- FAB -->
 <div class="fab-container">
   <button class="fab-btn fab-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="최상단으로 이동">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -477,7 +416,7 @@
   </button>
 </div>
 
-<!-- 평가 남기기 모달 -->
+<!-- 거래 후기 모달 -->
 <div id="review-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
   <div class="modal-box" style="width:320px; background:#fff; border-radius:16px; padding:24px; text-align:center;">
     <h3 style="margin-top:0; color:#1A2B4A; font-size:18px;">거래 후기 남기기</h3>
