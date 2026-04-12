@@ -1974,3 +1974,7 @@ async function submitReview(score) {
     
     document.getElementById('review-modal').style.display = 'none';
 }
+// 페이지 로드 시 Supabase에서 실제 매물 불러오기
+document.addEventListener('DOMContentLoaded', () => {
+    fetchProducts();
+});
