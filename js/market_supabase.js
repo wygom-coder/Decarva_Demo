@@ -108,11 +108,11 @@ const KATEGORY_MAP = {
     { name: '기타', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#D4960A" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#FFF3C0' }
   ],
   '주/부식': [
-    { name: '쌀·곡물', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="6" y="4" width="10" height="14" rx="2" stroke="#1E8E3E" stroke-width="1.4"/><line x1="8" y1="10" x2="14" y2="10" stroke="#1E8E3E" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#E6F4EA' },
-    { name: '육류', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 12c0-4 6-6 12 0-6 6-12 4-12 0z" stroke="#D32F2F" stroke-width="1.4"/></svg>', bg: '#FFEBEE' },
-    { name: '수산물', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11s4-4 8 0 6 4 6 4-2 3-5 1-9-3-9-5z" stroke="#1A5FA0" stroke-width="1.4"/></svg>', bg: '#DAEEFF' },
-    { name: '청과류', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="12" r="6" stroke="#D4960A" stroke-width="1.4"/><path d="M11 6v2" stroke="#1E8E3E" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#FFF3C0' },
-    { name: '가공·음료', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="6" width="8" height="12" rx="2" stroke="#7A5200" stroke-width="1.4"/><line x1="7" y1="10" x2="15" y2="10" stroke="#7A5200" stroke-width="1.4"/></svg>', bg: '#FFF3C0' }
+    { name: '부산/마산항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="6" y="4" width="10" height="14" rx="2" stroke="#1E8E3E" stroke-width="1.4"/><line x1="8" y1="10" x2="14" y2="10" stroke="#1E8E3E" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#E6F4EA' },
+    { name: '여수/광양항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 12c0-4 6-6 12 0-6 6-12 4-12 0z" stroke="#D32F2F" stroke-width="1.4"/></svg>', bg: '#FFEBEE' },
+    { name: '울산/포항항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11s4-4 8 0 6 4 6 4-2 3-5 1-9-3-9-5z" stroke="#1A5FA0" stroke-width="1.4"/></svg>', bg: '#DAEEFF' },
+    { name: '인천/평택항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="12" r="6" stroke="#D4960A" stroke-width="1.4"/><path d="M11 6v2" stroke="#1E8E3E" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#FFF3C0' },
+    { name: '기타항구', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="6" width="8" height="12" rx="2" stroke="#7A5200" stroke-width="1.4"/><line x1="7" y1="10" x2="15" y2="10" stroke="#7A5200" stroke-width="1.4"/></svg>', bg: '#FFF3C0' }
   ]
 };
 
@@ -145,11 +145,11 @@ const mockProducts = [
   { id: 23, title: '방독 마스크 및 정화통 50세트', sub: '여수 · 3일 전', price: '₩ 850,000', category: '개인보호구', tradeType: '가격제안', region: '여수', condition: '최상', cert: 'CE', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><ellipse cx="24" cy="24" rx="8" ry="10" stroke="#1A5FA0" stroke-width="1.5"/><circle cx="20" cy="24" r="2" fill="#1A5FA0"/><circle cx="28" cy="24" r="2" fill="#1A5FA0"/></svg>' },
   { id: 24, title: '해상 조난 신호 홍염 1박스', sub: '목포 · 방금 전', price: '₩ 340,000', category: '항해안전', tradeType: '직거래', region: '목포', condition: '최상', cert: '없음', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="20" r="6" stroke="#1A5FA0" stroke-width="1.5"/><path d="M22 34l2 4 2-4" stroke="#1A5FA0" stroke-width="1.5"/><line x1="24" y1="36" x2="24" y2="26" stroke="#1A5FA0" stroke-width="1.5"/></svg>' },
   { id: 25, title: '안전 난간 네트 50m', sub: '광양 · 1시간 전', price: '₩ 200,000', category: '기타', tradeType: '가격제안', region: '광양', condition: '양호', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="12" y="16" width="24" height="16" stroke="#1A5FA0" stroke-width="1.5" stroke-dasharray="2 2"/></svg>' },
-  { id: 26, title: '냉동 닭가슴살 10kg x 10박스', sub: '부산 · 어제', price: '₩ 700,000', category: '육류', tradeType: '가격제안', region: '부산', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M16 26c0-4 16-8 16 0-8 6-16 4-16 0z" stroke="#D32F2F" stroke-width="1.5"/></svg>' },
-  { id: 27, title: '국내산 손질 오징어 50kg', sub: '속초 · 2시간 전', price: '₩ 650,000', category: '수산물', tradeType: '직거래', region: '속초', condition: '보통', cert: '없음', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 24s6-6 12 0 12 6 12 6-4 4-8 2-16-6-16-8z" stroke="#1A5FA0" stroke-width="1.5"/></svg>' },
-  { id: 28, title: '제주 감귤 10kg x 30박스', sub: '제주 · 오전 08:30', price: '₩ 900,000', category: '청과류', tradeType: '가격제안', region: '제주', condition: '최상', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="26" r="8" stroke="#D4960A" stroke-width="1.5"/><path d="M24 16v2" stroke="#1E8E3E" stroke-width="1.5"/></svg>' },
-  { id: 29, title: '[도매] 생수 2L 6개입 x 100팩', sub: '수원 · 어제', price: '₩ 280,000', category: '가공·음료', tradeType: '가격제안', region: '수원', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="20" y="14" width="8" height="20" rx="3" stroke="#7A5200" stroke-width="1.5"/><line x1="20" y1="22" x2="28" y2="22" stroke="#7A5200" stroke-width="1.5"/></svg>' },
-  { id: 30, title: '김치 10kg 큰포기 x 20박스', sub: '광주 · 1시간 전', price: '₩ 1,000,000', category: '주/부식', tradeType: '가격제안', region: '광주', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M16 26c0-6 12-8 16 0-8 6-16 4-16 0z" stroke="#D4960A" stroke-width="1.5"/></svg>' }
+  { id: 26, title: '[부산항 우수업체] 늘푸른 종합식품', sub: '평점 4.9 · 단골 120척', price: '최소진행 ₩ 1,000,000', category: '부산/마산항', tradeType: '가격제안', region: '부산', condition: '주요품목: 농산, 수산', cert: '우수파트너', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="12" y="14" width="24" height="20" rx="3" stroke="#1E8E3E" stroke-width="1.5"/><path d="M18 14V10c0-2 4-2 4 0M26 14V10c0-2 4-2 4 0" stroke="#1E8E3E" stroke-width="1.5"/></svg>' },
+  { id: 27, title: '여수신선부식센터 (당일조달)', sub: '평점 4.6 · 월 평균 30건', price: '최소진행 ₩ 700,000', category: '여수/광양항', tradeType: '직거래', region: '여수', condition: '주요품목: 공산품, 정육', cert: '인증업체', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 24s6-6 12 0 12 6 12 6-4 4-8 2-16-6-16-8z" stroke="#1A5FA0" stroke-width="1.5"/></svg>' },
+  { id: 28, title: '울산상사 (식재료+선용품 통합)', sub: '평점 4.8 · 통합공조 전문', price: '최소진행 ₩ 1,500,000', category: '울산/포항항', tradeType: '가격제안', region: '울산', condition: '주요품목: 식자재 전반', cert: '인증업체', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="26" r="8" stroke="#D4960A" stroke-width="1.5"/><path d="M24 16v2" stroke="#1E8E3E" stroke-width="1.5"/></svg>' },
+  { id: 29, title: '[인천/평택] 글로벌 식자재유통', sub: '평점 4.7 · 할랄푸드 보유', price: '최소진행 ₩ 800,000', category: '인천/평택항', tradeType: '가격제안', region: '인천', condition: '주요품목: 할랄, 향신료', cert: '인증업체', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="20" y="14" width="8" height="20" rx="3" stroke="#7A5200" stroke-width="1.5"/><line x1="20" y1="22" x2="28" y2="22" stroke="#7A5200" stroke-width="1.5"/></svg>' },
+  { id: 30, title: '목포연합 수산/건어물 창고', sub: '평점 5.0 · 신선도 보장', price: '최소진행 ₩ 500,000', category: '기타항구', tradeType: '가격제안', region: '목포', condition: '주요품목: 서해수산물', cert: '인증업체', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M16 26c0-6 12-8 16 0-8 6-16 4-16 0z" stroke="#D4960A" stroke-width="1.5"/></svg>' }
 ];
 
 let currentUser = null;
@@ -567,17 +567,58 @@ function openProductModal(id) {
     const catTrimmed = (p.category||'').trim();
     let topCat = CAT_TO_TOP_MAP[catTrimmed] || catTrimmed;
     if (!KATEGORY_MAP[topCat]) topCat = '기부속';
-    if (['쌀·곡물', '육류', '수산물', '청과류', '가공·음료', '주/부식'].includes(catTrimmed)) {
+    if (['쌀·곡물', '육류', '수산물', '청과류', '가공·음료', '주/부식', '부산/마산항', '여수/광양항', '울산/포항항', '인천/평택항', '기타항구'].includes(catTrimmed)) {
         topCat = '주/부식';
     }
 
     if (topCat === '주/부식') {
-        actionArea = `
-            <div style="margin-top:20px; margin-bottom:24px; display:flex; gap:12px;">
-                <button style="flex:1; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="requestQuote('${p.id}')">견적서에 추가하기</button>
+        const storeName = p.title;
+        const storeScore = p.sub;
+        const minimumOrder = p.price;
+        const storeRegion = p.category;
+        
+        body.innerHTML = `
+            <div style="width:100%; height:200px; background:linear-gradient(to bottom right, #f4f9ff, #e6f4ea); display:flex; flex-direction:column; align-items:center; justify-content:center;">
+               ${p.svg}
+               <div style="margin-top:12px; font-weight:700; color:#1E8E3E; font-size:14px; background:#fff; padding:6px 16px; border-radius:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">검증된 해마 B-Mart 스토어</div>
+            </div>
+            <div style="padding: 20px; flex:1; overflow-y:auto; display:flex; flex-direction:column;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="flex:1;">
+                        <div style="font-size:12px; color:#1E8E3E; font-weight:700; margin-bottom:6px;">배송가능: ${storeRegion}</div>
+                        <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:800; color:#1A2B4A; line-height:1.3; word-break:keep-all;">${storeName}</h3>
+                        <div style="font-size:14px; color:#7A93B0; font-weight:500; margin-bottom:16px;">${storeScore}</div>
+                    </div>
+                </div>
+                
+                <div style="background:#f4f5f7; border-radius:12px; padding:16px; margin-bottom:24px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                        <span style="color:#7A93B0; font-size:14px; font-weight:600;">안내 금액</span>
+                        <span style="color:#1A2B4A; font-size:15px; font-weight:700;">${minimumOrder}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                        <span style="color:#7A93B0; font-size:14px; font-weight:600;">주요 취급 품목</span>
+                        <span style="color:#1A2B4A; font-size:14px; font-weight:600;">${p.condition}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:#7A93B0; font-size:14px; font-weight:600;">에이전시 인증</span>
+                        <span style="color:#1E8E3E; font-size:14px; font-weight:700;">${p.cert}</span>
+                    </div>
+                </div>
+
+                <div style="color:#333; font-size:14px; line-height:1.6; white-space:pre-wrap; margin-bottom:24px;">본 업체는 해당 항구에서 선박으로의 식자재 조달에 특화된 우수 벤더입니다. 견적 요청 시 단일 납품을 통해 항만 수수료와 물류비를 아끼실 수 있습니다.</div>
+
+                <div style="margin-top:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:24px;">
+                    <button style="width:100%; padding:14px; border-radius:12px; background:#fff; color:#1E8E3E; font-size:15px; font-weight:700; border:1px solid #1E8E3E; cursor:pointer;" onclick="alert('품목 개별 장바구니 보기 기능은 추후 B-Mart 전용 쇼핑몰 업데이트 시 제공됩니다.')">이 업체의 상품 카탈로그 보기 (준비중)</button>
+                    <button style="width:100%; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="requestQuote('${p.id}')">이 업체에 다이렉트 견적 요청하기 (Excel 첨부)</button>
+                </div>
             </div>
         `;
-    } else if (topCat === '선용품' || topCat === '안전장비') {
+        document.getElementById('product-modal').style.display = 'flex';
+        return;
+    }
+
+    if (topCat === '선용품' || topCat === '안전장비') {
         actionArea = `
             <div style="margin-top:20px; margin-bottom:24px; display:flex; gap:12px;">
                 <button style="flex:1; padding:14px; border-radius:12px; background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="startChat('${p.id}')">판매자와 네고하기</button>
