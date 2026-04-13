@@ -280,6 +280,7 @@ let filterState = {
   condition: '전체',
   cert: '전체',
   tradeType: '전체',
+  supplier: '전체',
   minPrice: null,
   maxPrice: null
 };
@@ -409,6 +410,15 @@ function renderProducts() {
         if (filterState.tradeType === '경매' && !p.auction) return false;
         if (filterState.tradeType === '가격제안' && !p.offer) return false;
     }
+    // 업체별 필터링
+    if (filterState.supplier !== '전체') {
+        const titleStr = p.title || '';
+        const match = titleStr.match(/^\[(.*?)\]/);
+        const extractedSupplier = match ? match[1] : '';
+        if (!extractedSupplier.includes(filterState.supplier) && !titleStr.includes(filterState.supplier)) {
+            return false;
+        }
+    }
     // 3. 커스텀 가격
     const valObj = p.price.replace(/[^0-9]/g, '');
     if (valObj) {
@@ -536,6 +546,8 @@ function resetFilters() {
     filterState.condition = '전체';
     filterState.cert = '전체';
     filterState.tradeType = '전체';
+    filterState.supplier = '전체';
+    filterState.supplier = '전체';
     filterState.minPrice = null;
     filterState.maxPrice = null;
 
