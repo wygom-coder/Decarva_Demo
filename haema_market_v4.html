@@ -32,9 +32,9 @@
       <input type="text" id="search-input" placeholder="선박 엔진, 앵커, 레이더 등 검색">
     </div>
     <div class="header-nav">
-      <button class="btn-sell" id="header-cart-btn" onclick="showPage('cart'); renderCartPage();" style="background:#f4f9ff; color:#1A2B4A; border:1px solid #1A2B4A; margin-right:6px; display:flex; align-items:center; gap:4px; padding:0 10px;">
-        <span style="font-size:12px; font-weight:700;">🛒 장바구니</span>
-        <div id="header-cart-badge" style="background:#D32F2F; color:#fff; font-size:10px; font-weight:800; min-width:14px; height:14px; border-radius:7px; display:none; align-items:center; justify-content:center; padding:0 3px;">0</div>
+      <button class="btn-sell" id="header-cart-btn" onclick="showPage('cart'); renderCartPage();" style="background:#f4f9ff; color:#1A5FA0; border:1px solid #1A5FA0; margin-right:6px; position:relative;">
+        장바구니
+        <div id="header-cart-badge" style="position:absolute; top:-6px; right:-6px; background:#D32F2F; color:#fff; font-size:10px; font-weight:800; min-width:16px; height:16px; border-radius:8px; display:none; align-items:center; justify-content:center; padding:0 4px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">0</div>
       </button>
       <button class="btn-login" id="header-btn-login" onclick="showPage('login')">로그인</button>
       
