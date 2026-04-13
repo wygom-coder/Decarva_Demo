@@ -490,7 +490,7 @@ function renderProducts() {
       // Specific Top-Category Curation
       if(catArea) catArea.style.display = 'block';
       if(recArea) recArea.style.display = 'block';
-      if(listTitle) listTitle.innerHTML = '<span class="section-title">최신 매물</span><span class="section-more">더보기 →</span>';
+      if(listTitle) listTitle.innerHTML = '<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>최신 매물</span><span class="section-more">더보기 →</span>';
       
       const recList = document.getElementById('recommendation-list');
       const curList = document.getElementById('curation-list');
@@ -512,7 +512,7 @@ function renderProducts() {
       // Hide recommendations, show only filtered list
       if(catArea) catArea.style.display = 'block'; // ALWAYS SHOW CATEGORIES
       if(recArea) recArea.style.display = 'none';
-      if(listTitle) listTitle.innerHTML = `<span class="section-title">${filterState.category} 결과</span>`;
+      if(listTitle) listTitle.innerHTML = `<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>${filterState.category} 결과</span>`;
   }
 
   if (filtered.length === 0) {
