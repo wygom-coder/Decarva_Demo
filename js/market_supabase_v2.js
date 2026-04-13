@@ -2602,6 +2602,9 @@ window.setCommTag = function(tagName, el) {
     // Re-render
     if (typeof renderCommunityPosts === 'function') {
         renderCommunityPosts();
+    }
+}
+
 // Scroll to Top specific logic
 window.scrollToTop = function() {
     window.scrollTo({top:0, behavior:'smooth'});
