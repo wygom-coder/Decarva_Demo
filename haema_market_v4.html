@@ -32,10 +32,10 @@
       <input type="text" id="search-input" placeholder="선박 엔진, 앵커, 레이더 등 검색">
     </div>
     <div class="header-nav">
-      <div id="header-cart-btn" onclick="showPage('cart'); renderCartPage();" style="position:relative; margin-right:8px; cursor:pointer; display:flex; align-items:center;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 3h2l3.6 7.6L7 14h11" stroke="#1A2B4A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="20" r="2" stroke="#1A2B4A" stroke-width="2"/><circle cx="16" cy="20" r="2" stroke="#1A2B4A" stroke-width="2"/></svg>
-        <div id="header-cart-badge" style="position:absolute; top:-4px; right:-6px; background:#D32F2F; color:#fff; font-size:10px; font-weight:800; min-width:16px; height:16px; border-radius:8px; display:none; align-items:center; justify-content:center; padding:0 4px;">0</div>
-      </div>
+      <button class="btn-sell" id="header-cart-btn" onclick="showPage('cart'); renderCartPage();" style="background:#f4f9ff; color:#1A2B4A; border:1px solid #1A2B4A; margin-right:6px; display:flex; align-items:center; gap:4px; padding:0 10px;">
+        <span style="font-size:12px; font-weight:700;">🛒 장바구니</span>
+        <div id="header-cart-badge" style="background:#D32F2F; color:#fff; font-size:10px; font-weight:800; min-width:14px; height:14px; border-radius:7px; display:none; align-items:center; justify-content:center; padding:0 3px;">0</div>
+      </button>
       <button class="btn-login" id="header-btn-login" onclick="showPage('login')">로그인</button>
       
       <button class="btn-sell" onclick="requireAuthAndShow('register')">+ 등록</button>
