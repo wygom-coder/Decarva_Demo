@@ -281,7 +281,6 @@ let filterState = {
   cert: '전체',
   tradeType: '전체',
   supplier: '전체',
-  port: '전체',
   minPrice: null,
   maxPrice: null
 };
@@ -293,35 +292,11 @@ function renderSubCategories(topCat) {
     
     const subCats = KATEGORY_MAP[topCat] || [];
     
-    // Update horizontal sub-bar
-    let subHTML = '';
-    if (topCat === '주/부식') {
-        catBar.style.display = 'flex';
-        const fb = document.querySelector('.filter-bar');
-        if(fb) fb.style.display = 'none';
-        
-        const ports = ['부산/마산항', '여수/광양항', '울산/포항항', '인천/평택항', '기타항구'];
-        subHTML = `<div class="cat-item ${filterState.port === '전체' ? 'active' : ''}">전체 항구</div>`;
-        ports.forEach(p => {
-            subHTML += `<div class="cat-item ${filterState.port === p ? 'active' : ''}">${p}</div>`;
-        });
-        catBar.innerHTML = subHTML;
-        catBar.querySelectorAll('.cat-item').forEach(el => {
-            el.addEventListener('click', () => {
-                let txt = el.textContent.trim();
-                if(txt === '전체 항구') txt = '전체';
-                filterState.port = txt;
-                renderSubCategories(filterState.topCategory);
-                renderProducts();
-            });
-        });
-    } else {
-        catBar.style.display = 'none';
-        const fb = document.querySelector('.filter-bar');
-        if(fb) fb.style.display = 'flex';
-        subHTML = '';
-        catBar.innerHTML = subHTML;
-    }
+    // Hide horizontal text sub-bar for all tabs to unify UI (We rely strictly on the icon grid and dropdown filters)
+    catBar.style.display = 'none';
+    const fb = document.querySelector('.filter-bar');
+    if(fb) fb.style.display = 'flex';
+    catBar.innerHTML = '';
     
     // Update grid icons
     let gridHTML = '';
@@ -359,7 +334,6 @@ function initTopCategory() {
           if(filterState.topCategory !== topVal) {
              filterState.topCategory = topVal;
              filterState.category = '전체'; // Reset sub-category on top category change
-             filterState.port = '전체';
              renderSubCategories(topVal);
              renderProducts();
           }
@@ -459,10 +433,6 @@ function renderProducts() {
         if (p.category !== filterState.category) return false;
     }
     
-    // 2. 주/부식 항구 매칭
-    if (filterState.topCategory === '주/부식' && filterState.port !== '전체') {
-        if (!filterState.port.includes(p.region) && !p.region.includes(filterState.port)) return false;
-    }
     // 2. 다중 필터 체크
     if (filterState.region !== '전체' && p.region !== filterState.region) return false;
     if (filterState.condition !== '전체' && p.condition !== filterState.condition) return false;
@@ -599,7 +569,6 @@ function resetFilters() {
     filterState.cert = '전체';
     filterState.tradeType = '전체';
     filterState.supplier = '전체';
-    filterState.port = '전체';
     filterState.minPrice = null;
     filterState.maxPrice = null;
 
