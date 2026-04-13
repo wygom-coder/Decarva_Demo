@@ -587,8 +587,7 @@ function openProductModal(id) {
                 <button style="width:100%; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="requestQuote('${p.id}')">[${storeName}] 전용 견적 장바구니에 담기</button>
             </div>
         `;
-
-    if (topCat === '선용품' || topCat === '안전장비') {
+    } else if (topCat === '선용품' || topCat === '안전장비') {
         actionArea = `
             <div style="margin-top:20px; margin-bottom:24px; display:flex; gap:12px;">
                 <button style="flex:1; padding:14px; border-radius:12px; background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="startChat('${p.id}')">판매자와 네고하기</button>
