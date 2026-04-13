@@ -272,6 +272,8 @@ window.doLogout = async function() {
 };
 
 
+let userCart = JSON.parse(localStorage.getItem('haema_cart')) || [];
+
 let filterState = {
   topCategory: '기부속',
   keyword: '',
@@ -617,12 +619,13 @@ function openProductModal(id) {
                 <div style="margin-top:6px; font-size:13px; color:#333; line-height:1.4;">이 물품은 해당 지역의 우수 벤더가 납품합니다. 동일 업체의 식품을 여러 개 담아 견적을 요청하시면 물류비가 대폭 절감됩니다.</div>
             </div>
             <div style="margin-top:16px; margin-bottom:24px; display:flex; flex-direction:column; gap:12px;">
-                <button style="width:100%; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="requestQuote('${p.id}')">[${storeName}] 전용 견적 장바구니에 담기</button>
+                <button style="width:100%; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="addToCart('${p.id}'); closeProductModal();">[${storeName}] 전용 견적 장바구니에 담기</button>
             </div>
         `;
     } else if (topCat === '선용품' || topCat === '안전장비') {
         actionArea = `
             <div style="margin-top:20px; margin-bottom:24px; display:flex; gap:12px;">
+                <button style="flex:1; padding:14px; border-radius:12px; background:#fff; color:#1A5FA0; border:1px solid #1A5FA0; font-size:15px; font-weight:700; cursor:pointer;" onclick="addToCart('${p.id}'); closeProductModal();">견적 장바구니 담기</button>
                 <button style="flex:1; padding:14px; border-radius:12px; background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="startChat('${p.id}')">판매자와 네고하기</button>
             </div>
         `;
@@ -944,8 +947,136 @@ async function registerProduct() {
   // 등록 직후 최신 데이터베이스 리스트 가져오기
   await fetchProducts();
 }
+// --- 장바구니 기능 시작 ---
+function addToCart(productId) {
+    const existingIndex = userCart.findIndex(item => String(item.id) === String(productId));
+    if (existingIndex > -1) {
+        userCart[existingIndex].qty += 1;
+    } else {
+        userCart.push({ id: productId, qty: 1 });
+    }
+    saveCart();
+    alert('🛒 견적 장바구니에 담겼습니다!\\n(우측 상단 장바구니 아이콘에서 확인 가능합니다)');
+}
+
+function saveCart() {
+    localStorage.setItem('haema_cart', JSON.stringify(userCart));
+    renderCartBadge();
+}
+
+function renderCartBadge() {
+    const badge = document.getElementById('header-cart-badge');
+    if(!badge) return;
+    const totalQty = userCart.reduce((sum, item) => sum + item.qty, 0);
+    if(totalQty > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = totalQty;
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+window.renderCartPage = function() {
+    const area = document.getElementById('cart-content-area');
+    const totalCountEl = document.getElementById('cart-total-count');
+    if(!area) return;
+    
+    if(userCart.length === 0) {
+        area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">장바구니가 비어있습니다.</div>';
+        if(totalCountEl) totalCountEl.textContent = '0개';
+        return;
+    }
+    
+    // Group by supplier
+    const groups = {};
+    let totalItems = 0;
+    
+    userCart.forEach(cartItem => {
+        const product = products.find(p => String(p.id) === String(cartItem.id));
+        if(!product) return;
+        
+        const storeMatch = (product.title||'').match(/^\\[(.*?)\\]/);
+        const storeName = storeMatch ? storeMatch[1] : '일반 업체';
+        
+        if(!groups[storeName]) groups[storeName] = [];
+        groups[storeName].push({ cartItem, product });
+        totalItems += cartItem.qty;
+    });
+    
+    if(totalCountEl) totalCountEl.textContent = totalItems + '개';
+    
+    let html = '';
+    for(const [storeName, items] of Object.entries(groups)) {
+        html += `
+            <div style="background:#fff; border-radius:16px; padding:16px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid #eaedf2;">
+                <div style="font-size:14px; font-weight:800; color:#1A2B4A; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" stroke="#1A2B4A" stroke-width="2"/><path d="M12 12v6m-4-6v6m8-6v6" stroke="#1A2B4A" stroke-width="2"/></svg>
+                    [${storeName}] 묶음 배송
+                </div>
+        `;
+        
+        items.forEach(obj => {
+            const p = obj.product;
+            const c = obj.cartItem;
+            const displayPrice = p.price.replace(/[^0-9]/g, '');
+            html += `
+                <div style="display:flex; gap:12px; padding:12px 0; border-top:1px solid #f4f9ff;">
+                    <div style="width:60px; height:60px; border-radius:8px; background:#f4f9ff url('${p.image_url}') center/cover;"></div>
+                    <div style="flex:1;">
+                        <div style="font-size:13px; color:#1A2B4A; font-weight:600; line-height:1.4; margin-bottom:4px;">${p.title}</div>
+                        <div style="font-size:14px; font-weight:800; color:#1A5FA0;">₩ ${parseInt(displayPrice||0).toLocaleString()}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:space-between;">
+                        <button onclick="removeCartItem('${p.id}')" style="background:none; border:none; color:#999; font-size:16px; cursor:pointer; padding:0;">✕</button>
+                        <div style="display:flex; align-items:center; border:1px solid #eaedf2; border-radius:4px; overflow:hidden;">
+                            <button onclick="updateCartQty('${p.id}', -1)" style="width:24px; height:24px; background:#fff; border:none; color:#1A2B4A; cursor:pointer;">-</button>
+                            <div style="width:30px; text-align:center; font-size:12px; font-weight:700; line-height:24px;">${c.qty}</div>
+                            <button onclick="updateCartQty('${p.id}', 1)" style="width:24px; height:24px; background:#fff; border:none; color:#1A2B4A; cursor:pointer;">+</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+    }
+    
+    area.innerHTML = html;
+}
+
+window.updateCartQty = function(id, delta) {
+    const idx = userCart.findIndex(item => String(item.id) === String(id));
+    if(idx > -1) {
+        userCart[idx].qty += delta;
+        if(userCart[idx].qty <= 0) userCart.splice(idx, 1);
+        saveCart();
+        renderCartPage();
+    }
+}
+
+window.removeCartItem = function(id) {
+    const idx = userCart.findIndex(item => String(item.id) === String(id));
+    if(idx > -1) {
+        userCart.splice(idx, 1);
+        saveCart();
+        renderCartPage();
+    }
+}
+
+window.requestQuoteCheckout = function() {
+    if(userCart.length === 0) {
+        alert('장바구니가 비어있습니다.');
+        return;
+    }
+    alert('✅ 성공적으로 묶음 견적/결제 요청이 접수되었습니다!\\n각 공급업체에서 확인 후 담당자가 연락드릴 예정입니다.');
+    userCart = [];
+    saveCart();
+    renderCartPage();
+    showPage('home');
+}
+// --- 장바구니 기능 끝 ---
 
 document.addEventListener('DOMContentLoaded', () => {
+    renderCartBadge();
     initTopCategory();
     fetchProducts();
     updateFilterStyles();
