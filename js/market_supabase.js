@@ -144,7 +144,9 @@ const KATEGORY_MAP = {
 };
 
 const CAT_TO_TOP_MAP = {};
-Object.entries(KATEGORY_MAP).forEach(([top, cats]) => cats.forEach(c => CAT_TO_TOP_MAP[c.name] = top));
+Object.entries(KATEGORY_MAP).forEach(([top, cats]) => {
+    if (top !== '전체') cats.forEach(c => CAT_TO_TOP_MAP[c.name] = top);
+});
 
 
 
@@ -462,7 +464,7 @@ function renderProducts() {
   grid.innerHTML = '';
 
   // View Toggle based on '전체' selection
-  if (filterState.topCategory === '전체') {
+  if (filterState.topCategory === '전체' && filterState.keyword === '') {
       // Main Page Mode
       if(catArea) catArea.style.display = 'block'; // Show curated sub-categories on main page
       if(recArea) recArea.style.display = 'block';
@@ -483,6 +485,7 @@ function renderProducts() {
           if(curItems.length > 0) curItems.forEach(p => curList.innerHTML += createProductCardHTML(p));
           else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">등록된 매물이 없습니다.</div>';
       }
+      
   } else if (filterState.category === '전체' && filterState.keyword === '') {
       // Specific Top-Category Curation
       if(catArea) catArea.style.display = 'block';
