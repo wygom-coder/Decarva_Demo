@@ -108,11 +108,11 @@ const KATEGORY_MAP = {
     { name: '기타', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#D4960A" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#FFF3C0' }
   ],
   '주/부식': [
-    { name: '부산/마산항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="6" y="4" width="10" height="14" rx="2" stroke="#1E8E3E" stroke-width="1.4"/><line x1="8" y1="10" x2="14" y2="10" stroke="#1E8E3E" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#E6F4EA' },
-    { name: '여수/광양항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 12c0-4 6-6 12 0-6 6-12 4-12 0z" stroke="#D32F2F" stroke-width="1.4"/></svg>', bg: '#FFEBEE' },
-    { name: '울산/포항항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11s4-4 8 0 6 4 6 4-2 3-5 1-9-3-9-5z" stroke="#1A5FA0" stroke-width="1.4"/></svg>', bg: '#DAEEFF' },
-    { name: '인천/평택항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="12" r="6" stroke="#D4960A" stroke-width="1.4"/><path d="M11 6v2" stroke="#1E8E3E" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#FFF3C0' },
-    { name: '기타항구', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="6" width="8" height="12" rx="2" stroke="#7A5200" stroke-width="1.4"/><line x1="7" y1="10" x2="15" y2="10" stroke="#7A5200" stroke-width="1.4"/></svg>', bg: '#FFF3C0' }
+    { name: '쌀·곡물', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="6" y="4" width="10" height="14" rx="2" stroke="#1E8E3E" stroke-width="1.4"/><line x1="8" y1="10" x2="14" y2="10" stroke="#1E8E3E" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#E6F4EA' },
+    { name: '육류', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 12c0-4 6-6 12 0-6 6-12 4-12 0z" stroke="#D32F2F" stroke-width="1.4"/></svg>', bg: '#FFEBEE' },
+    { name: '수산물', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11s4-4 8 0 6 4 6 4-2 3-5 1-9-3-9-5z" stroke="#1A5FA0" stroke-width="1.4"/></svg>', bg: '#DAEEFF' },
+    { name: '청과류', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="12" r="6" stroke="#D4960A" stroke-width="1.4"/><path d="M11 6v2" stroke="#1E8E3E" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#FFF3C0' },
+    { name: '가공·음료', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="6" width="8" height="12" rx="2" stroke="#7A5200" stroke-width="1.4"/><line x1="7" y1="10" x2="15" y2="10" stroke="#7A5200" stroke-width="1.4"/></svg>', bg: '#FFF3C0' }
   ]
 };
 
@@ -281,7 +281,7 @@ let filterState = {
   cert: '전체',
   tradeType: '전체',
   supplier: '전체',
-  foodCategory: '전체',
+  port: '전체',
   minPrice: null,
   maxPrice: null
 };
@@ -298,36 +298,49 @@ function initTopCategory() {
       const subCats = KATEGORY_MAP[topCat] || [];
       
       // Update horizontal sub-bar
-      let subHTML = `<div class="cat-item ${filterState.category === '전체' ? 'active' : ''}">전체</div>`;
-      subCats.forEach(c => {
-          subHTML += `<div class="cat-item ${filterState.category === c.name ? 'active' : ''}">${c.name}</div>`;
-      });
-      catBar.innerHTML = subHTML;
-      
-      const foodBar = document.getElementById('food-cat-bar');
-      if (foodBar) {
-          if (topCat === '주/부식') {
-              foodBar.style.display = 'flex';
-              renderFoodBar();
-          } else {
-              foodBar.style.display = 'none';
-          }
+      let subHTML = '';
+      if (topCat === '주/부식') {
+          const fb = document.querySelector('.filter-bar');
+          if(fb) fb.style.display = 'none';
+          
+          const ports = ['부산/마산항', '여수/광양항', '울산/포항항', '인천/평택항', '기타항구'];
+          subHTML = `<div class="cat-item ${filterState.port === '전체' ? 'active' : ''}">전체 항구</div>`;
+          ports.forEach(p => {
+              subHTML += `<div class="cat-item ${filterState.port === p ? 'active' : ''}">${p}</div>`;
+          });
+          catBar.innerHTML = subHTML;
+          catBar.querySelectorAll('.cat-item').forEach(el => {
+              el.addEventListener('click', () => {
+                  let txt = el.textContent.trim();
+                  if(txt === '전체 항구') txt = '전체';
+                  filterState.port = txt;
+                  renderSubCategories(filterState.topCategory);
+                  renderProducts();
+              });
+          });
+      } else {
+          const fb = document.querySelector('.filter-bar');
+          if(fb) fb.style.display = 'flex';
+          
+          subHTML = `<div class="cat-item ${filterState.category === '전체' ? 'active' : ''}">전체</div>`;
+          subCats.forEach(c => {
+              subHTML += `<div class="cat-item ${filterState.category === c.name ? 'active' : ''}">${c.name}</div>`;
+          });
+          catBar.innerHTML = subHTML;
+          catBar.querySelectorAll('.cat-item').forEach(el => {
+              el.addEventListener('click', () => setCategory(el.textContent.trim(), el));
+          });
       }
       
       // Update grid icons
       let gridHTML = '';
       subCats.forEach(c => {
-          gridHTML += `<div class="cat-icon-item"><div class="cat-icon-box" style="background:${c.bg};">${c.svg}</div><span class="cat-icon-label">${c.name}</span></div>`;
+          const isActive = filterState.category === c.name;
+          const lblStyle = isActive ? 'color:#1E8E3E; font-weight:800;' : '';
+          const ringStyle = isActive ? 'box-shadow:0 0 0 2px #1E8E3E;' : '';
+          gridHTML += `<div class="cat-icon-item" onclick="setCategory('${c.name}', this)"><div class="cat-icon-box" style="background:${c.bg}; ${ringStyle}">${c.svg}</div><span class="cat-icon-label" style="${lblStyle}">${c.name}</span></div>`;
       });
       catGrid.innerHTML = gridHTML;
-      
-      // Attach events for new elements
-      catBar.querySelectorAll('.cat-item').forEach(el => {
-          el.addEventListener('click', () => setCategory(el.textContent.trim(), el));
-      });
-      catGrid.querySelectorAll('.cat-icon-item').forEach(el => {
-          el.addEventListener('click', () => setCategory(el.querySelector('.cat-icon-label').textContent.trim()));
-      });
   }
 
   topTabs.forEach(tab => {
@@ -339,7 +352,7 @@ function initTopCategory() {
           if(filterState.topCategory !== topVal) {
              filterState.topCategory = topVal;
              filterState.category = '전체'; // Reset sub-category on top category change
-             filterState.foodCategory = '전체';
+             filterState.port = '전체';
              renderSubCategories(topVal);
              renderProducts();
           }
@@ -436,16 +449,12 @@ function renderProducts() {
     }
     // 1. 대분류 카테고리 체크
     if (filterState.category !== '전체') {
-        if (filterState.topCategory === '주/부식') {
-            if (!(filterState.category.includes(p.region) || p.region.includes(filterState.category))) return false;
-        } else {
-            if (p.category !== filterState.category) return false;
-        }
+        if (p.category !== filterState.category) return false;
     }
     
-    // 2. 주/부식 2단 식품 필터 체크
-    if (filterState.topCategory === '주/부식' && filterState.foodCategory !== '전체') {
-        if (p.category !== filterState.foodCategory) return false;
+    // 2. 주/부식 항구 매칭
+    if (filterState.topCategory === '주/부식' && filterState.port !== '전체') {
+        if (!filterState.port.includes(p.region) && !p.region.includes(filterState.port)) return false;
     }
     // 2. 다중 필터 체크
     if (filterState.region !== '전체' && p.region !== filterState.region) return false;
@@ -543,6 +552,11 @@ function renderProducts() {
 
 function setCategory(cat, el) {
   filterState.category = cat;
+  if (filterState.topCategory === '주/부식') {
+      renderSubCategories(filterState.topCategory);
+      renderProducts();
+      return;
+  }
   document.querySelectorAll('.cat-item').forEach(e => e.classList.remove('active'));
   if (el && el.classList.contains('cat-item')) el.classList.add('active');
   else {
@@ -593,7 +607,7 @@ function resetFilters() {
     filterState.cert = '전체';
     filterState.tradeType = '전체';
     filterState.supplier = '전체';
-    filterState.foodCategory = '전체';
+    filterState.port = '전체';
     filterState.minPrice = null;
     filterState.maxPrice = null;
 
