@@ -196,14 +196,21 @@
   <div>
     <div class="my-profile"><div class="my-avatar" id="profile-avatar">👤</div><div><div style="display:flex; align-items:center;"><div class="my-name" id="profile-name">해마 유저</div><div id="profile-region-badge" style="display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; background:#EAEDF2; color:#7A93B0;">📍 미설정</div></div><div class="my-sub" id="profile-email">이메일 정보 없음</div><div class="my-badge" id="profile-biz-badge">일반 회원</div></div><button class="my-edit-btn" onclick="openProfileEdit()">편집</button></div>
     
-    <!-- 매너온도 섹션 -->
-    <div class="manner-temp-box" style="padding:16px 20px; background:#fff; border-bottom:8px solid #f4f9ff;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span style="font-size:13px; font-weight:700; color:#1A2B4A; text-decoration:underline;">매너온도</span>
-        <span id="manner-temp-text" style="font-size:22px; font-weight:800; color:#1A5FA0;">36.5°C</span>
-      </div>
-      <div style="width:100%; height:8px; background:#EAEDF2; border-radius:4px; overflow:hidden;">
-        <div id="manner-temp-bar" style="width:36.5%; height:100%; background:#1A5FA0; border-radius:4px; transition:width 0.8s ease-in-out;"></div>
+    <!-- 거래 평점 섹션 -->
+    <div class="user-rating-box" style="padding:16px 20px; background:#fff; border-bottom:8px solid #f4f9ff;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:14px; font-weight:700; color:#1A2B4A;">거래 신뢰도</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div id="user-rating-stars" style="color:#F5C518; font-size:18px; letter-spacing:1px; display:flex;">
+            <!-- JS will populate stars -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+          <span id="user-rating-text" style="font-size:18px; font-weight:800; color:#1A2B4A;">5.0</span><span style="font-size:12px; color:#7A93B0; margin-left:-4px;">/5</span>
+        </div>
       </div>
     </div>
     

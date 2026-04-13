@@ -1577,20 +1577,30 @@ async function fetchAndRenderMannerTemp() {
         .select('score')
         .eq('reviewee_id', currentUser.id);
         
-    let baseTemp = 36.5;
+    let baseScore = 5.0; // Starts at 5.0
     if(data && !error) {
         let sum = 0;
-        data.forEach(r => sum += (r.score * 0.5)); // +1은 +0.5도, -1은 -0.5도
-        baseTemp += sum;
+        data.forEach(r => sum += (r.score * 0.5)); // +1 is +0.5, -1 is -0.5
+        baseScore += sum;
     }
     
-    if(baseTemp < 0) baseTemp = 0;
-    if(baseTemp > 99) baseTemp = 99;
+    if(baseScore < 0) baseScore = 0;
+    if(baseScore > 5.0) baseScore = 5.0;
     
-    const txt = document.getElementById('manner-temp-text');
-    const bar = document.getElementById('manner-temp-bar');
-    if(txt) txt.textContent = baseTemp.toFixed(1) + "°C";
-    if(bar) bar.style.width = baseTemp + "%";
+    const txt = document.getElementById('user-rating-text');
+    const starsContainer = document.getElementById('user-rating-stars');
+    if(txt) txt.textContent = baseScore.toFixed(1);
+    
+    if(starsContainer) {
+        const starCount = Math.round(baseScore);
+        const svgPath = "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z";
+        let starsHtml = '';
+        for(let i=1; i<=5; i++) {
+            let color = i <= starCount ? '#F5C518' : '#EAEDF2';
+            starsHtml += `<svg width="20" height="20" viewBox="0 0 24 24" fill="${color}"><path d="${svgPath}"/></svg>`;
+        }
+        starsContainer.innerHTML = starsHtml;
+    }
 }
 
 
@@ -2374,7 +2384,7 @@ async function submitReview(score) {
             alert('후기 등록 중 오류가 발생했습니다.');
         }
     } else {
-        alert('소중한 후기가 등록되었습니다. 매너온도에 반영됩니다!');
+        alert('소중한 후기가 등록되었습니다. 거래 신뢰도(별점)에 반영됩니다!');
     }
     
     document.getElementById('review-modal').style.display = 'none';
