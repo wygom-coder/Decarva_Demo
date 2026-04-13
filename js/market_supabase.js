@@ -2403,18 +2403,30 @@ window.executeMigration = async function() {
     
     console.log("🚀 매물(Products) 마이그레이션 시작...");
     const productsToInsert = mockProducts.map(p => {
-        return {
-            seller_id: currentUser.id,
+        let isAuction = p.auction || false;
+        let pobj = {
             title: p.title,
-            description: p.title + " 임시 상세 설명입니다.",
+            sub: p.sub || '방금 전 등록',
+            price: p.price,
             category: p.category,
-            condition: p.condition,
-            price: parseInt(p.price.replace(/[^0-9]/g, '')) || 0,
-            region: p.region,
-            svg: p.svg,
-            trade_type: p.tradeType,
-            auction: p.auction || false
+            "tradeType": p.tradeType,
+            region: p.region || '전국',
+            seller_id: currentUser.id,
+            condition: p.condition || '보통',
+            cert: p.cert || '없음',
+            auth: p.auth !== undefined ? p.auth : true,
+            auction: isAuction,
+            offer: p.offer || false,
+            svg: p.svg
         };
+        if(isAuction) {
+            let nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            pobj.auction_end = nextWeek.toISOString();
+            pobj.current_bid = parseInt(p.price.replace(/[^0-9]/g, '')) || 0;
+            pobj.bid_count = 0;
+        }
+        return pobj;
     });
     
     const { error: err1 } = await supabaseClient.from('haema_products').insert(productsToInsert);
