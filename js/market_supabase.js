@@ -2388,6 +2388,8 @@ async function submitReview(score) {
     }
     
     document.getElementById('review-modal').style.display = 'none';
+}
+
 // ==========================================
 // [DB Migration Script] 실행 후 제거 예정
 // ==========================================
