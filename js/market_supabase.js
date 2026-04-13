@@ -573,13 +573,13 @@ function openProductModal(id) {
 
     if (topCat === '주/부식') {
         actionArea = `
-            <div style="margin-top:20px; display:flex; gap:12px;">
-                <button style="flex:1; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="requestQuote('${p.id}')">견적 결제서 요청하기</button>
+            <div style="margin-top:20px; margin-bottom:24px; display:flex; gap:12px;">
+                <button style="flex:1; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="requestQuote('${p.id}')">견적서에 추가하기</button>
             </div>
         `;
     } else if (topCat === '선용품' || topCat === '안전장비') {
         actionArea = `
-            <div style="margin-top:20px; display:flex; gap:12px;">
+            <div style="margin-top:20px; margin-bottom:24px; display:flex; gap:12px;">
                 <button style="flex:1; padding:14px; border-radius:12px; background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="startChat('${p.id}')">판매자와 네고하기</button>
             </div>
         `;
@@ -589,7 +589,7 @@ function openProductModal(id) {
             const remainText = p.is_closed ? '경매 종료됨' : (p.auction_end ? '마감: ' + new Date(p.auction_end).toLocaleString() : '진행중');
             
             actionArea = `
-                <div style="background:#F4F9FF; border:1px solid #1A5FA0; padding:16px; border-radius:12px; margin-top:20px;">
+                <div style="background:#F4F9FF; border:1px solid #1A5FA0; padding:16px; border-radius:12px; margin-top:20px; margin-bottom:24px;">
                     <div style="color:#1A5FA0; font-size:12px; font-weight:700; margin-bottom:8px;">🔥 최고 입찰자만이 낙찰자가 됩니다!</div>
                     <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                         <span style="font-size:13px; color:#7A93B0;">현재 최고가 (입찰 ${p.bid_count || 0}회)</span>
