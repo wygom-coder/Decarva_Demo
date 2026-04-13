@@ -1103,7 +1103,12 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
                 filterState.keyword = e.target.value.trim();
-                renderProducts();
+                const activePage = document.querySelector('.page.active');
+                if (activePage && activePage.id === 'page-community') {
+                    renderCommunityPosts();
+                } else {
+                    renderProducts();
+                }
             }, 250); // 250ms 대기 후 렌더링 호출
         });
     }
@@ -1261,10 +1266,21 @@ window.renderCommunityPosts = async function() {
         return;
     }
 
+    let filteredPosts = posts;
+    if (filterState.keyword) {
+        const kw = filterState.keyword.toLowerCase();
+        filteredPosts = posts.filter(p => p.title.toLowerCase().includes(kw) || p.content.toLowerCase().includes(kw));
+    }
+
+    if (filteredPosts.length === 0) {
+        area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">검색된 게시글이 없습니다.</div>';
+        return;
+    }
+
     let html = '';
-    posts.forEach(post => {
+    filteredPosts.forEach(post => {
         html += `
-            <div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #eaedf2; box-shadow:0 2px 4px rgba(0,0,0,0.02); cursor:pointer;" onclick="alert('게시글 상세 화면은 준비 중입니다.')">
+            <div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #eaedf2; box-shadow:0 2px 4px rgba(0,0,0,0.02); cursor:pointer;" onclick="openPostDetail('${post.id}')">
                 <div style="display:inline-block; font-size:11px; font-weight:800; background:${post.tag_bg}; color:${post.tag_color}; padding:4px 8px; border-radius:6px; margin-bottom:8px;">
                     ${post.tag}
                 </div>
@@ -2339,3 +2355,179 @@ async function submitReview(score) {
 }
 
 
+
+// ==========================================
+// [커뮤니티 글쓰기 & 상세 & 댓글 로직]
+// ==========================================
+
+window.openPostWriteModal = function() {
+    if(!currentUser) {
+        alert("글을 작성하려면 먼저 로그인을 하셔야 합니다.");
+        return;
+    }
+    document.getElementById('post-write-title').value = '';
+    document.getElementById('post-write-content').value = '';
+    document.getElementById('post-write-modal').style.display = 'flex';
+}
+
+window.closePostWriteModal = function() {
+    document.getElementById('post-write-modal').style.display = 'none';
+}
+
+window.submitPost = async function() {
+    if(!currentUser) return;
+    const title = document.getElementById('post-write-title').value.trim();
+    const content = document.getElementById('post-write-content').value.trim();
+    const tag = document.getElementById('post-write-tag').value;
+    
+    if(!title || !content) {
+        alert("제목과 내용을 모두 입력해주세요.");
+        return;
+    }
+    
+    let tagBg = '#F4F9FF';
+    let tagColor = '#1A5FA0';
+    if(tag.includes('수리지식')) { tagBg = '#E8F5E9'; tagColor = '#1E8E3E'; }
+    if(tag.includes('구인구직')) { tagBg = '#FFF3E0'; tagColor = '#F57C00'; }
+
+    const btn = document.getElementById('btn-submit-post');
+    btn.disabled = true;
+    btn.textContent = '등록 중...';
+
+    const newPost = {
+        author_id: currentUser.id,
+        author_name: currentUser.user_metadata?.full_name || '익명선장',
+        author_role: currentUser.user_metadata?.role || '일반 회원',
+        tag: tag,
+        tag_bg: tagBg,
+        tag_color: tagColor,
+        title: title,
+        content: content,
+        views: 0,
+        comments_count: 0
+    };
+
+    const { error } = await supabaseClient.from('haema_posts').insert([newPost]);
+    
+    btn.disabled = false;
+    btn.textContent = '등록';
+
+    if(error) {
+        alert("글 등록 중 오류가 발생했습니다: " + error.message);
+        return;
+    }
+
+    closePostWriteModal();
+    renderCommunityPosts(); // 리스트 갱신
+}
+
+let currentPostId = null;
+
+window.openPostDetail = async function(postId) {
+    currentPostId = postId;
+    document.getElementById('post-detail-modal').style.display = 'flex';
+    const body = document.getElementById('post-detail-body');
+    body.innerHTML = '<div style="text-align:center; padding: 40px; color:#999;">불러오는 중...</div>';
+    
+    const { data: postData } = await supabaseClient.from('haema_posts').select('*').eq('id', postId).single();
+    if(postData) {
+        await supabaseClient.from('haema_posts').update({ views: postData.views + 1 }).eq('id', postId);
+        postData.views += 1;
+    } else {
+        body.innerHTML = '<div style="text-align:center; padding: 40px; color:red;">삭제되었거나 없는 게시글입니다.</div>';
+        return;
+    }
+
+    const { data: comments } = await supabaseClient.from('haema_post_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+    
+    let html = `
+        <div style="margin-bottom:20px;">
+            <div style="display:inline-block; font-size:12px; font-weight:800; background:${postData.tag_bg}; color:${postData.tag_color}; padding:4px 8px; border-radius:6px; margin-bottom:12px;">
+                ${postData.tag}
+            </div>
+            <h2 style="margin:0 0 12px 0; font-size:20px; color:#1A2B4A; line-height:1.4;">${postData.title}</h2>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px; border-bottom:1px solid #eaedf2; padding-bottom:16px;">
+                <div style="width:36px; height:36px; border-radius:50%; background:#f4f9ff; display:flex; align-items:center; justify-content:center; font-size:18px;">👤</div>
+                <div>
+                    <div style="font-size:14px; font-weight:700; color:#1A2B4A;">${postData.author_name}</div>
+                    <div style="font-size:12px; color:#7A93B0;">${postData.author_role} · 방금 전 · 조회 ${postData.views}</div>
+                </div>
+            </div>
+            <div style="font-size:15px; color:#1A2B4A; line-height:1.6; white-space:pre-wrap;">${postData.content}</div>
+        </div>
+        
+        <div style="margin-top:32px;">
+            <h4 style="margin:0 0 16px 0; font-size:15px; color:#1A2B4A;">댓글 <span style="color:#1A5FA0;">${comments ? comments.length : 0}</span></h4>
+            <div id="comments-list" style="display:flex; flex-direction:column; gap:16px;">
+    `;
+    
+    if(comments && comments.length > 0) {
+        comments.forEach(c => {
+            html += `
+                <div style="display:flex; gap:12px;">
+                    <div style="width:28px; height:28px; border-radius:50%; background:#eaedf2; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:14px;">👤</div>
+                    <div>
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                            <span style="font-size:13px; font-weight:700; color:#1A2B4A;">${c.author_name}</span>
+                            <span style="font-size:11px; background:#f4f9ff; color:#7A93B0; padding:2px 6px; border-radius:4px;">${c.author_role}</span>
+                        </div>
+                        <div style="font-size:14px; color:#4A5568; line-height:1.4;">${c.content}</div>
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        html += `<div style="text-align:center; color:#999; font-size:13px; padding:20px 0;">가장 먼저 댓글을 남겨보세요!</div>`;
+    }
+
+    html += `</div></div>`;
+    body.innerHTML = html;
+}
+
+window.closePostDetail = function() {
+    document.getElementById('post-detail-modal').style.display = 'none';
+    currentPostId = null;
+}
+
+window.submitComment = async function() {
+    if(!currentUser) {
+        alert("댓글을 작성하려면 먼저 로그인을 하셔야 합니다.");
+        return;
+    }
+    if(!currentPostId) return;
+
+    const input = document.getElementById('post-comment-input');
+    const content = input.value.trim();
+    if(!content) return;
+
+    input.value = '등록 중...';
+    input.disabled = true;
+
+    const newComment = {
+        post_id: currentPostId,
+        author_id: currentUser.id,
+        author_name: currentUser.user_metadata?.full_name || '익명선장',
+        author_role: currentUser.user_metadata?.role || '일반 회원',
+        content: content
+    };
+
+    const { error } = await supabaseClient.from('haema_post_comments').insert([newComment]);
+    
+    if(error) {
+        alert("댓글 등록 실패: " + error.message);
+        input.value = content;
+        input.disabled = false;
+        return;
+    }
+
+    const { data: pData } = await supabaseClient.from('haema_posts').select('comments_count').eq('id', currentPostId).single();
+    if(pData) {
+        await supabaseClient.from('haema_posts').update({ comments_count: (pData.comments_count || 0) + 1 }).eq('id', currentPostId);
+    }
+
+    input.value = '';
+    input.disabled = false;
+    
+    openPostDetail(currentPostId);
+    renderCommunityPosts();
+}
