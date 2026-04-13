@@ -300,6 +300,7 @@ function initTopCategory() {
       // Update horizontal sub-bar
       let subHTML = '';
       if (topCat === '주/부식') {
+          catBar.style.display = 'flex';
           const fb = document.querySelector('.filter-bar');
           if(fb) fb.style.display = 'none';
           
@@ -319,17 +320,11 @@ function initTopCategory() {
               });
           });
       } else {
+          catBar.style.display = 'none';
           const fb = document.querySelector('.filter-bar');
           if(fb) fb.style.display = 'flex';
-          
-          subHTML = `<div class="cat-item ${filterState.category === '전체' ? 'active' : ''}">전체</div>`;
-          subCats.forEach(c => {
-              subHTML += `<div class="cat-item ${filterState.category === c.name ? 'active' : ''}">${c.name}</div>`;
-          });
+          subHTML = '';
           catBar.innerHTML = subHTML;
-          catBar.querySelectorAll('.cat-item').forEach(el => {
-              el.addEventListener('click', () => setCategory(el.textContent.trim(), el));
-          });
       }
       
       // Update grid icons
@@ -347,7 +342,9 @@ function initTopCategory() {
           el.addEventListener('click', () => {
               const catName = el.getAttribute('data-cat');
               if (topCat === '주/부식') {
-                  filterState.category = catName;
+                  if (filterState.category === catName) filterState.category = '전체';
+                  else filterState.category = catName;
+                  
                   renderSubCategories(topCat);
                   renderProducts();
               } else {
@@ -525,8 +522,8 @@ function renderProducts() {
       }
       
   } else {
-      // Hide recommendations and category grid, show only filtered list
-      if(catArea) catArea.style.display = 'none';
+      // Hide recommendations, show only filtered list
+      if(catArea) catArea.style.display = 'block'; // ALWAYS SHOW CATEGORIES
       if(recArea) recArea.style.display = 'none';
       if(listTitle) listTitle.innerHTML = `<span class="section-title">${filterState.category} 결과</span>`;
   }
@@ -565,14 +562,10 @@ function renderProducts() {
 }
 
 function setCategory(cat, el) {
-  filterState.category = cat;
-  document.querySelectorAll('.cat-item').forEach(e => e.classList.remove('active'));
-  if (el && el.classList.contains('cat-item')) el.classList.add('active');
-  else {
-      document.querySelectorAll('.cat-item').forEach(e => {
-          if (e.textContent.trim() === cat) e.classList.add('active');
-      });
-  }
+  if (filterState.category === cat) filterState.category = '전체';
+  else filterState.category = cat;
+  
+  renderSubCategories(filterState.topCategory);
   renderProducts();
 }
 
