@@ -59,6 +59,18 @@ function triggerBottomNav(tab) {
   } else if(tab === 'mypage') {
     showPage('mypage');
   }
+
+  // Update fab display correctly
+  const fabReg = document.querySelector('.fab-register');
+  const fabTop = document.querySelector('.fab-top');
+  
+  if(tab === 'community') {
+      if(fabReg) fabReg.style.display = 'none';
+      if(fabTop) fabTop.style.marginBottom = '76px';
+  } else {
+      if(fabReg) fabReg.style.display = 'flex';
+      if(fabTop) fabTop.style.marginBottom = '0px';
+  }
 }
 
 function showChatRoom() {
@@ -631,7 +643,7 @@ function openProductModal(id) {
             `;
         } else {
             actionArea = `
-                <div style="margin-top:20px; display:flex; gap:12px;">
+                <div style="margin-top:20px; margin-bottom:24px; display:flex; gap:12px;">
                     <button style="flex:1; padding:14px; border-radius:12px; background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="startChat('${p.id}')">판매자와 채팅하기</button>
                 </div>
             `;
@@ -1270,6 +1282,10 @@ window.renderCommunityPosts = async function() {
     if (filterState.keyword) {
         const kw = filterState.keyword.toLowerCase();
         filteredPosts = posts.filter(p => p.title.toLowerCase().includes(kw) || p.content.toLowerCase().includes(kw));
+    }
+    
+    if (window.currentCommTag && window.currentCommTag !== '전체') {
+        filteredPosts = filteredPosts.filter(p => p.tag === window.currentCommTag);
     }
 
     if (filteredPosts.length === 0) {
@@ -2530,4 +2546,28 @@ window.submitComment = async function() {
     
     openPostDetail(currentPostId);
     renderCommunityPosts();
+}
+
+// Community Sub-tag filter logic
+window.currentCommTag = '전체';
+window.setCommTag = function(tagName, el) {
+    window.currentCommTag = tagName;
+    
+    // Update styling
+    const tags = document.querySelectorAll('.comm-tag');
+    tags.forEach(t => {
+        t.style.background = '#f4f9ff';
+        t.style.color = '#7A93B0';
+        t.style.border = '1px solid #eaedf2';
+    });
+    if (el) {
+        el.style.background = '#1A2B4A';
+        el.style.color = '#fff';
+        el.style.border = 'none';
+    }
+    
+    // Re-render
+    if (typeof renderCommunityPosts === 'function') {
+        renderCommunityPosts();
+    }
 }
