@@ -129,7 +129,27 @@ const mockProducts = [
   { id: 7, title: '고강도 나일론 계류로프 100m', sub: '부산 · 방금 전', price: '₩ 850,000', category: '로프·와이어', tradeType: '직거래', region: '부산', condition: '최상', cert: 'KR', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="12" y="12" width="24" height="24" rx="4" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="6" stroke="#D4960A" stroke-width="1.5"/></svg>' },
   { id: 8, title: '선박용 외판 페인트(청색) 20L x 10통', sub: '울산 · 1시간 전', price: '₩ 1,200,000', category: '페인트·화공품', tradeType: '직거래', region: '울산', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M16 16v16a4 4 0 008 0V16" stroke="#3A90D9" stroke-width="1.5"/><rect x="12" y="32" width="24" height="8" rx="2" stroke="#3A90D9" stroke-width="1.5"/></svg>' },
   { id: 9, title: '[도매] 국내산 백미 20kg x 50포', sub: '인천 · 2시간 전', price: '₩ 2,400,000', category: '쌀·곡물', tradeType: '직거래', region: '인천', condition: '최상', cert: '없음', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="14" y="10" width="20" height="28" rx="4" stroke="#1E8E3E" stroke-width="1.5"/><line x1="14" y1="20" x2="34" y2="20" stroke="#1E8E3E" stroke-width="1.5" stroke-dasharray="2 2"/></svg>' },
-  { id: 10, title: '냉동 삼겹살 (수입) 100kg', sub: '부산 · 5시간 전', price: '₩ 1,300,000', category: '육류', tradeType: '가격제안', region: '부산', condition: '최상', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 24c0-6 12-10 24 0-12 10-24 6-24 0z" stroke="#D32F2F" stroke-width="1.5"/></svg>' }
+  { id: 10, title: '냉동 삼겹살 (수입) 100kg', sub: '부산 · 5시간 전', price: '₩ 1,300,000', category: '육류', tradeType: '가격제안', region: '부산', condition: '최상', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 24c0-6 12-10 24 0-12 10-24 6-24 0z" stroke="#D32F2F" stroke-width="1.5"/></svg>' },
+  { id: 11, title: 'MAN 엔진 피스톤 링 세트', sub: '부산 · 1시간 전', price: '₩ 1,500,000', category: '엔진·동력', tradeType: '경매', region: '부산', condition: '사용감 있음', cert: 'KR', auth: true, auction: true, remain: '02:15 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#3A90D9" stroke-width="1.5"/><circle cx="24" cy="24" r="8" stroke="#3A90D9" stroke-width="1.5" stroke-dasharray="2 2"/></svg>' },
+  { id: 12, title: '알파라발 원심분리기 부속', sub: '인천 · 어제', price: '₩ 800,000', category: '펌프·배관', tradeType: '가격제안', region: '인천', condition: '양호', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="12" y="16" width="24" height="16" rx="2" stroke="#D4960A" stroke-width="1.5"/><line x1="24" y1="16" x2="24" y2="32" stroke="#D4960A" stroke-width="1.5"/></svg>' },
+  { id: 13, title: '선박용 무전기 배터리팩', sub: '여수 · 3시간 전', price: '₩ 120,000', category: '통신장비', tradeType: '직거래', region: '여수', condition: '최상', cert: 'CE', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="16" y="12" width="16" height="24" rx="2" stroke="#D4960A" stroke-width="1.5"/><line x1="20" y1="8" x2="20" y2="12" stroke="#D4960A" stroke-width="1.5"/></svg>' },
+  { id: 14, title: '야마하 선외기 스크류', sub: '목포 · 2일 전', price: '₩ 450,000', category: '기타부품', tradeType: '경매', region: '목포', condition: '수리필요', cert: '없음', auth: false, auction: true, remain: '05:30 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="10" stroke="#3A90D9" stroke-width="1.5"/><path d="M16 16l16 16M32 16L16 32" stroke="#3A90D9" stroke-width="1.5"/></svg>' },
+  { id: 15, title: '[도매] 고강력 폴리에스터 로프 100m', sub: '울산 · 방금 전', price: '₩ 950,000', category: '로프·와이어', tradeType: '가격제안', region: '울산', condition: '최상', cert: 'KR', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="10" stroke="#1A5FA0" stroke-width="1.5" stroke-dasharray="4 4"/></svg>' },
+  { id: 16, title: '특수 방오도료 (에폭시 하도) 20L', sub: '부산 · 10분 전', price: '₩ 320,000', category: '페인트·화공품', tradeType: '가격제안', region: '부산', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="14" y="16" width="20" height="20" rx="3" stroke="#D4960A" stroke-width="1.5"/><line x1="18" y1="16" x2="18" y2="12" stroke="#D4960A" stroke-width="1.5"/></svg>' },
+  { id: 17, title: 'K2 다이얼 안전화 50켤레 박스', sub: '인천 · 어제', price: '₩ 3,500,000', category: '작업복·안전화', tradeType: '직거래', region: '인천', condition: '최상', cert: '없음', auth: false, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 28l8-4 8 4 8-4v12H12z" stroke="#1A5FA0" stroke-width="1.5"/></svg>' },
+  { id: 18, title: '고압세척기 세트 (호스 포함)', sub: '여수 · 4시간 전', price: '₩ 890,000', category: '청소·소모품', tradeType: '가격제안', region: '여수', condition: '양호', cert: '기타선급', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="16" y="24" width="16" height="12" rx="2" stroke="#D4960A" stroke-width="1.5"/><path d="M24 24V12c0-2-4-2-4 0" stroke="#D4960A" stroke-width="1.5"/></svg>' },
+  { id: 19, title: '산업용 용접기 풀세트', sub: '광양 · 1시간 전', price: '₩ 1,200,000', category: '공구·기기', tradeType: '직거래', region: '광양', condition: '양호', cert: 'CE', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="12" y="16" width="24" height="16" rx="2" stroke="#1A5FA0" stroke-width="1.5"/><circle cx="18" cy="24" r="2" fill="#1A5FA0"/></svg>' },
+  { id: 20, title: '대형 선박 방수포 커버 10x10', sub: '울산 · 5일 전', price: '₩ 450,000', category: '기타', tradeType: '가격제안', region: '울산', condition: '최상', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 24L24 16l12 8v12H12z" stroke="#1A5FA0" stroke-width="1.5" stroke-dasharray="2 2"/></svg>' },
+  { id: 21, title: 'Solas 인증 구명조끼 100벌', sub: '부산 · 오전 10:00', price: '₩ 2,800,000', category: '구명설비', tradeType: '가격제안', region: '부산', condition: '최상', cert: 'KR', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="10" stroke="#1E8E3E" stroke-width="1.5" stroke-dasharray="4 4"/></svg>' },
+  { id: 22, title: '휴대용 소화기 분말 3.3kg x 20개', sub: '인천 · 어제', price: '₩ 600,000', category: '소방설비', tradeType: '직거래', region: '인천', condition: '최상', cert: '없음', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="18" y="16" width="12" height="20" rx="3" stroke="#D32F2F" stroke-width="1.5"/><line x1="24" y1="16" x2="24" y2="12" stroke="#D32F2F" stroke-width="1.5"/></svg>' },
+  { id: 23, title: '방독 마스크 및 정화통 50세트', sub: '여수 · 3일 전', price: '₩ 850,000', category: '개인보호구', tradeType: '가격제안', region: '여수', condition: '최상', cert: 'CE', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><ellipse cx="24" cy="24" rx="8" ry="10" stroke="#1A5FA0" stroke-width="1.5"/><circle cx="20" cy="24" r="2" fill="#1A5FA0"/><circle cx="28" cy="24" r="2" fill="#1A5FA0"/></svg>' },
+  { id: 24, title: '해상 조난 신호 홍염 1박스', sub: '목포 · 방금 전', price: '₩ 340,000', category: '항해안전', tradeType: '직거래', region: '목포', condition: '최상', cert: '없음', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="20" r="6" stroke="#1A5FA0" stroke-width="1.5"/><path d="M22 34l2 4 2-4" stroke="#1A5FA0" stroke-width="1.5"/><line x1="24" y1="36" x2="24" y2="26" stroke="#1A5FA0" stroke-width="1.5"/></svg>' },
+  { id: 25, title: '안전 난간 네트 50m', sub: '광양 · 1시간 전', price: '₩ 200,000', category: '기타', tradeType: '가격제안', region: '광양', condition: '양호', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="12" y="16" width="24" height="16" stroke="#1A5FA0" stroke-width="1.5" stroke-dasharray="2 2"/></svg>' },
+  { id: 26, title: '냉동 닭가슴살 10kg x 10박스', sub: '부산 · 어제', price: '₩ 700,000', category: '육류', tradeType: '가격제안', region: '부산', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M16 26c0-4 16-8 16 0-8 6-16 4-16 0z" stroke="#D32F2F" stroke-width="1.5"/></svg>' },
+  { id: 27, title: '국내산 손질 오징어 50kg', sub: '속초 · 2시간 전', price: '₩ 650,000', category: '수산물', tradeType: '직거래', region: '속초', condition: '보통', cert: '없음', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 24s6-6 12 0 12 6 12 6-4 4-8 2-16-6-16-8z" stroke="#1A5FA0" stroke-width="1.5"/></svg>' },
+  { id: 28, title: '제주 감귤 10kg x 30박스', sub: '제주 · 오전 08:30', price: '₩ 900,000', category: '청과류', tradeType: '가격제안', region: '제주', condition: '최상', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="26" r="8" stroke="#D4960A" stroke-width="1.5"/><path d="M24 16v2" stroke="#1E8E3E" stroke-width="1.5"/></svg>' },
+  { id: 29, title: '[도매] 생수 2L 6개입 x 100팩', sub: '수원 · 어제', price: '₩ 280,000', category: '가공·음료', tradeType: '가격제안', region: '수원', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="20" y="14" width="8" height="20" rx="3" stroke="#7A5200" stroke-width="1.5"/><line x1="20" y1="22" x2="28" y2="22" stroke="#7A5200" stroke-width="1.5"/></svg>' },
+  { id: 30, title: '김치 10kg 큰포기 x 20박스', sub: '광주 · 1시간 전', price: '₩ 1,000,000', category: '주/부식', tradeType: '가격제안', region: '광주', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M16 26c0-6 12-8 16 0-8 6-16 4-16 0z" stroke="#D4960A" stroke-width="1.5"/></svg>' }
 ];
 
 let currentUser = null;
@@ -399,17 +419,8 @@ function renderProducts() {
     return true;
   });
 
-  if (filtered.length === 0) {
-    grid.innerHTML = '<div style="grid-column: span 3; padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">선택한 조건에 맞는 매물이 없습니다.</div>';
-    return;
-  }
+  grid.innerHTML = '';
 
-  if(auctionInterval) clearInterval(auctionInterval);
-  if(auctionInterval) clearInterval(auctionInterval);
-  filtered.forEach(p => {
-    grid.innerHTML += createProductCardHTML(p);
-  });
-  
   // View Toggle based on '전체' selection
   if (filterState.category === '전체' && filterState.keyword === '') {
       // Show Bunjang style Recommendations
@@ -424,8 +435,14 @@ function renderProducts() {
       if(recList && curList) {
           recList.innerHTML = ''; curList.innerHTML = '';
           const shuffled = [...filtered].sort(() => 0.5 - Math.random());
-          shuffled.slice(0, 4).forEach(p => recList.innerHTML += createProductCardHTML(p));
-          shuffled.slice(4, 8).forEach(p => curList.innerHTML += createProductCardHTML(p));
+          const recItems = shuffled.slice(0, 4);
+          const curItems = shuffled.slice(4, 8);
+          
+          if(recItems.length > 0) recItems.forEach(p => recList.innerHTML += createProductCardHTML(p));
+          else recList.innerHTML = '<div style="padding: 20px; font-size:13px; color:#999; text-align:center; width:100%;">선택한 조건에 맞는 매물이 없습니다.</div>';
+          
+          if(curItems.length > 0) curItems.forEach(p => curList.innerHTML += createProductCardHTML(p));
+          else curList.innerHTML = '<div style="padding: 20px; font-size:13px; color:#999; text-align:center; width:100%;">선택한 조건에 맞는 매물이 없습니다.</div>';
       }
       
   } else {
@@ -434,6 +451,17 @@ function renderProducts() {
       if(recArea) recArea.style.display = 'none';
       if(listTitle) listTitle.innerHTML = `<span class="section-title">${filterState.category} 결과</span>`;
   }
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div style="grid-column: span 3; padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">선택한 조건에 맞는 매물이 없습니다.</div>';
+    return;
+  }
+
+  filtered.forEach(p => {
+    grid.innerHTML += createProductCardHTML(p);
+  });
+
+  if(auctionInterval) clearInterval(auctionInterval);
 
 
   auctionInterval = setInterval(() => {
