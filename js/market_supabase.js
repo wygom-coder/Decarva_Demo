@@ -956,7 +956,7 @@ function addToCart(productId) {
         userCart.push({ id: productId, qty: 1 });
     }
     saveCart();
-    alert('🛒 견적 장바구니에 담겼습니다!\\n(우측 상단 장바구니 아이콘에서 확인 가능합니다)');
+    alert('🛒 장바구니에 담겼습니다.');
 }
 
 function saveCart() {
@@ -1067,7 +1067,7 @@ window.requestQuoteCheckout = function() {
         alert('장바구니가 비어있습니다.');
         return;
     }
-    alert('✅ 성공적으로 묶음 견적/결제 요청이 접수되었습니다!\\n각 공급업체에서 확인 후 담당자가 연락드릴 예정입니다.');
+    alert('✅ 성공적으로 묶음 견적 요청이 접수되었습니다.');
     userCart = [];
     saveCart();
     renderCartPage();
