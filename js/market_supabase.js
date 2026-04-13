@@ -424,10 +424,6 @@ function renderProducts() {
           const shuffled = [...filtered].sort(() => 0.5 - Math.random());
           shuffled.slice(0, 4).forEach(p => recList.innerHTML += createProductCardHTML(p));
           shuffled.slice(4, 8).forEach(p => curList.innerHTML += createProductCardHTML(p));
-          
-          if(shuffled.length < 4) {
-              recList.innerHTML += '<div style="padding: 20px; font-size:13px; color:#999;">추천 상품이 아직 없습니다.</div>';
-          }
       }
       
   } else {
@@ -538,12 +534,16 @@ function openProductModal(id) {
     const body = document.getElementById('product-modal-body');
     
     let actionArea = '';
-    const topCat = CAT_TO_TOP_MAP[p.category] || '기부속';
+    const catTrimmed = (p.category||'').trim();
+    let topCat = CAT_TO_TOP_MAP[catTrimmed] || '기부속';
+    if (['쌀·곡물', '육류', '수산물', '청과류', '가공·음료'].includes(catTrimmed)) {
+        topCat = '주/부식';
+    }
 
     if (topCat === '주/부식') {
         actionArea = `
             <div style="margin-top:20px; display:flex; gap:12px;">
-                <button style="flex:1; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="requestQuote('${p.id}')">견적서 요청하기</button>
+                <button style="flex:1; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="requestQuote('${p.id}')">견적 결제서 요청하기</button>
             </div>
         `;
     } else if (topCat === '선용품' || topCat === '안전장비') {
