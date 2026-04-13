@@ -439,10 +439,10 @@ function renderProducts() {
           const curItems = shuffled.slice(4, 8);
           
           if(recItems.length > 0) recItems.forEach(p => recList.innerHTML += createProductCardHTML(p));
-          else recList.innerHTML = '<div style="padding: 20px; font-size:13px; color:#999; text-align:center; width:100%;">선택한 조건에 맞는 매물이 없습니다.</div>';
+          else recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">선택한 조건에 맞는 매물이 없습니다.</div>';
           
           if(curItems.length > 0) curItems.forEach(p => curList.innerHTML += createProductCardHTML(p));
-          else curList.innerHTML = '<div style="padding: 20px; font-size:13px; color:#999; text-align:center; width:100%;">선택한 조건에 맞는 매물이 없습니다.</div>';
+          else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">선택한 조건에 맞는 매물이 없습니다.</div>';
       }
       
   } else {
@@ -453,7 +453,7 @@ function renderProducts() {
   }
 
   if (filtered.length === 0) {
-    grid.innerHTML = '<div style="grid-column: span 3; padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">선택한 조건에 맞는 매물이 없습니다.</div>';
+    grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 100px 20px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); font-size: 14px;">선택한 조건에 맞는 매물이 없습니다.</div>';
     return;
   }
 
@@ -746,7 +746,7 @@ async function fetchProducts() {
     }
     
     if (data && data.length > 0) {
-        products = data;
+        products = [...data, ...mockProducts];
     } else {
         // 처음 빈 테이블일 땐 기본 하드코딩 예시를 보여줌
         products = mockProducts; 
