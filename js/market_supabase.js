@@ -2388,4 +2388,99 @@ async function submitReview(score) {
     }
     
     document.getElementById('review-modal').style.display = 'none';
-}
+// ==========================================
+// [DB Migration Script] 실행 후 제거 예정
+// ==========================================
+window.executeMigration = async function() {
+    if(!currentUser) {
+        alert("이주 작업을 하려면 먼저 로그인을 하셔야 합니다.");
+        return;
+    }
+    
+    if(!confirm("현재 저장된 모든 더미 매물과 커뮤니티 게시글을 Supabase DB로 복사하시겠습니까?")) return;
+    
+    console.log("🚀 매물(Products) 마이그레이션 시작...");
+    const productsToInsert = mockProducts.map(p => {
+        return {
+            seller_id: currentUser.id,
+            title: p.title,
+            description: p.title + " 임시 상세 설명입니다.",
+            category: p.category,
+            condition: p.condition,
+            price: parseInt(p.price.replace(/[^0-9]/g, '')) || 0,
+            region: p.region,
+            svg: p.svg,
+            trade_type: p.tradeType,
+            auction: p.auction || false
+        };
+    });
+    
+    const { error: err1 } = await supabaseClient.from('haema_products').insert(productsToInsert);
+    if(err1) {
+        console.error("❌ 매물 등록 실패:", err1);
+        alert("매물 이주 중 오류 발생. 콘솔 확인 요망.");
+    } else {
+        console.log("✅ 매물 등록 성공!");
+    }
+    
+    console.log("🚀 커뮤니티(Posts) 마이그레이션 시작...");
+    const mockPosts = [
+        {
+            tag: '🛠 수리지식', tagBg: '#E8F5E9', tagColor: '#1E8E3E',
+            title: '선외기 엔진오일 교체 주기 질문합니다',
+            content: '보통 야마하 150마력 선외기 사용중인데 가을바다 다녀오고 나서 오일교체를...',
+            author: '마린보이', role: '엔지니어', time: '10분 전', views: 42, comments: 3
+        },
+        {
+            tag: '💬 자유게시판', tagBg: '#F4F9FF', tagColor: '#1A5FA0',
+            title: '요즘 부산항 근처 볼트/너트 전문점 추천 부탁드려요',
+            content: 'SUS304 재질 특수볼트 소량으로 구하기가 하늘의 별따기네요. 혹시...',
+            author: '김선장', role: '일반 회원', time: '1시간 전', views: 128, comments: 12
+        },
+        {
+            tag: '🛠 수리지식', tagBg: '#E8F5E9', tagColor: '#1E8E3E',
+            title: '알파라발 원심분리기 Overhaul 팁 정리',
+            content: '최근에 분해조립 하면서 헤맸던 부분들 사진으로 남겨뒀습니다. 오링(O-ring)...',
+            author: '동원해양 김씨', role: '공인 업체', time: '3시간 전', views: 350, comments: 24
+        },
+        {
+            tag: '👨‍🔧 구인구직', tagBg: '#FFF3E0', tagColor: '#F57C00',
+            title: '[급구] 울산항 갑판 보수 용접공 모십니다',
+            content: '일정: 11월 4일 하루 / 조건: 용접 자격증 필수, 일당 협의 / 연락처...',
+            author: '현대보수', role: '기업 회원', time: '어제', views: 89, comments: 1
+        },
+        {
+            tag: '💬 자유게시판', tagBg: '#F4F9FF', tagColor: '#1A5FA0',
+            title: '다들 요즘 해운운임 떨어지는거 체감하시나요?',
+            content: '기름값은 오르는데 운임은 떨어지고... 다들 어떻게 버티시나요 ㅠㅠ',
+            author: '은빛갈매기', role: '일반 회원', time: '어제', views: 512, comments: 45
+        }
+    ];
+
+    const postsToInsert = mockPosts.map(p => {
+        return {
+            author_id: currentUser.id,
+            author_name: p.author,
+            author_role: p.role,
+            tag: p.tag,
+            tag_bg: p.tagBg,
+            tag_color: p.tagColor,
+            title: p.title,
+            content: p.content,
+            views: p.views,
+            comments_count: p.comments
+        };
+    });
+
+    const { error: err2 } = await supabaseClient.from('haema_posts').insert(postsToInsert);
+    if(err2) {
+        console.error("❌ 게시글 등록 실패:", err2);
+        alert("게시글 이주 중 오류 발생. 콘솔 확인 요망.");
+    } else {
+        console.log("✅ 게시글 등록 성공!");
+    }
+    
+    if(!err1 && !err2) {
+        alert("🎉 모든 데이터베이스 마이그레이션이 완료되었습니다! 확인 버튼을 누릅니다.");
+    }
+};
