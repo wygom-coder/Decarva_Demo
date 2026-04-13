@@ -124,38 +124,7 @@ const KATEGORY_MAP = {
 const CAT_TO_TOP_MAP = {};
 Object.entries(KATEGORY_MAP).forEach(([top, cats]) => cats.forEach(c => CAT_TO_TOP_MAP[c.name] = top));
 
-const mockProducts = [
-  { id: 1, title: 'MAN B&W 엔진 부품', sub: '부산 · 2024.03', price: '₩ 4,500,000', category: '엔진·동력', tradeType: '직거래', region: '부산', condition: '양호', cert: '전체', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#3A90D9" stroke-width="1.5"/><path d="M16 20v-6a8 8 0 0116 0v6" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="29" r="3" fill="#3A90D9"/></svg>' },
-  { id: 2, title: 'JRC 레이더 시스템', sub: '인천 · 2022.11', price: '₩ 8,200,000', category: '항법장비', tradeType: '경매', region: '인천', condition: '최상', cert: 'KR', auth: false, auction: true, remain: '14:32 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="4" fill="#D4960A"/><line x1="24" y1="12" x2="24" y2="8" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="36" y1="24" x2="40" y2="24" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-  { id: 3, title: '앵커 체인 50m', sub: '울산 · 2021.06', price: '₩ 1,200,000', category: '갑판장비', tradeType: '가격제안', region: '울산', condition: '부품용', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 36L24 12l12 24H12z" stroke="#3A90D9" stroke-width="1.5" stroke-linejoin="round"/><line x1="24" y1="36" x2="24" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="42" x2="30" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-  { id: 4, title: 'ICOM 위성통신 장비', sub: '여수 · 2023.08', price: '₩ 2,800,000', category: '통신장비', tradeType: '직거래', region: '여수', condition: '최상', cert: '기타선급', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="16" width="28" height="20" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M18 16v-4h12v4" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="26" x2="32" y2="26" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="24" y1="22" x2="24" y2="30" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-  { id: 5, title: '구명정 진수장치', sub: '광양 · 2020.04', price: '₩ 5,600,000', category: '구명설비', tradeType: '가격제안', region: '여수', condition: '양호', cert: '기타선급', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="22" r="8" stroke="#3A90D9" stroke-width="1.5"/><path d="M18 30l-4 8M30 30l4 8" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="38" x2="34" y2="38" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-  { id: 6, title: '선박용 압력계 세트', sub: '목포 · 2023.12', price: '₩ 680,000', category: '전기·계측', tradeType: '직거래', region: '목포', condition: '보통', cert: 'KR', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="12" width="28" height="24" rx="3" stroke="#D4960A" stroke-width="1.5"/><line x1="10" y1="20" x2="38" y2="20" stroke="#D4960A" stroke-width="1.5"/><line x1="24" y1="12" x2="24" y2="36" stroke="#D4960A" stroke-width="1.5"/></svg>' },
-  { id: 7, title: '고강도 나일론 계류로프 100m', sub: '부산 · 방금 전', price: '₩ 850,000', category: '로프·와이어', tradeType: '직거래', region: '부산', condition: '최상', cert: 'KR', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="12" y="12" width="24" height="24" rx="4" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="6" stroke="#D4960A" stroke-width="1.5"/></svg>' },
-  { id: 8, title: '선박용 외판 페인트(청색) 20L x 10통', sub: '울산 · 1시간 전', price: '₩ 1,200,000', category: '페인트·화공품', tradeType: '직거래', region: '울산', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M16 16v16a4 4 0 008 0V16" stroke="#3A90D9" stroke-width="1.5"/><rect x="12" y="32" width="24" height="8" rx="2" stroke="#3A90D9" stroke-width="1.5"/></svg>' },
-  { id: 9, title: '[도매] 국내산 백미 20kg x 50포', sub: '인천 · 2시간 전', price: '₩ 2,400,000', category: '쌀·곡물', tradeType: '직거래', region: '인천', condition: '최상', cert: '없음', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="14" y="10" width="20" height="28" rx="4" stroke="#1E8E3E" stroke-width="1.5"/><line x1="14" y1="20" x2="34" y2="20" stroke="#1E8E3E" stroke-width="1.5" stroke-dasharray="2 2"/></svg>' },
-  { id: 10, title: '냉동 삼겹살 (수입) 100kg', sub: '부산 · 5시간 전', price: '₩ 1,300,000', category: '육류', tradeType: '가격제안', region: '부산', condition: '최상', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 24c0-6 12-10 24 0-12 10-24 6-24 0z" stroke="#D32F2F" stroke-width="1.5"/></svg>' },
-  { id: 11, title: 'MAN 엔진 피스톤 링 세트', sub: '부산 · 1시간 전', price: '₩ 1,500,000', category: '엔진·동력', tradeType: '경매', region: '부산', condition: '사용감 있음', cert: 'KR', auth: true, auction: true, remain: '02:15 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#3A90D9" stroke-width="1.5"/><circle cx="24" cy="24" r="8" stroke="#3A90D9" stroke-width="1.5" stroke-dasharray="2 2"/></svg>' },
-  { id: 12, title: '알파라발 원심분리기 부속', sub: '인천 · 어제', price: '₩ 800,000', category: '펌프·배관', tradeType: '가격제안', region: '인천', condition: '양호', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="12" y="16" width="24" height="16" rx="2" stroke="#D4960A" stroke-width="1.5"/><line x1="24" y1="16" x2="24" y2="32" stroke="#D4960A" stroke-width="1.5"/></svg>' },
-  { id: 13, title: '선박용 무전기 배터리팩', sub: '여수 · 3시간 전', price: '₩ 120,000', category: '통신장비', tradeType: '직거래', region: '여수', condition: '최상', cert: 'CE', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="16" y="12" width="16" height="24" rx="2" stroke="#D4960A" stroke-width="1.5"/><line x1="20" y1="8" x2="20" y2="12" stroke="#D4960A" stroke-width="1.5"/></svg>' },
-  { id: 14, title: '야마하 선외기 스크류', sub: '목포 · 2일 전', price: '₩ 450,000', category: '기타부품', tradeType: '경매', region: '목포', condition: '수리필요', cert: '없음', auth: false, auction: true, remain: '05:30 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="10" stroke="#3A90D9" stroke-width="1.5"/><path d="M16 16l16 16M32 16L16 32" stroke="#3A90D9" stroke-width="1.5"/></svg>' },
-  { id: 15, title: '[도매] 고강력 폴리에스터 로프 100m', sub: '울산 · 방금 전', price: '₩ 950,000', category: '로프·와이어', tradeType: '가격제안', region: '울산', condition: '최상', cert: 'KR', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="10" stroke="#1A5FA0" stroke-width="1.5" stroke-dasharray="4 4"/></svg>' },
-  { id: 16, title: '특수 방오도료 (에폭시 하도) 20L', sub: '부산 · 10분 전', price: '₩ 320,000', category: '페인트·화공품', tradeType: '가격제안', region: '부산', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="14" y="16" width="20" height="20" rx="3" stroke="#D4960A" stroke-width="1.5"/><line x1="18" y1="16" x2="18" y2="12" stroke="#D4960A" stroke-width="1.5"/></svg>' },
-  { id: 17, title: 'K2 다이얼 안전화 50켤레 박스', sub: '인천 · 어제', price: '₩ 3,500,000', category: '작업복·안전화', tradeType: '직거래', region: '인천', condition: '최상', cert: '없음', auth: false, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 28l8-4 8 4 8-4v12H12z" stroke="#1A5FA0" stroke-width="1.5"/></svg>' },
-  { id: 18, title: '고압세척기 세트 (호스 포함)', sub: '여수 · 4시간 전', price: '₩ 890,000', category: '청소·소모품', tradeType: '가격제안', region: '여수', condition: '양호', cert: '기타선급', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="16" y="24" width="16" height="12" rx="2" stroke="#D4960A" stroke-width="1.5"/><path d="M24 24V12c0-2-4-2-4 0" stroke="#D4960A" stroke-width="1.5"/></svg>' },
-  { id: 19, title: '산업용 용접기 풀세트', sub: '광양 · 1시간 전', price: '₩ 1,200,000', category: '공구·기기', tradeType: '직거래', region: '광양', condition: '양호', cert: 'CE', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="12" y="16" width="24" height="16" rx="2" stroke="#1A5FA0" stroke-width="1.5"/><circle cx="18" cy="24" r="2" fill="#1A5FA0"/></svg>' },
-  { id: 20, title: '대형 선박 방수포 커버 10x10', sub: '울산 · 5일 전', price: '₩ 450,000', category: '기타', tradeType: '가격제안', region: '울산', condition: '최상', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 24L24 16l12 8v12H12z" stroke="#1A5FA0" stroke-width="1.5" stroke-dasharray="2 2"/></svg>' },
-  { id: 21, title: 'Solas 인증 구명조끼 100벌', sub: '부산 · 오전 10:00', price: '₩ 2,800,000', category: '구명설비', tradeType: '가격제안', region: '부산', condition: '최상', cert: 'KR', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="10" stroke="#1E8E3E" stroke-width="1.5" stroke-dasharray="4 4"/></svg>' },
-  { id: 22, title: '휴대용 소화기 분말 3.3kg x 20개', sub: '인천 · 어제', price: '₩ 600,000', category: '소방설비', tradeType: '직거래', region: '인천', condition: '최상', cert: '없음', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="18" y="16" width="12" height="20" rx="3" stroke="#D32F2F" stroke-width="1.5"/><line x1="24" y1="16" x2="24" y2="12" stroke="#D32F2F" stroke-width="1.5"/></svg>' },
-  { id: 23, title: '방독 마스크 및 정화통 50세트', sub: '여수 · 3일 전', price: '₩ 850,000', category: '개인보호구', tradeType: '가격제안', region: '여수', condition: '최상', cert: 'CE', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><ellipse cx="24" cy="24" rx="8" ry="10" stroke="#1A5FA0" stroke-width="1.5"/><circle cx="20" cy="24" r="2" fill="#1A5FA0"/><circle cx="28" cy="24" r="2" fill="#1A5FA0"/></svg>' },
-  { id: 24, title: '해상 조난 신호 홍염 1박스', sub: '목포 · 방금 전', price: '₩ 340,000', category: '항해안전', tradeType: '직거래', region: '목포', condition: '최상', cert: '없음', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="20" r="6" stroke="#1A5FA0" stroke-width="1.5"/><path d="M22 34l2 4 2-4" stroke="#1A5FA0" stroke-width="1.5"/><line x1="24" y1="36" x2="24" y2="26" stroke="#1A5FA0" stroke-width="1.5"/></svg>' },
-  { id: 25, title: '안전 난간 네트 50m', sub: '광양 · 1시간 전', price: '₩ 200,000', category: '기타', tradeType: '가격제안', region: '광양', condition: '양호', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="12" y="16" width="24" height="16" stroke="#1A5FA0" stroke-width="1.5" stroke-dasharray="2 2"/></svg>' },
-  { id: 26, title: '[늘푸른식품] 냉장 삼겹살 10kg x 3박스', sub: '부산 · 평점 4.9', price: '₩ 450,000', category: '육류', tradeType: '가격제안', region: '부산', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M16 26c0-4 16-8 16 0-8 6-16 4-16 0z" stroke="#D32F2F" stroke-width="1.5"/></svg>' },
-  { id: 27, title: '[여수부식센터] 국내산 손질 오징어 50kg', sub: '여수 · 평점 4.6', price: '₩ 650,000', category: '수산물', tradeType: '가격제안', region: '여수', condition: '보통', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 24s6-6 12 0 12 6 12 6-4 4-8 2-16-6-16-8z" stroke="#1A5FA0" stroke-width="1.5"/></svg>' },
-  { id: 28, title: '[울산상사] 제주 감귤 10kg x 30박스', sub: '울산 · 평점 4.8', price: '₩ 900,000', category: '청과류', tradeType: '가격제안', region: '울산', condition: '최상', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="26" r="8" stroke="#D4960A" stroke-width="1.5"/><path d="M24 16v2" stroke="#1E8E3E" stroke-width="1.5"/></svg>' },
-  { id: 29, title: '[인천글로벌] 생수 2L 6개입 x 100팩', sub: '인천 · 평점 4.7', price: '₩ 280,000', category: '가공·음료', tradeType: '가격제안', region: '인천', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="20" y="14" width="8" height="20" rx="3" stroke="#7A5200" stroke-width="1.5"/><line x1="20" y1="22" x2="28" y2="22" stroke="#7A5200" stroke-width="1.5"/></svg>' },
-  { id: 30, title: '[항구종합식자재] 김치 10kg 큰포기 20박스', sub: '기타 · 평점 5.0', price: '₩ 1,000,000', category: '주/부식', tradeType: '가격제안', region: '광주', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M16 26c0-6 12-8 16 0-8 6-16 4-16 0z" stroke="#D4960A" stroke-width="1.5"/></svg>' }
-];
+
 
 let currentUser = null;
 let authMode = 'signin';
@@ -796,12 +765,7 @@ async function fetchProducts() {
         return;
     }
     
-    if (data && data.length > 0) {
-        products = [...data, ...mockProducts];
-    } else {
-        // 처음 빈 테이블일 땐 기본 하드코딩 예시를 보여줌
-        products = mockProducts; 
-    }
+    products = data || [];
     renderProducts();
 }
 
@@ -1276,48 +1240,32 @@ let currentChatSubscription = null;
 
 // ==== 내가 올린 매물 (판매 목록) 로직 ====
 // ==== 커뮤니티 탭 렌더링 로직 ====
-window.renderCommunityPosts = function() {
+window.renderCommunityPosts = async function() {
     const area = document.getElementById('community-content-area');
     if(!area) return;
+    
+    area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">게시글을 불러오는 중입니다...</div>';
 
-    const mockPosts = [
-        {
-            tag: '🛠 수리지식', tagBg: '#E8F5E9', tagColor: '#1E8E3E',
-            title: '선외기 엔진오일 교체 주기 질문합니다',
-            content: '보통 야마하 150마력 선외기 사용중인데 가을바다 다녀오고 나서 오일교체를...',
-            author: '마린보이', role: '엔지니어', time: '10분 전', views: 42, comments: 3
-        },
-        {
-            tag: '💬 자유게시판', tagBg: '#F4F9FF', tagColor: '#1A5FA0',
-            title: '요즘 부산항 근처 볼트/너트 전문점 추천 부탁드려요',
-            content: 'SUS304 재질 특수볼트 소량으로 구하기가 하늘의 별따기네요. 혹시...',
-            author: '김선장', role: '일반 회원', time: '1시간 전', views: 128, comments: 12
-        },
-        {
-            tag: '🛠 수리지식', tagBg: '#E8F5E9', tagColor: '#1E8E3E',
-            title: '알파라발 원심분리기 Overhaul 팁 정리',
-            content: '최근에 분해조립 하면서 헤맸던 부분들 사진으로 남겨뒀습니다. 오링(O-ring)...',
-            author: '동원해양 김씨', role: '공인 업체', time: '3시간 전', views: 350, comments: 24
-        },
-        {
-            tag: '👨‍🔧 구인구직', tagBg: '#FFF3E0', tagColor: '#F57C00',
-            title: '[급구] 울산항 갑판 보수 용접공 모십니다',
-            content: '일정: 11월 4일 하루 / 조건: 용접 자격증 필수, 일당 협의 / 연락처...',
-            author: '현대보수', role: '기업 회원', time: '어제', views: 89, comments: 1
-        },
-        {
-            tag: '💬 자유게시판', tagBg: '#F4F9FF', tagColor: '#1A5FA0',
-            title: '다들 요즘 해운운임 떨어지는거 체감하시나요?',
-            content: '기름값은 오르는데 운임은 떨어지고... 다들 어떻게 버티시나요 ㅠㅠ',
-            author: '은빛갈매기', role: '일반 회원', time: '어제', views: 512, comments: 45
-        }
-    ];
+    const { data: posts, error } = await supabaseClient
+        .from('haema_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+    if(error) {
+        area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:red; text-align:center;">게시글을 불러오지 못했습니다.</div>';
+        return;
+    }
+    
+    if(!posts || posts.length === 0) {
+        area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">등록된 커뮤니티 글이 없습니다.</div>';
+        return;
+    }
 
     let html = '';
-    mockPosts.forEach(post => {
+    posts.forEach(post => {
         html += `
             <div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #eaedf2; box-shadow:0 2px 4px rgba(0,0,0,0.02); cursor:pointer;" onclick="alert('게시글 상세 화면은 준비 중입니다.')">
-                <div style="display:inline-block; font-size:11px; font-weight:800; background:${post.tagBg}; color:${post.tagColor}; padding:4px 8px; border-radius:6px; margin-bottom:8px;">
+                <div style="display:inline-block; font-size:11px; font-weight:800; background:${post.tag_bg}; color:${post.tag_color}; padding:4px 8px; border-radius:6px; margin-bottom:8px;">
                     ${post.tag}
                 </div>
                 <div style="font-size:15px; font-weight:700; color:#1A2B4A; margin-bottom:6px; line-height:1.4;">
@@ -1328,13 +1276,13 @@ window.renderCommunityPosts = function() {
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#7A93B0;">
                     <div style="display:flex; align-items:center; gap:6px;">
-                        <span style="font-weight:700; color:#1A2B4A;">${post.author}</span>
-                        <span style="font-size:10px; background:#EAEDF2; padding:2px 6px; border-radius:4px;">${post.role}</span>
-                        <span>· ${post.time}</span>
+                        <span style="font-weight:700; color:#1A2B4A;">${post.author_name}</span>
+                        <span style="font-size:10px; background:#EAEDF2; padding:2px 6px; border-radius:4px;">${post.author_role}</span>
+                        <span>· 방금 전</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="display:flex; align-items:center; gap:2px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke="currentColor" stroke-width="2"/></svg>${post.views}</span>
-                        <span style="display:flex; align-items:center; gap:2px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2"/></svg>${post.comments}</span>
+                        <span style="display:flex; align-items:center; gap:2px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke="currentColor" stroke-width="2"/></svg>${post.views || 0}</span>
+                        <span style="display:flex; align-items:center; gap:2px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2"/></svg>${post.comments_count || 0}</span>
                     </div>
                 </div>
             </div>
@@ -2390,111 +2338,4 @@ async function submitReview(score) {
     document.getElementById('review-modal').style.display = 'none';
 }
 
-// ==========================================
-// [DB Migration Script] 실행 후 제거 예정
-// ==========================================
-window.executeMigration = async function() {
-    if(!currentUser) {
-        alert("이주 작업을 하려면 먼저 로그인을 하셔야 합니다.");
-        return;
-    }
-    
-    if(!confirm("현재 저장된 모든 더미 매물과 커뮤니티 게시글을 Supabase DB로 복사하시겠습니까?")) return;
-    
-    console.log("🚀 매물(Products) 마이그레이션 시작...");
-    const productsToInsert = mockProducts.map(p => {
-        let isAuction = p.auction || false;
-        let pobj = {
-            title: p.title,
-            sub: p.sub || '방금 전 등록',
-            price: p.price,
-            category: p.category,
-            "tradeType": p.tradeType,
-            region: p.region || '전국',
-            seller_id: currentUser.id,
-            condition: p.condition || '보통',
-            cert: p.cert || '없음',
-            auth: p.auth !== undefined ? p.auth : true,
-            auction: isAuction,
-            offer: p.offer || false,
-            svg: p.svg
-        };
-        if(isAuction) {
-            let nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + 7);
-            pobj.auction_end = nextWeek.toISOString();
-            pobj.current_bid = parseInt(p.price.replace(/[^0-9]/g, '')) || 0;
-            pobj.bid_count = 0;
-        }
-        return pobj;
-    });
-    
-    const { error: err1 } = await supabaseClient.from('haema_products').insert(productsToInsert);
-    if(err1) {
-        console.error("❌ 매물 등록 실패:", err1);
-        alert("매물 이주 중 오류 발생. 콘솔 확인 요망.");
-    } else {
-        console.log("✅ 매물 등록 성공!");
-    }
-    
-    console.log("🚀 커뮤니티(Posts) 마이그레이션 시작...");
-    const mockPosts = [
-        {
-            tag: '🛠 수리지식', tagBg: '#E8F5E9', tagColor: '#1E8E3E',
-            title: '선외기 엔진오일 교체 주기 질문합니다',
-            content: '보통 야마하 150마력 선외기 사용중인데 가을바다 다녀오고 나서 오일교체를...',
-            author: '마린보이', role: '엔지니어', time: '10분 전', views: 42, comments: 3
-        },
-        {
-            tag: '💬 자유게시판', tagBg: '#F4F9FF', tagColor: '#1A5FA0',
-            title: '요즘 부산항 근처 볼트/너트 전문점 추천 부탁드려요',
-            content: 'SUS304 재질 특수볼트 소량으로 구하기가 하늘의 별따기네요. 혹시...',
-            author: '김선장', role: '일반 회원', time: '1시간 전', views: 128, comments: 12
-        },
-        {
-            tag: '🛠 수리지식', tagBg: '#E8F5E9', tagColor: '#1E8E3E',
-            title: '알파라발 원심분리기 Overhaul 팁 정리',
-            content: '최근에 분해조립 하면서 헤맸던 부분들 사진으로 남겨뒀습니다. 오링(O-ring)...',
-            author: '동원해양 김씨', role: '공인 업체', time: '3시간 전', views: 350, comments: 24
-        },
-        {
-            tag: '👨‍🔧 구인구직', tagBg: '#FFF3E0', tagColor: '#F57C00',
-            title: '[급구] 울산항 갑판 보수 용접공 모십니다',
-            content: '일정: 11월 4일 하루 / 조건: 용접 자격증 필수, 일당 협의 / 연락처...',
-            author: '현대보수', role: '기업 회원', time: '어제', views: 89, comments: 1
-        },
-        {
-            tag: '💬 자유게시판', tagBg: '#F4F9FF', tagColor: '#1A5FA0',
-            title: '다들 요즘 해운운임 떨어지는거 체감하시나요?',
-            content: '기름값은 오르는데 운임은 떨어지고... 다들 어떻게 버티시나요 ㅠㅠ',
-            author: '은빛갈매기', role: '일반 회원', time: '어제', views: 512, comments: 45
-        }
-    ];
 
-    const postsToInsert = mockPosts.map(p => {
-        return {
-            author_id: currentUser.id,
-            author_name: p.author,
-            author_role: p.role,
-            tag: p.tag,
-            tag_bg: p.tagBg,
-            tag_color: p.tagColor,
-            title: p.title,
-            content: p.content,
-            views: p.views,
-            comments_count: p.comments
-        };
-    });
-
-    const { error: err2 } = await supabaseClient.from('haema_posts').insert(postsToInsert);
-    if(err2) {
-        console.error("❌ 게시글 등록 실패:", err2);
-        alert("게시글 이주 중 오류 발생. 콘솔 확인 요망.");
-    } else {
-        console.log("✅ 게시글 등록 성공!");
-    }
-    
-    if(!err1 && !err2) {
-        alert("🎉 모든 데이터베이스 마이그레이션이 완료되었습니다! 확인 버튼을 누릅니다.");
-    }
-};
