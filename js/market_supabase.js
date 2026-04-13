@@ -338,9 +338,23 @@ function initTopCategory() {
           const isActive = filterState.category === c.name;
           const lblStyle = isActive ? 'color:#1E8E3E; font-weight:800;' : '';
           const ringStyle = isActive ? 'box-shadow:0 0 0 2px #1E8E3E;' : '';
-          gridHTML += `<div class="cat-icon-item" onclick="setCategory('${c.name}', this)"><div class="cat-icon-box" style="background:${c.bg}; ${ringStyle}">${c.svg}</div><span class="cat-icon-label" style="${lblStyle}">${c.name}</span></div>`;
+          gridHTML += `<div class="cat-icon-item" data-cat="${c.name}"><div class="cat-icon-box" style="background:${c.bg}; ${ringStyle}">${c.svg}</div><span class="cat-icon-label" style="${lblStyle}">${c.name}</span></div>`;
       });
       catGrid.innerHTML = gridHTML;
+      
+      // Attach click events locally so it has access to renderSubCategories
+      catGrid.querySelectorAll('.cat-icon-item').forEach(el => {
+          el.addEventListener('click', () => {
+              const catName = el.getAttribute('data-cat');
+              if (topCat === '주/부식') {
+                  filterState.category = catName;
+                  renderSubCategories(topCat);
+                  renderProducts();
+              } else {
+                  setCategory(catName, el);
+              }
+          });
+      });
   }
 
   topTabs.forEach(tab => {
@@ -552,11 +566,6 @@ function renderProducts() {
 
 function setCategory(cat, el) {
   filterState.category = cat;
-  if (filterState.topCategory === '주/부식') {
-      renderSubCategories(filterState.topCategory);
-      renderProducts();
-      return;
-  }
   document.querySelectorAll('.cat-item').forEach(e => e.classList.remove('active'));
   if (el && el.classList.contains('cat-item')) el.classList.add('active');
   else {
