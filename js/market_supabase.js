@@ -572,51 +572,21 @@ function openProductModal(id) {
     }
 
     if (topCat === '주/부식') {
-        const storeName = p.title;
-        const storeScore = p.sub;
-        const minimumOrder = p.price;
-        const storeRegion = p.category;
+        const storeMatch = p.title.match(/^\[(.*?)\]/);
+        const storeName = storeMatch ? storeMatch[1] : '인증 협력업체';
         
-        body.innerHTML = `
-            <div style="width:100%; height:200px; background:linear-gradient(to bottom right, #f4f9ff, #e6f4ea); display:flex; flex-direction:column; align-items:center; justify-content:center;">
-               ${p.svg}
-               <div style="margin-top:12px; font-weight:700; color:#1E8E3E; font-size:14px; background:#fff; padding:6px 16px; border-radius:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">검증된 해마 B-Mart 스토어</div>
+        actionArea = `
+            <div style="background:#e6f4ea; border:1px solid #1E8E3E; padding:16px; border-radius:12px; margin-top:20px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="background:#1E8E3E; color:#fff; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:700;">추천 벤더</div>
+                    <span style="font-size:14px; font-weight:700; color:#1A2B4A;">${storeName}</span>
+                </div>
+                <div style="margin-top:6px; font-size:13px; color:#333; line-height:1.4;">이 물품은 해당 지역의 우수 벤더가 납품합니다. 동일 업체의 식품을 여러 개 담아 견적을 요청하시면 물류비가 대폭 절감됩니다.</div>
             </div>
-            <div style="padding: 20px; flex:1; overflow-y:auto; display:flex; flex-direction:column;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div style="flex:1;">
-                        <div style="font-size:12px; color:#1E8E3E; font-weight:700; margin-bottom:6px;">배송가능: ${storeRegion}</div>
-                        <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:800; color:#1A2B4A; line-height:1.3; word-break:keep-all;">${storeName}</h3>
-                        <div style="font-size:14px; color:#7A93B0; font-weight:500; margin-bottom:16px;">${storeScore}</div>
-                    </div>
-                </div>
-                
-                <div style="background:#f4f5f7; border-radius:12px; padding:16px; margin-bottom:24px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                        <span style="color:#7A93B0; font-size:14px; font-weight:600;">안내 금액</span>
-                        <span style="color:#1A2B4A; font-size:15px; font-weight:700;">${minimumOrder}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                        <span style="color:#7A93B0; font-size:14px; font-weight:600;">주요 취급 품목</span>
-                        <span style="color:#1A2B4A; font-size:14px; font-weight:600;">${p.condition}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between;">
-                        <span style="color:#7A93B0; font-size:14px; font-weight:600;">에이전시 인증</span>
-                        <span style="color:#1E8E3E; font-size:14px; font-weight:700;">${p.cert}</span>
-                    </div>
-                </div>
-
-                <div style="color:#333; font-size:14px; line-height:1.6; white-space:pre-wrap; margin-bottom:24px;">본 업체는 해당 항구에서 선박으로의 식자재 조달에 특화된 우수 벤더입니다. 견적 요청 시 단일 납품을 통해 항만 수수료와 물류비를 아끼실 수 있습니다.</div>
-
-                <div style="margin-top:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:24px;">
-                    <button style="width:100%; padding:14px; border-radius:12px; background:#fff; color:#1E8E3E; font-size:15px; font-weight:700; border:1px solid #1E8E3E; cursor:pointer;" onclick="alert('품목 개별 장바구니 보기 기능은 추후 B-Mart 전용 쇼핑몰 업데이트 시 제공됩니다.')">이 업체의 상품 카탈로그 보기 (준비중)</button>
-                    <button style="width:100%; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="requestQuote('${p.id}')">이 업체에 다이렉트 견적 요청하기 (Excel 첨부)</button>
-                </div>
+            <div style="margin-top:16px; margin-bottom:24px; display:flex; flex-direction:column; gap:12px;">
+                <button style="width:100%; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="requestQuote('${p.id}')">[${storeName}] 전용 견적 장바구니에 담기</button>
             </div>
         `;
-        document.getElementById('product-modal').style.display = 'flex';
-        return;
-    }
 
     if (topCat === '선용품' || topCat === '안전장비') {
         actionArea = `
