@@ -1467,11 +1467,11 @@ function showMyList() {
     
     if(myProducts.length === 0) {
         container.innerHTML = `
-            <div style="grid-column: span 3; text-align:center; padding: 40px; color:#aaa; font-size:13px;">
-                <div style="font-size:30px; margin-bottom:12px;">🛳️</div>
+            <div style="grid-column: span 3; text-align:center; padding: 60px 20px; color:#aaa; font-size:14px; display:flex; flex-direction:column; align-items:center;">
+                <div style="font-size:32px; margin-bottom:12px;">🛳️</div>
                 <div>아직 등록하신 판매 매물이 없습니다.</div>
                 <div style="margin-top:16px;">
-                    <button onclick="requireAuthAndShow('register')" style="padding: 8px 16px; background:var(--blue-50); color:var(--blue-800); border:1px solid var(--blue-200); border-radius:8px; cursor:pointer; font-weight:700;">첫 판매글 올리러 가기</button>
+                    <button onclick="requireAuthAndShow('register')" style="padding: 10px 20px; background:var(--blue-50); color:var(--blue-800); border:1px solid var(--blue-200); border-radius:8px; cursor:pointer; font-weight:700;">첫 판매글 작성하기</button>
                 </div>
             </div>`;
         return;
@@ -2300,7 +2300,7 @@ async function loadLikedProducts() {
         .order('created_at', { ascending: false });
         
     if(error || !likes || likes.length === 0) {
-        document.getElementById('mylist-container').innerHTML = '<div style="padding:40px; text-align:center; color:#999; font-size:13px;">찜한 상품이 없습니다.</div>';
+        document.getElementById('mylist-grid').innerHTML = '<div style="grid-column: span 3; padding:60px 20px; text-align:center; color:#999; font-size:14px; display:flex; flex-direction:column; align-items:center; gap:12px;"><div style="font-size:32px;">❤️</div><div>아직 찜을 누른 관심 매물이 없습니다.</div><button onclick="triggerBottomNav(\\'home\\')" style="margin-top:16px; padding: 10px 20px; border-radius: 8px; background: #f4f9ff; color: #1a5fa0; border: 1px solid #cce5ff; font-weight: bold; cursor: pointer;">매물 둘러보기</button></div>';
         return;
     }
     
@@ -2310,7 +2310,7 @@ async function loadLikedProducts() {
     // 최신순 유지 및 자료형 충돌 방지 (String 전환 후 비교)
     const sortedProducts = pIds.map(id => pData ? pData.find(x => String(x.id) === String(id)) : null).filter(Boolean);
     
-    const container = document.getElementById('mylist-container');
+    const container = document.getElementById('mylist-grid');
     container.innerHTML = '';
     
     sortedProducts.forEach((p, idx) => {
@@ -2334,10 +2334,10 @@ async function loadLikedProducts() {
 }
 
 function openMyListCommon(titleText) {
-    document.getElementById('page-mylist').style.display = 'block';
+    showPage('mylist');
     const subTitle = document.querySelector('#page-mylist .sub-title');
     if(subTitle) subTitle.textContent = titleText;
-    document.getElementById('mylist-container').innerHTML = '<div style="padding:40px; text-align:center; color:#999; font-size:13px;">로딩 중...</div>';
+    document.getElementById('mylist-grid').innerHTML = '<div style="grid-column: span 3; padding:40px; text-align:center; color:#999; font-size:13px; display:flex; justify-content:center;">로딩 중...</div>';
 }
 
 // ----------------------------------------
