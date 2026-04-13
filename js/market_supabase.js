@@ -261,7 +261,7 @@ window.doLogout = async function() {
 let userCart = JSON.parse(localStorage.getItem('haema_cart')) || [];
 
 let filterState = {
-  topCategory: '기부속',
+  topCategory: '전체',
   keyword: '',
   category: '전체',
   region: '전체',
@@ -404,11 +404,11 @@ function renderProducts() {
   grid.innerHTML = '';
   
   let filtered = products.filter(p => {
-    let topOfP = CAT_TO_TOP_MAP[p.category] || '기부속';
-    if (['쌀·곡물', '육류', '수산물', '청과류', '가공·음료'].includes(p.category)) {
+    let topOfP = CAT_TO_TOP_MAP[p.category] || p.category; // fallback to p.category instead of contaminating 기부속
+    if (['쌀·곡물', '육류', '수산물', '청과류', '가공·음료', '주/부식'].includes(p.category)) {
         topOfP = '주/부식';
     }
-    if (topOfP !== filterState.topCategory) return false;
+    if (filterState.topCategory !== '전체' && topOfP !== filterState.topCategory) return false;
     
     // 0. 키워드 매칭
     if (filterState.keyword) {
@@ -452,13 +452,12 @@ function renderProducts() {
   grid.innerHTML = '';
 
   // View Toggle based on '전체' selection
-  if (filterState.category === '전체' && filterState.keyword === '') {
-      // Show Bunjang style Recommendations
-      if(catArea) catArea.style.display = 'block';
+  if (filterState.topCategory === '전체') {
+      // Main Page Mode
+      if(catArea) catArea.style.display = 'none'; // Hide sub-categories on main page
       if(recArea) recArea.style.display = 'block';
-      if(listTitle) listTitle.innerHTML = '<span class="section-title">최신 매물</span><span class="section-more">더보기 →</span>';
+      if(listTitle) listTitle.innerHTML = '<span class="section-title">최신 전체 매물</span><span class="section-more">더보기 →</span>';
       
-      // Populate recommendation carousels with shuffled items from current top cat
       const recList = document.getElementById('recommendation-list');
       const curList = document.getElementById('curation-list');
       
@@ -469,10 +468,31 @@ function renderProducts() {
           const curItems = shuffled.slice(4, 8);
           
           if(recItems.length > 0) recItems.forEach(p => recList.innerHTML += createProductCardHTML(p));
-          else recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">선택한 조건에 맞는 매물이 없습니다.</div>';
+          else recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">등록된 매물이 없습니다.</div>';
           
           if(curItems.length > 0) curItems.forEach(p => curList.innerHTML += createProductCardHTML(p));
-          else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">선택한 조건에 맞는 매물이 없습니다.</div>';
+          else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">등록된 매물이 없습니다.</div>';
+      }
+  } else if (filterState.category === '전체' && filterState.keyword === '') {
+      // Specific Top-Category Curation
+      if(catArea) catArea.style.display = 'block';
+      if(recArea) recArea.style.display = 'block';
+      if(listTitle) listTitle.innerHTML = '<span class="section-title">최신 매물</span><span class="section-more">더보기 →</span>';
+      
+      const recList = document.getElementById('recommendation-list');
+      const curList = document.getElementById('curation-list');
+      
+      if(recList && curList) {
+          recList.innerHTML = ''; curList.innerHTML = '';
+          const shuffled = [...filtered].sort(() => 0.5 - Math.random());
+          const recItems = shuffled.slice(0, 4);
+          const curItems = shuffled.slice(4, 8);
+          
+          if(recItems.length > 0) recItems.forEach(p => recList.innerHTML += createProductCardHTML(p));
+          else recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">조건에 맞는 매물이 없습니다.</div>';
+          
+          if(curItems.length > 0) curItems.forEach(p => curList.innerHTML += createProductCardHTML(p));
+          else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">조건에 맞는 매물이 없습니다.</div>';
       }
       
   } else {
@@ -2569,5 +2589,15 @@ window.setCommTag = function(tagName, el) {
     // Re-render
     if (typeof renderCommunityPosts === 'function') {
         renderCommunityPosts();
+// Scroll to Top specific logic
+window.scrollToTop = function() {
+    window.scrollTo({top:0, behavior:'smooth'});
+    const activePage = document.querySelector('.page.active');
+    if (activePage) {
+        const scrollAreas = activePage.querySelectorAll('[style*="overflow-y"], [style*="overflow-y:auto"], [id*="-content-area"]');
+        scrollAreas.forEach(area => {
+            area.scrollTo({top:0, behavior:'smooth'});
+        });
     }
 }
+

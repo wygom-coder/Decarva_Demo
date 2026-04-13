@@ -9,7 +9,7 @@
 
   <!-- Supabase & Custom Script -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./js/market_supabase.js?v=20240413" defer></script>
+  <script src="./js/market_supabase.js?v=20240413_3" defer></script>
   
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="./css/market.css">
@@ -43,7 +43,8 @@
   </div>
 
   <div class="top-nav-tabs" id="top-nav-tabs">
-    <div class="top-tab active" data-top="기부속">중고기부속</div>
+    <div class="top-tab active" data-top="전체">전체</div>
+    <div class="top-tab" data-top="기부속">중고기부속</div>
     <div class="top-tab" data-top="선용품">선용품</div>
     <div class="top-tab" data-top="안전장비">안전장비</div>
     <div class="top-tab" data-top="주/부식">주/부식</div>
@@ -563,7 +564,7 @@
 
 <!-- 우측 하단 플로팅 액션 버튼 (Top 이동 및 매물 등록) -->
 <div class="fab-container">
-  <button class="fab-btn fab-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="최상단으로 이동">
+  <button class="fab-btn fab-top" onclick="scrollToTop()" title="최상단으로 이동">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
   <button class="fab-btn fab-register" onclick="requireAuthAndShow('register')" title="매물 등록">
