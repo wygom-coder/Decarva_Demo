@@ -286,74 +286,70 @@ let filterState = {
   maxPrice: null
 };
 
+function renderSubCategories(topCat) {
+    const catBar = document.getElementById('sub-cat-bar');
+    const catGrid = document.getElementById('main-cat-grid');
+    if(!catBar || !catGrid) return;
+    
+    const subCats = KATEGORY_MAP[topCat] || [];
+    
+    // Update horizontal sub-bar
+    let subHTML = '';
+    if (topCat === '주/부식') {
+        catBar.style.display = 'flex';
+        const fb = document.querySelector('.filter-bar');
+        if(fb) fb.style.display = 'none';
+        
+        const ports = ['부산/마산항', '여수/광양항', '울산/포항항', '인천/평택항', '기타항구'];
+        subHTML = `<div class="cat-item ${filterState.port === '전체' ? 'active' : ''}">전체 항구</div>`;
+        ports.forEach(p => {
+            subHTML += `<div class="cat-item ${filterState.port === p ? 'active' : ''}">${p}</div>`;
+        });
+        catBar.innerHTML = subHTML;
+        catBar.querySelectorAll('.cat-item').forEach(el => {
+            el.addEventListener('click', () => {
+                let txt = el.textContent.trim();
+                if(txt === '전체 항구') txt = '전체';
+                filterState.port = txt;
+                renderSubCategories(filterState.topCategory);
+                renderProducts();
+            });
+        });
+    } else {
+        catBar.style.display = 'none';
+        const fb = document.querySelector('.filter-bar');
+        if(fb) fb.style.display = 'flex';
+        subHTML = '';
+        catBar.innerHTML = subHTML;
+    }
+    
+    // Update grid icons
+    let gridHTML = '';
+    subCats.forEach(c => {
+        const isActive = filterState.category === c.name;
+        const lblStyle = isActive ? 'color:#1E8E3E; font-weight:800;' : '';
+        const ringStyle = isActive ? 'box-shadow:0 0 0 2px #1E8E3E;' : '';
+        gridHTML += `<div class="cat-icon-item" data-cat="${c.name}"><div class="cat-icon-box" style="background:${c.bg}; ${ringStyle}">${c.svg}</div><span class="cat-icon-label" style="${lblStyle}">${c.name}</span></div>`;
+    });
+    catGrid.innerHTML = gridHTML;
+    
+    // Attach click events to grid icons locally (Unifying toggle logic for ALL tabs)
+    catGrid.querySelectorAll('.cat-icon-item').forEach(el => {
+        el.addEventListener('click', () => {
+            const catName = el.getAttribute('data-cat');
+            
+            if (filterState.category === catName) filterState.category = '전체';
+            else filterState.category = catName;
+            
+            renderSubCategories(topCat);
+            renderProducts();
+        });
+    });
+}
+
 function initTopCategory() {
   const topTabs = document.querySelectorAll('.top-tab');
-  const catBar = document.getElementById('sub-cat-bar');
-  const catGrid = document.getElementById('main-cat-grid');
   
-  // Render sub categories based on top category
-  function renderSubCategories(topCat) {
-      if(!catBar || !catGrid) return;
-      
-      const subCats = KATEGORY_MAP[topCat] || [];
-      
-      // Update horizontal sub-bar
-      let subHTML = '';
-      if (topCat === '주/부식') {
-          catBar.style.display = 'flex';
-          const fb = document.querySelector('.filter-bar');
-          if(fb) fb.style.display = 'none';
-          
-          const ports = ['부산/마산항', '여수/광양항', '울산/포항항', '인천/평택항', '기타항구'];
-          subHTML = `<div class="cat-item ${filterState.port === '전체' ? 'active' : ''}">전체 항구</div>`;
-          ports.forEach(p => {
-              subHTML += `<div class="cat-item ${filterState.port === p ? 'active' : ''}">${p}</div>`;
-          });
-          catBar.innerHTML = subHTML;
-          catBar.querySelectorAll('.cat-item').forEach(el => {
-              el.addEventListener('click', () => {
-                  let txt = el.textContent.trim();
-                  if(txt === '전체 항구') txt = '전체';
-                  filterState.port = txt;
-                  renderSubCategories(filterState.topCategory);
-                  renderProducts();
-              });
-          });
-      } else {
-          catBar.style.display = 'none';
-          const fb = document.querySelector('.filter-bar');
-          if(fb) fb.style.display = 'flex';
-          subHTML = '';
-          catBar.innerHTML = subHTML;
-      }
-      
-      // Update grid icons
-      let gridHTML = '';
-      subCats.forEach(c => {
-          const isActive = filterState.category === c.name;
-          const lblStyle = isActive ? 'color:#1E8E3E; font-weight:800;' : '';
-          const ringStyle = isActive ? 'box-shadow:0 0 0 2px #1E8E3E;' : '';
-          gridHTML += `<div class="cat-icon-item" data-cat="${c.name}"><div class="cat-icon-box" style="background:${c.bg}; ${ringStyle}">${c.svg}</div><span class="cat-icon-label" style="${lblStyle}">${c.name}</span></div>`;
-      });
-      catGrid.innerHTML = gridHTML;
-      
-      // Attach click events locally so it has access to renderSubCategories
-      catGrid.querySelectorAll('.cat-icon-item').forEach(el => {
-          el.addEventListener('click', () => {
-              const catName = el.getAttribute('data-cat');
-              if (topCat === '주/부식') {
-                  if (filterState.category === catName) filterState.category = '전체';
-                  else filterState.category = catName;
-                  
-                  renderSubCategories(topCat);
-                  renderProducts();
-              } else {
-                  setCategory(catName, el);
-              }
-          });
-      });
-  }
-
   topTabs.forEach(tab => {
       tab.addEventListener('click', () => {
           topTabs.forEach(t => t.classList.remove('active'));
@@ -561,13 +557,7 @@ function renderProducts() {
 
 }
 
-function setCategory(cat, el) {
-  if (filterState.category === cat) filterState.category = '전체';
-  else filterState.category = cat;
-  
-  renderSubCategories(filterState.topCategory);
-  renderProducts();
-}
+// setCategory function was completely removed as it caused reference errors and is now handled exclusively inside renderSubCategories
 
 function updateFilterStyles() {
     // 필터 부모 노드들 강조색 업데이트
@@ -976,7 +966,8 @@ async function registerProduct() {
   
   alert('매물이 성공적으로 등록되었습니다! 🚀\n(하단 경매 탭에서도 바로 확인하실 수 있습니다.)');
   
-  setCategory('전체'); 
+  filterState.category = '전체';
+  renderSubCategories(filterState.topCategory);
   resetFilters();
   showPage('home');
   window.scrollTo(0, 0);
@@ -1003,13 +994,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 메뉴 클릭
-    document.querySelectorAll('.cat-item').forEach(el => {
-        el.addEventListener('click', () => setCategory(el.textContent.trim(), el));
-    });
-    document.querySelectorAll('.cat-icon-item').forEach(el => {
-        el.addEventListener('click', () => setCategory(el.querySelector('.cat-icon-label').textContent.trim()));
-    });
+    // 삭제된 글로벌 이벤트 바인딩 (이제 renderSubCategories안에서 각각 바인딩됨)
 
     // 드롭다운 토글 매니저
     document.querySelectorAll('.filter-dropdown').forEach(btn => {
