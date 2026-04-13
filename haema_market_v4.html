@@ -41,6 +41,7 @@
   <div class="top-nav-tabs" id="top-nav-tabs">
     <div class="top-tab active" data-top="기부속">중고기부속</div>
     <div class="top-tab" data-top="선용품">선용품</div>
+    <div class="top-tab" data-top="안전장비">안전장비</div>
     <div class="top-tab" data-top="주/부식">주/부식</div>
   </div>
 
@@ -493,6 +494,31 @@
       <button onclick="submitReview(-1)" style="flex:1; padding:16px 0; border:1px solid #eee; border-radius:12px; background:#f9f9f9; cursor:pointer;"><div style="font-size:24px;margin-bottom:8px;">😞</div><div style="font-size:12px;font-weight:700;color:#555;">별로예요</div></button>
     </div>
     <button onclick="document.getElementById('review-modal').style.display='none'" style="width:100%; padding:14px; background:#EAEDF2; color:#7A93B0; font-weight:700; border:none; border-radius:12px; cursor:pointer;">나중에 하기</button>
+  </div>
+</div>
+
+<!-- 견적서 요청 모달 (주/부식 전용) -->
+<div id="quote-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
+  <div class="modal-box" style="width:100%; max-width:360px; background:#fff; border-radius:20px; padding:24px; text-align:center; animation: popIn 0.2s ease-out; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+    <div style="font-size:36px; margin-bottom:12px;">📑</div>
+    <h3 style="margin-top:0; color:#1A2B4A; font-size:20px; font-weight:800; margin-bottom:12px;">견적서 벤더 토스 시스템</h3>
+    <p style="font-size:14px; color:#7A93B0; line-height:1.5; margin-bottom:24px;">
+      선박에서 요청서를 수신했습니다.<br>
+      해마 벤더 시스템에 등록된 <b>제휴 업체</b>로 즉시 토스하여 견적서를 수령 후,<br> 
+      선박으로 다시 전송해 드립니다.
+    </p>
+    <div style="background:#F4F9FF; border-radius:12px; padding:16px; text-align:left; margin-bottom:24px;">
+      <div style="font-size:12px; color:#1A5FA0; font-weight:700; margin-bottom:6px;">발주 절차 안내</div>
+      <div style="font-size:13px; color:#1A2B4A; line-height:1.5;">
+        1. 견적서 요청 접수<br>
+        2. 최적의 제휴 벤더 매칭 및 견적서 수신<br>
+        3. 선박 (본선) 컨펌 및 최종 발주 결정
+      </div>
+    </div>
+    <div style="display:flex; gap:12px;">
+      <button onclick="document.getElementById('quote-modal').style.display='none'" style="flex:1; padding:16px; background:#EAEDF2; color:#7A93B0; font-size:15px; font-weight:700; border:none; border-radius:12px; cursor:pointer;">취소</button>
+      <button onclick="submitQuoteRequest()" style="flex:2; padding:16px; background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; border-radius:12px; cursor:pointer;">진행하기</button>
+    </div>
   </div>
 </div>
 

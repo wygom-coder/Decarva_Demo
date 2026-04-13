@@ -88,7 +88,6 @@ const KATEGORY_MAP = {
     { name: '항법장비', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="6" stroke="#D4960A" stroke-width="1.4"/><line x1="11" y1="5" x2="11" y2="3" stroke="#D4960A" stroke-width="1.4" stroke-linecap="round"/><line x1="17" y1="11" x2="19" y2="11" stroke="#D4960A" stroke-width="1.4" stroke-linecap="round"/><circle cx="11" cy="11" r="2" fill="#D4960A"/></svg>', bg: '#FFF3C0' },
     { name: '갑판장비', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 14L11 4l7 10H4z" stroke="#1A5FA0" stroke-width="1.4" stroke-linejoin="round"/><line x1="11" y1="14" x2="11" y2="19" stroke="#1A5FA0" stroke-width="1.4" stroke-linecap="round"/><line x1="7" y1="19" x2="15" y2="19" stroke="#1A5FA0" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#DAEEFF' },
     { name: '통신장비', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5" y="6" width="12" height="10" rx="2" stroke="#D4960A" stroke-width="1.4"/><path d="M9 6V4h4v2" stroke="#D4960A" stroke-width="1.4" stroke-linecap="round"/><line x1="8" y1="11" x2="14" y2="11" stroke="#D4960A" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#FFF3C0' },
-    { name: '안전장비', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="10" r="5" stroke="#1A5FA0" stroke-width="1.4"/><path d="M8 16l3 3 3-3" stroke="#1A5FA0" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><line x1="11" y1="19" x2="11" y2="15" stroke="#1A5FA0" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#DAEEFF' },
     { name: '펌프·배관', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 8h12M5 14h12" stroke="#D4960A" stroke-width="1.4" stroke-linecap="round"/><rect x="3" y="5" width="16" height="12" rx="2" stroke="#D4960A" stroke-width="1.4"/></svg>', bg: '#FFF3C0' },
     { name: '전기·계측', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="6" y="4" width="10" height="14" rx="2" stroke="#1A5FA0" stroke-width="1.4"/><line x1="11" y1="14" x2="15" y2="10" stroke="#1A5FA0" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#DAEEFF' },
     { name: '기타부품', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#D4960A" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#FFF3C0' }
@@ -99,6 +98,12 @@ const KATEGORY_MAP = {
     { name: '작업복·안전화', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M6 6h10v12H6z" stroke="#1A5FA0" stroke-width="1.4"/><path d="M8 6l3-4 3 4" stroke="#1A5FA0" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#DAEEFF' },
     { name: '청소·소모품', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 20l-4-8h8l-4 8z" stroke="#D4960A" stroke-width="1.4"/><path d="M11 12V4" stroke="#D4960A" stroke-width="1.4"/></svg>', bg: '#FFF3C0' },
     { name: '공구·기기', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M14 6l-8 8" stroke="#1A5FA0" stroke-width="1.4" stroke-linecap="round"/><circle cx="16" cy="6" r="2" stroke="#1A5FA0" stroke-width="1.4"/></svg>', bg: '#DAEEFF' }
+  ],
+  '안전장비': [
+    { name: '구명설비', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#1E8E3E" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#E6F4EA' },
+    { name: '소방설비', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 4C7 4 7 11 7 11c0 3.3 2.7 6 4 6s4-2.7 4-6c0 0 0-7-4-7z" stroke="#D32F2F" stroke-width="1.4"/></svg>', bg: '#FFEBEE' },
+    { name: '개인보호구', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M6 6h10v12H6z" stroke="#1A5FA0" stroke-width="1.4"/><path d="M8 6l3-4 3 4" stroke="#1A5FA0" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#DAEEFF' },
+    { name: '항해안전', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="10" r="5" stroke="#1A5FA0" stroke-width="1.4"/><path d="M8 16l3 3 3-3" stroke="#1A5FA0" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><line x1="11" y1="19" x2="11" y2="15" stroke="#1A5FA0" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#DAEEFF' }
   ],
   '주/부식': [
     { name: '쌀·곡물', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="6" y="4" width="10" height="14" rx="2" stroke="#1E8E3E" stroke-width="1.4"/><line x1="8" y1="10" x2="14" y2="10" stroke="#1E8E3E" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#E6F4EA' },
@@ -117,7 +122,7 @@ const mockProducts = [
   { id: 2, title: 'JRC 레이더 시스템', sub: '인천 · 2022.11', price: '₩ 8,200,000', category: '항법장비', tradeType: '경매', region: '인천', condition: '최상', cert: 'KR', auth: false, auction: true, remain: '14:32 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="4" fill="#D4960A"/><line x1="24" y1="12" x2="24" y2="8" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="36" y1="24" x2="40" y2="24" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
   { id: 3, title: '앵커 체인 50m', sub: '울산 · 2021.06', price: '₩ 1,200,000', category: '갑판장비', tradeType: '가격제안', region: '울산', condition: '부품용', cert: '없음', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 36L24 12l12 24H12z" stroke="#3A90D9" stroke-width="1.5" stroke-linejoin="round"/><line x1="24" y1="36" x2="24" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="42" x2="30" y2="42" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
   { id: 4, title: 'ICOM 위성통신 장비', sub: '여수 · 2023.08', price: '₩ 2,800,000', category: '통신장비', tradeType: '직거래', region: '여수', condition: '최상', cert: '기타선급', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="16" width="28" height="20" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M18 16v-4h12v4" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="26" x2="32" y2="26" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/><line x1="24" y1="22" x2="24" y2="30" stroke="#D4960A" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-  { id: 5, title: '구명정 진수장치', sub: '광양 · 2020.04', price: '₩ 5,600,000', category: '안전장비', tradeType: '경매', region: '여수', condition: '양호', cert: '기타선급', auth: false, auction: true, remain: '8:14 남음', svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="22" r="8" stroke="#3A90D9" stroke-width="1.5"/><path d="M18 30l-4 8M30 30l4 8" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="38" x2="34" y2="38" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+  { id: 5, title: '구명정 진수장치', sub: '광양 · 2020.04', price: '₩ 5,600,000', category: '구명설비', tradeType: '가격제안', region: '여수', condition: '양호', cert: '기타선급', auth: false, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="22" r="8" stroke="#3A90D9" stroke-width="1.5"/><path d="M18 30l-4 8M30 30l4 8" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="38" x2="34" y2="38" stroke="#3A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>' },
   { id: 6, title: '선박용 압력계 세트', sub: '목포 · 2023.12', price: '₩ 680,000', category: '전기·계측', tradeType: '직거래', region: '목포', condition: '보통', cert: 'KR', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="12" width="28" height="24" rx="3" stroke="#D4960A" stroke-width="1.5"/><line x1="10" y1="20" x2="38" y2="20" stroke="#D4960A" stroke-width="1.5"/><line x1="24" y1="12" x2="24" y2="36" stroke="#D4960A" stroke-width="1.5"/></svg>' },
   { id: 7, title: '고강도 나일론 계류로프 100m', sub: '부산 · 방금 전', price: '₩ 850,000', category: '로프·와이어', tradeType: '직거래', region: '부산', condition: '최상', cert: 'KR', auth: true, auction: false, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="12" y="12" width="24" height="24" rx="4" stroke="#D4960A" stroke-width="1.5"/><circle cx="24" cy="24" r="6" stroke="#D4960A" stroke-width="1.5"/></svg>' },
   { id: 8, title: '선박용 외판 페인트(청색) 20L x 10통', sub: '울산 · 1시간 전', price: '₩ 1,200,000', category: '페인트·화공품', tradeType: '직거래', region: '울산', condition: '최상', cert: '없음', auth: true, auction: false, offer: true, svg: '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M16 16v16a4 4 0 008 0V16" stroke="#3A90D9" stroke-width="1.5"/><rect x="12" y="32" width="24" height="8" rx="2" stroke="#3A90D9" stroke-width="1.5"/></svg>' },
@@ -533,38 +538,53 @@ function openProductModal(id) {
     const body = document.getElementById('product-modal-body');
     
     let actionArea = '';
-    
-    if (p.auction) {
-        const displayPrice = p.current_bid ? p.current_bid.toLocaleString() : p.price.replace(/[^0-9]/g, '');
-        const remainText = p.is_closed ? '경매 종료됨' : (p.auction_end ? '마감: ' + new Date(p.auction_end).toLocaleString() : '진행중');
-        
+    const topCat = CAT_TO_TOP_MAP[p.category] || '기부속';
+
+    if (topCat === '주/부식') {
         actionArea = `
-            <div style="background:#F4F9FF; border:1px solid #1A5FA0; padding:16px; border-radius:12px; margin-top:20px;">
-                <div style="color:#1A5FA0; font-size:12px; font-weight:700; margin-bottom:8px;">🔥 최고 입찰자만이 낙찰자가 됩니다!</div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                    <span style="font-size:13px; color:#7A93B0;">현재 최고가 (입찰 ${p.bid_count || 0}회)</span>
-                    <span style="font-size:20px; font-weight:800; color:#1A2B4A;">₩ ${displayPrice}</span>
-                </div>
-                <div style="font-size:12px; color:#E53E3E; font-weight:600; margin-bottom:16px;">${remainText}</div>
-                
-                ${p.is_closed ? `<button style="width:100%; padding:14px; border-radius:12px; background:#EAEDF2; color:#7A93B0; font-size:15px; font-weight:700; border:none;" disabled>마감된 경매입니다</button>` : `
-                <div style="display:flex; gap:8px; margin-bottom:12px;">
-                    <button type="button" onclick="document.getElementById('bid-amount').value = ${parseInt(displayPrice.replace(/,/g,'')) + 10000}" style="flex:1; padding:10px; background:#fff; border:1px solid #1A5FA0; color:#1A5FA0; border-radius:8px; font-weight:600; cursor:pointer;">+ 1만원</button>
-                    <button type="button" onclick="document.getElementById('bid-amount').value = ${parseInt(displayPrice.replace(/,/g,'')) + 50000}" style="flex:1; padding:10px; background:#fff; border:1px solid #1A5FA0; color:#1A5FA0; border-radius:8px; font-weight:600; cursor:pointer;">+ 5만원</button>
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <input type="number" id="bid-amount" placeholder="희망가 입력" style="flex:1; padding:12px 14px; border:1px solid #ccc; border-radius:8px; outline:none; font-size:15px; font-weight:600;">
-                    <button onclick="submitBid('${p.id}')" class="auction-bid-btn" style="background:#D4960A; color:#fff; border:none; border-radius:8px; padding:0 24px; font-weight:700; font-size:15px; cursor:pointer;">입찰</button>
-                </div>
-                `}
+            <div style="margin-top:20px; display:flex; gap:12px;">
+                <button style="flex:1; padding:14px; border-radius:12px; background:#1E8E3E; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="requestQuote('${p.id}')">견적서 요청하기</button>
+            </div>
+        `;
+    } else if (topCat === '선용품' || topCat === '안전장비') {
+        actionArea = `
+            <div style="margin-top:20px; display:flex; gap:12px;">
+                <button style="flex:1; padding:14px; border-radius:12px; background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="startChat('${p.id}')">판매자와 네고하기</button>
             </div>
         `;
     } else {
-        actionArea = `
-            <div style="margin-top:20px; display:flex; gap:12px;">
-                <button style="flex:1; padding:14px; border-radius:12px; background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="startChat('${p.id}')">판매자와 채팅하기</button>
-            </div>
-        `;
+        if (p.auction) {
+            const displayPrice = p.current_bid ? p.current_bid.toLocaleString() : p.price.replace(/[^0-9]/g, '');
+            const remainText = p.is_closed ? '경매 종료됨' : (p.auction_end ? '마감: ' + new Date(p.auction_end).toLocaleString() : '진행중');
+            
+            actionArea = `
+                <div style="background:#F4F9FF; border:1px solid #1A5FA0; padding:16px; border-radius:12px; margin-top:20px;">
+                    <div style="color:#1A5FA0; font-size:12px; font-weight:700; margin-bottom:8px;">🔥 최고 입찰자만이 낙찰자가 됩니다!</div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span style="font-size:13px; color:#7A93B0;">현재 최고가 (입찰 ${p.bid_count || 0}회)</span>
+                        <span style="font-size:20px; font-weight:800; color:#1A2B4A;">₩ ${displayPrice}</span>
+                    </div>
+                    <div style="font-size:12px; color:#E53E3E; font-weight:600; margin-bottom:16px;">${remainText}</div>
+                    
+                    ${p.is_closed ? `<button style="width:100%; padding:14px; border-radius:12px; background:#EAEDF2; color:#7A93B0; font-size:15px; font-weight:700; border:none;" disabled>마감된 경매입니다</button>` : `
+                    <div style="display:flex; gap:8px; margin-bottom:12px;">
+                        <button type="button" onclick="document.getElementById('bid-amount').value = ${parseInt(displayPrice.replace(/,/g,'')) + 10000}" style="flex:1; padding:10px; background:#fff; border:1px solid #1A5FA0; color:#1A5FA0; border-radius:8px; font-weight:600; cursor:pointer;">+ 1만원</button>
+                        <button type="button" onclick="document.getElementById('bid-amount').value = ${parseInt(displayPrice.replace(/,/g,'')) + 50000}" style="flex:1; padding:10px; background:#fff; border:1px solid #1A5FA0; color:#1A5FA0; border-radius:8px; font-weight:600; cursor:pointer;">+ 5만원</button>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <input type="number" id="bid-amount" placeholder="희망가 입력" style="flex:1; padding:12px 14px; border:1px solid #ccc; border-radius:8px; outline:none; font-size:15px; font-weight:600;">
+                        <button onclick="submitBid('${p.id}')" class="auction-bid-btn" style="background:#D4960A; color:#fff; border:none; border-radius:8px; padding:0 24px; font-weight:700; font-size:15px; cursor:pointer;">입찰</button>
+                    </div>
+                    `}
+                </div>
+            `;
+        } else {
+            actionArea = `
+                <div style="margin-top:20px; display:flex; gap:12px;">
+                    <button style="flex:1; padding:14px; border-radius:12px; background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;" onclick="startChat('${p.id}')">판매자와 채팅하기</button>
+                </div>
+            `;
+        }
     }
     
     const safeContent = p.content && p.content !== 'undefined' ? p.content : '상세 설명이 없습니다.';
@@ -603,6 +623,22 @@ function openProductModal(id) {
 
 function closeProductModal() {
     document.getElementById('product-modal').style.display = 'none';
+}
+
+let currentQuoteProductId = null;
+function requestQuote(id) {
+    if(!currentUser) {
+        alert('견적서 요청은 로그인이 필요합니다.');
+        showPage('login');
+        return;
+    }
+    currentQuoteProductId = id;
+    document.getElementById('quote-modal').style.display = 'flex';
+}
+
+function submitQuoteRequest() {
+    alert('해마 벤더 시스템으로 견적 요청이 성공적으로 접수되었습니다.\\n빠른 시일 내에 선박의 메일/시스템으로 견적서가 도착합니다!');
+    document.getElementById('quote-modal').style.display = 'none';
 }
 
 async function submitBid(id) {
