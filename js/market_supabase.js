@@ -47,6 +47,9 @@ function triggerBottomNav(tab) {
     showPage('home');
     resetFilters();
     applySubFilter('tradeType', '경매');
+  } else if(tab === 'community') {
+    showPage('community');
+    if (typeof renderCommunityPosts === 'function') renderCommunityPosts();
   } else if(tab === 'chat') {
     showPage('chat');
     hideChatRoom();
@@ -1333,6 +1336,75 @@ async function loadChatRooms() {
 
 
 // ==== 내가 올린 매물 (판매 목록) 로직 ====
+// ==== 커뮤니티 탭 렌더링 로직 ====
+window.renderCommunityPosts = function() {
+    const area = document.getElementById('community-content-area');
+    if(!area) return;
+
+    const mockPosts = [
+        {
+            tag: '🛠 수리지식', tagBg: '#E8F5E9', tagColor: '#1E8E3E',
+            title: '선외기 엔진오일 교체 주기 질문합니다',
+            content: '보통 야마하 150마력 선외기 사용중인데 가을바다 다녀오고 나서 오일교체를...',
+            author: '마린보이', role: '엔지니어', time: '10분 전', views: 42, comments: 3
+        },
+        {
+            tag: '💬 자유게시판', tagBg: '#F4F9FF', tagColor: '#1A5FA0',
+            title: '요즘 부산항 근처 볼트/너트 전문점 추천 부탁드려요',
+            content: 'SUS304 재질 특수볼트 소량으로 구하기가 하늘의 별따기네요. 혹시...',
+            author: '김선장', role: '일반 회원', time: '1시간 전', views: 128, comments: 12
+        },
+        {
+            tag: '🛠 수리지식', tagBg: '#E8F5E9', tagColor: '#1E8E3E',
+            title: '알파라발 원심분리기 Overhaul 팁 정리',
+            content: '최근에 분해조립 하면서 헤맸던 부분들 사진으로 남겨뒀습니다. 오링(O-ring)...',
+            author: '동원해양 김씨', role: '공인 업체', time: '3시간 전', views: 350, comments: 24
+        },
+        {
+            tag: '👨‍🔧 구인구직', tagBg: '#FFF3E0', tagColor: '#F57C00',
+            title: '[급구] 울산항 갑판 보수 용접공 모십니다',
+            content: '일정: 11월 4일 하루 / 조건: 용접 자격증 필수, 일당 협의 / 연락처...',
+            author: '현대보수', role: '기업 회원', time: '어제', views: 89, comments: 1
+        },
+        {
+            tag: '💬 자유게시판', tagBg: '#F4F9FF', tagColor: '#1A5FA0',
+            title: '다들 요즘 해운운임 떨어지는거 체감하시나요?',
+            content: '기름값은 오르는데 운임은 떨어지고... 다들 어떻게 버티시나요 ㅠㅠ',
+            author: '은빛갈매기', role: '일반 회원', time: '어제', views: 512, comments: 45
+        }
+    ];
+
+    let html = '';
+    mockPosts.forEach(post => {
+        html += \`
+            <div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #eaedf2; box-shadow:0 2px 4px rgba(0,0,0,0.02); cursor:pointer;" onclick="alert('게시글 상세 화면은 준비 중입니다.')">
+                <div style="display:inline-block; font-size:11px; font-weight:800; background:\${post.tagBg}; color:\${post.tagColor}; padding:4px 8px; border-radius:6px; margin-bottom:8px;">
+                    \${post.tag}
+                </div>
+                <div style="font-size:15px; font-weight:700; color:#1A2B4A; margin-bottom:6px; line-height:1.4;">
+                    \${post.title}
+                </div>
+                <div style="font-size:13px; color:#4A5568; line-height:1.5; margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                    \${post.content}
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#7A93B0;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-weight:700; color:#1A2B4A;">\${post.author}</span>
+                        <span style="font-size:10px; background:#EAEDF2; padding:2px 6px; border-radius:4px;">\${post.role}</span>
+                        <span>· \${post.time}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="display:flex; align-items:center; gap:2px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke="currentColor" stroke-width="2"/></svg>\${post.views}</span>
+                        <span style="display:flex; align-items:center; gap:2px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2"/></svg>\${post.comments}</span>
+                    </div>
+                </div>
+            </div>
+        \`;
+    });
+    
+    area.innerHTML = html;
+}
+
 window.showMyQuotes = async function() {
     if(!currentUser) {
         alert('로그인이 필요한 기능입니다.');
