@@ -1333,6 +1333,99 @@ async function loadChatRooms() {
 
 
 // ==== 내가 올린 매물 (판매 목록) 로직 ====
+window.showMyQuotes = async function() {
+    if(!currentUser) {
+        alert('로그인이 필요한 기능입니다.');
+        return showPage('login');
+    }
+    
+    showPage('myquotes');
+    const area = document.getElementById('myquotes-content-area');
+    area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">목록을 불러오는 중입니다...</div>';
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('haema_quotes')
+            .select('*')
+            .eq('buyer_id', currentUser.id)
+            .order('created_at', { ascending: false });
+            
+        if(error) throw error;
+
+        if(!data || data.length === 0) {
+            area.innerHTML = `
+                <div style="padding: 80px 20px; text-align:center;">
+                    <div style="font-size:48px; margin-bottom:16px;">📂</div>
+                    <div style="font-size:16px; font-weight:700; color:#1A2B4A; margin-bottom:8px;">요청한 견적 내역이 없습니다</div>
+                    <div style="font-size:14px; color:#7A93B0;">장바구니를 통해 업체를 묶어서<br>편리하게 견적을 요청해 보세요.</div>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        data.forEach(q => {
+            const dateObj = new Date(q.created_at);
+            const dateStr = dateObj.toLocaleDateString('ko-KR') + ' ' + dateObj.toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+            
+            let statusText = '결제/견적 대기중';
+            let statusColor = '#F57C00';
+            let statusBg = '#FFF3E0';
+            if(q.status === 'replied') {
+                statusText = '답변 완료 (승인)';
+                statusColor = '#1E8E3E';
+                statusBg = '#E8F5E9';
+            } else if(q.status === 'completed') {
+                statusText = '계약/결제 완료';
+                statusColor = '#1A5FA0';
+                statusBg = '#F4F9FF';
+            }
+
+            // items summary
+            let itemSummary = '상품 내용 없음';
+            if(q.items && q.items.length > 0) {
+                const firstTitle = q.items[0].title;
+                const totalQty = q.items.reduce((acc, curr) => acc + (curr.qty || 1), 0);
+                if(q.items.length === 1) {
+                    itemSummary = `${firstTitle} (${totalQty}개)`;
+                } else {
+                    itemSummary = `${firstTitle} 외 ${q.items.length - 1}건 (총 ${totalQty}개)`;
+                }
+            }
+
+            html += `
+                <div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #eaedf2; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                        <div>
+                            <div style="font-size:12px; color:#7A93B0; margin-bottom:4px;">${dateStr} 발주</div>
+                            <div style="font-size:15px; font-weight:800; color:#1A2B4A; display:flex; align-items:center; gap:4px;">
+                                🏢 [${q.vendor_name}]
+                            </div>
+                        </div>
+                        <div style="font-size:11px; font-weight:800; background:${statusBg}; color:${statusColor}; padding:4px 8px; border-radius:6px;">
+                            ${statusText}
+                        </div>
+                    </div>
+                    
+                    <div style="background:#f8f9fc; border-radius:8px; padding:12px; display:flex; align-items:center; justify-content:space-between;">
+                        <div>
+                            <div style="font-size:13px; font-weight:600; color:#4A5568; line-height:1.4;">
+                                ${itemSummary}
+                            </div>
+                        </div>
+                        <button style="background:#fff; border:1px solid #eaedf2; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:700; color:#1A5FA0; cursor:pointer;" onclick="alert('품목 상세 내역 확인 기능은 추후 연동됩니다.')">상세보기</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        area.innerHTML = html;
+
+    } catch(err) {
+        area.innerHTML = `<div style="padding: 60px 20px; font-size:14px; color:#D32F2F; text-align:center;">오류가 발생했습니다:<br>${err.message}</div>`;
+    }
+}
+
 function showMyList() {
     if(!currentUser) {
         alert("로그인이 필요한 기능입니다.");

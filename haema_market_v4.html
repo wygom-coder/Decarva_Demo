@@ -210,6 +210,7 @@
     <div class="my-stats" style="border-top:none;"><div class="stat-item"><span class="stat-num">24</span><span class="stat-label">판매완료</span></div><div class="stat-item" onclick="showPage('mylist')" style="cursor:pointer;"><span class="stat-num">3</span><span class="stat-label">판매중</span></div><div class="stat-item"><span class="stat-num">4.9</span><span class="stat-label">거래 평점</span></div></div>
     <div class="my-menu-section">
       <div class="my-menu-title">나의 거래</div>
+      <div class="my-menu-item" onclick="showMyQuotes()"><div class="menu-icon" style="background:#E8F5E9;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 4h10v10H4z" stroke="#2E7D32" stroke-width="1.2"/><path d="M4 7h10M4 11h10M7 4v10" stroke="#2E7D32" stroke-width="1.2"/></svg></div><span class="menu-text">발주한 견적서 목록</span><span class="menu-arrow">›</span></div>
       <div class="my-menu-item" onclick="showMyList()"><div class="menu-icon" style="background:#DAEEFF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="5" width="14" height="10" rx="2" stroke="#1A5FA0" stroke-width="1.2"/><path d="M5 5V4a4 4 0 018 0v1" stroke="#1A5FA0" stroke-width="1.2" stroke-linecap="round"/></svg></div><span class="menu-text">판매 목록</span><span class="menu-arrow">›</span></div>
       <div class="my-menu-item" onclick="triggerBottomNav('auction')"><div class="menu-icon" style="background:#FFF3C0;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l1.8 5.4H17l-4.5 3.3 1.7 5.3L9 13l-4.2 3 1.7-5.3L2 7.4h5.2L9 2z" stroke="#D4960A" stroke-width="1.1" stroke-linejoin="round"/></svg></div><span class="menu-text">경매 참여 내역</span><span class="menu-arrow">›</span></div>
       <div class="my-menu-item" onclick="loadLikedProducts()"><div class="menu-icon" style="background:#FFF0F5;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 15s-7-4.5-7-9a7 7 0 0114 0c0 4.5-7 9-7 9z" stroke="#D81B60" stroke-width="1.2" fill="#FFE0EB"/><circle cx="9" cy="6" r="2" stroke="#D81B60" stroke-width="1.2"/></svg></div><span class="menu-text">관심 목록 (찜)</span><span class="menu-arrow">›</span></div>
@@ -226,8 +227,18 @@
 </div>
 </div>
 
-
-
+<!-- 발주한 견적/결제 내역 페이지 -->
+<div class="page" id="page-myquotes">
+  <div class="wrap" style="background:#f4f9ff; height:100vh; display:flex; flex-direction:column;">
+    <div class="sub-header" style="background:#fff;">
+      <span class="back-btn" onclick="showPage('mypage')">‹</span>
+      <span class="sub-title">발주한 견적 내역</span>
+    </div>
+    <div id="myquotes-content-area" style="flex:1; overflow-y:auto; padding:20px; padding-bottom:120px;">
+      <div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">불러오는 중...</div>
+    </div>
+  </div>
+</div>
 <!-- 사업자 인증 페이지 -->
 <div class="page" id="page-business-auth">
 <div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
