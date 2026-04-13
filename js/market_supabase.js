@@ -1011,7 +1011,7 @@ window.renderCartPage = function() {
             <div style="background:#fff; border-radius:16px; padding:16px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid #eaedf2;">
                 <div style="font-size:14px; font-weight:800; color:#1A2B4A; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" stroke="#1A2B4A" stroke-width="2"/><path d="M12 12v6m-4-6v6m8-6v6" stroke="#1A2B4A" stroke-width="2"/></svg>
-                    [${storeName}] 묶음 배송
+                    [${storeName}] 배송
                 </div>
         `;
         
@@ -1067,7 +1067,7 @@ window.requestQuoteCheckout = function() {
         alert('장바구니가 비어있습니다.');
         return;
     }
-    alert('✅ 성공적으로 묶음 견적 요청이 접수되었습니다.');
+    alert('✅ 성공적으로 견적 요청이 접수되었습니다.');
     userCart = [];
     saveCart();
     renderCartPage();
