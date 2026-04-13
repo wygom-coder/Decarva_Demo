@@ -1062,16 +1062,61 @@ window.removeCartItem = function(id) {
     }
 }
 
-window.requestQuoteCheckout = function() {
+window.requestQuoteCheckout = async function() {
     if(userCart.length === 0) {
         alert('장바구니가 비어있습니다.');
         return;
     }
-    alert('✅ 성공적으로 견적 요청이 접수되었습니다.');
-    userCart = [];
-    saveCart();
-    renderCartPage();
-    showPage('home');
+    if (!currentUser) {
+        alert('견적서를 발주하시려면 로그인이 필요합니다.');
+        showPage('login');
+        return;
+    }
+
+    // 업체(Vendor)별로 물건을 묶기
+    const groups = {};
+    userCart.forEach(cartItem => {
+        const product = products.find(p => String(p.id) === String(cartItem.id));
+        if(!product) return;
+        
+        const storeMatch = (product.title||'').match(/^\[(.*?)\]/);
+        const storeName = storeMatch ? storeMatch[1] : '일반 업체';
+        
+        if(!groups[storeName]) groups[storeName] = [];
+        groups[storeName].push({
+            product_id: product.id,
+            title: product.title,
+            qty: cartItem.qty,
+            price: product.price
+        });
+    });
+
+    const quotesToInsert = [];
+    for(const [storeName, itemsData] of Object.entries(groups)) {
+        quotesToInsert.push({
+            buyer_id: currentUser.id,
+            vendor_name: storeName,
+            items: itemsData,
+            status: 'pending'
+        });
+    }
+
+    try {
+        const { error } = await supabaseClient.from('haema_quotes').insert(quotesToInsert);
+        if (error) throw error;
+
+        alert('✅ 성공적으로 견적 요청이 접수되었습니다.');
+        userCart = [];
+        saveCart();
+        renderCartPage();
+        showPage('home');
+    } catch (err) {
+        if (err.message.includes('relation "public.haema_quotes" does not exist')) {
+            alert('⚠️ 에러: DB에 [haema_quotes] 테이블이 아직 생성되지 않았습니다. 관리자에게 문의하세요.');
+        } else {
+            alert('견적 요청 중 오류가 발생했습니다: ' + err.message);
+        }
+    }
 }
 // --- 장바구니 기능 끝 ---
 
