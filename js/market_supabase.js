@@ -108,11 +108,11 @@ const KATEGORY_MAP = {
     { name: '기타', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#D4960A" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#FFF3C0' }
   ],
   '주/부식': [
-    { name: '쌀·곡물', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="6" y="4" width="10" height="14" rx="2" stroke="#1E8E3E" stroke-width="1.4"/><line x1="8" y1="10" x2="14" y2="10" stroke="#1E8E3E" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#E6F4EA' },
-    { name: '육류', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 12c0-4 6-6 12 0-6 6-12 4-12 0z" stroke="#D32F2F" stroke-width="1.4"/></svg>', bg: '#FFEBEE' },
-    { name: '수산물', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11s4-4 8 0 6 4 6 4-2 3-5 1-9-3-9-5z" stroke="#1A5FA0" stroke-width="1.4"/></svg>', bg: '#DAEEFF' },
-    { name: '청과류', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="12" r="6" stroke="#D4960A" stroke-width="1.4"/><path d="M11 6v2" stroke="#1E8E3E" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#FFF3C0' },
-    { name: '가공·음료', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="6" width="8" height="12" rx="2" stroke="#7A5200" stroke-width="1.4"/><line x1="7" y1="10" x2="15" y2="10" stroke="#7A5200" stroke-width="1.4"/></svg>', bg: '#FFF3C0' }
+    { name: '부산/마산항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="6" y="4" width="10" height="14" rx="2" stroke="#1E8E3E" stroke-width="1.4"/><line x1="8" y1="10" x2="14" y2="10" stroke="#1E8E3E" stroke-width="1.4" stroke-dasharray="2 2"/></svg>', bg: '#E6F4EA' },
+    { name: '여수/광양항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 12c0-4 6-6 12 0-6 6-12 4-12 0z" stroke="#D32F2F" stroke-width="1.4"/></svg>', bg: '#FFEBEE' },
+    { name: '울산/포항항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11s4-4 8 0 6 4 6 4-2 3-5 1-9-3-9-5z" stroke="#1A5FA0" stroke-width="1.4"/></svg>', bg: '#DAEEFF' },
+    { name: '인천/평택항', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="12" r="6" stroke="#D4960A" stroke-width="1.4"/><path d="M11 6v2" stroke="#1E8E3E" stroke-width="1.4" stroke-linecap="round"/></svg>', bg: '#FFF3C0' },
+    { name: '기타항구', svg: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="6" width="8" height="12" rx="2" stroke="#7A5200" stroke-width="1.4"/><line x1="7" y1="10" x2="15" y2="10" stroke="#7A5200" stroke-width="1.4"/></svg>', bg: '#FFF3C0' }
   ]
 };
 
@@ -281,6 +281,7 @@ let filterState = {
   cert: '전체',
   tradeType: '전체',
   supplier: '전체',
+  foodCategory: '전체',
   minPrice: null,
   maxPrice: null
 };
@@ -302,6 +303,16 @@ function initTopCategory() {
           subHTML += `<div class="cat-item ${filterState.category === c.name ? 'active' : ''}">${c.name}</div>`;
       });
       catBar.innerHTML = subHTML;
+      
+      const foodBar = document.getElementById('food-cat-bar');
+      if (foodBar) {
+          if (topCat === '주/부식') {
+              foodBar.style.display = 'flex';
+              renderFoodBar();
+          } else {
+              foodBar.style.display = 'none';
+          }
+      }
       
       // Update grid icons
       let gridHTML = '';
@@ -328,6 +339,7 @@ function initTopCategory() {
           if(filterState.topCategory !== topVal) {
              filterState.topCategory = topVal;
              filterState.category = '전체'; // Reset sub-category on top category change
+             filterState.foodCategory = '전체';
              renderSubCategories(topVal);
              renderProducts();
           }
@@ -338,6 +350,26 @@ function initTopCategory() {
   renderSubCategories(filterState.topCategory);
 }
 
+
+function renderFoodBar() {
+    const foodBar = document.getElementById('food-cat-bar');
+    if (!foodBar) return;
+    const Foods = ['전체', '쌀·곡물', '육류', '수산물', '청과류', '가공·음료'];
+    let html = '';
+    Foods.forEach(f => {
+        const isActive = filterState.foodCategory === f ? 'background:#1E8E3E;color:#fff;border-color:#1E8E3E;' : 'background:#fff;color:#7A93B0;border-color:#eaedf2;';
+        html += `<div class="food-pill" data-food="${f}" style="padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700; border:1px solid; cursor:pointer; flex-shrink:0; ${isActive}">${f}</div>`;
+    });
+    foodBar.innerHTML = html;
+    
+    foodBar.querySelectorAll('.food-pill').forEach(el => {
+        el.addEventListener('click', () => {
+            filterState.foodCategory = el.getAttribute('data-food');
+            renderFoodBar();
+            renderProducts();
+        });
+    });
+}
 
 // 카테고리를 그리는 HTML 생성 유틸 함수
 function createProductCardHTML(p) {
@@ -390,7 +422,10 @@ function renderProducts() {
   grid.innerHTML = '';
   
   let filtered = products.filter(p => {
-    const topOfP = CAT_TO_TOP_MAP[p.category] || '기부속';
+    let topOfP = CAT_TO_TOP_MAP[p.category] || '기부속';
+    if (['쌀·곡물', '육류', '수산물', '청과류', '가공·음료'].includes(p.category)) {
+        topOfP = '주/부식';
+    }
     if (topOfP !== filterState.topCategory) return false;
     
     // 0. 키워드 매칭
@@ -400,7 +435,18 @@ function renderProducts() {
         if(!bodyTxt.includes(kw)) return false;
     }
     // 1. 대분류 카테고리 체크
-    if (filterState.category !== '전체' && p.category !== filterState.category) return false;
+    if (filterState.category !== '전체') {
+        if (filterState.topCategory === '주/부식') {
+            if (!(filterState.category.includes(p.region) || p.region.includes(filterState.category))) return false;
+        } else {
+            if (p.category !== filterState.category) return false;
+        }
+    }
+    
+    // 2. 주/부식 2단 식품 필터 체크
+    if (filterState.topCategory === '주/부식' && filterState.foodCategory !== '전체') {
+        if (p.category !== filterState.foodCategory) return false;
+    }
     // 2. 다중 필터 체크
     if (filterState.region !== '전체' && p.region !== filterState.region) return false;
     if (filterState.condition !== '전체' && p.condition !== filterState.condition) return false;
@@ -547,7 +593,7 @@ function resetFilters() {
     filterState.cert = '전체';
     filterState.tradeType = '전체';
     filterState.supplier = '전체';
-    filterState.supplier = '전체';
+    filterState.foodCategory = '전체';
     filterState.minPrice = null;
     filterState.maxPrice = null;
 
