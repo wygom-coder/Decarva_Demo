@@ -1375,6 +1375,7 @@ window.renderCommunityPosts = function() {
     ];
 
     let html = '';
+    mockPosts.forEach(post => {
         html += `
             <div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #eaedf2; box-shadow:0 2px 4px rgba(0,0,0,0.02); cursor:pointer;" onclick="alert('게시글 상세 화면은 준비 중입니다.')">
                 <div style="display:inline-block; font-size:11px; font-weight:800; background:${post.tagBg}; color:${post.tagColor}; padding:4px 8px; border-radius:6px; margin-bottom:8px;">
