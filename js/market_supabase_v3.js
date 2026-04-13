@@ -2300,7 +2300,7 @@ async function loadLikedProducts() {
         .order('created_at', { ascending: false });
         
     if(error || !likes || likes.length === 0) {
-        document.getElementById('mylist-grid').innerHTML = '<div style="grid-column: span 3; padding:60px 20px; text-align:center; color:#999; font-size:14px; display:flex; flex-direction:column; align-items:center; gap:12px;"><div style="font-size:32px;">❤️</div><div>아직 찜을 누른 관심 매물이 없습니다.</div><button onclick="triggerBottomNav(\\'home\\')" style="margin-top:16px; padding: 10px 20px; border-radius: 8px; background: #f4f9ff; color: #1a5fa0; border: 1px solid #cce5ff; font-weight: bold; cursor: pointer;">매물 둘러보기</button></div>';
+        document.getElementById('mylist-grid').innerHTML = `<div style="grid-column: span 3; padding:60px 20px; text-align:center; color:#999; font-size:14px; display:flex; flex-direction:column; align-items:center; gap:12px;"><div style="font-size:32px;">❤️</div><div>아직 찜을 누른 관심 매물이 없습니다.</div><button onclick="triggerBottomNav('home')" style="margin-top:16px; padding: 10px 20px; border-radius: 8px; background: #f4f9ff; color: #1a5fa0; border: 1px solid #cce5ff; font-weight: bold; cursor: pointer;">매물 둘러보기</button></div>`;
         return;
     }
     
