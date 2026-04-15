@@ -1320,10 +1320,6 @@ window.renderCommunityPosts = async function() {
     }
 
     let filteredPosts = posts;
-    if (filterState.keyword) {
-        const kw = filterState.keyword.toLowerCase();
-        filteredPosts = posts.filter(p => p.title.toLowerCase().includes(kw) || p.content.toLowerCase().includes(kw));
-    }
     
     if (window.currentCommTag && window.currentCommTag !== '전체') {
         filteredPosts = filteredPosts.filter(p => p.tag === window.currentCommTag);
