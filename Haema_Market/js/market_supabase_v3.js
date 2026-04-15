@@ -8,7 +8,7 @@ function showPage(id, pushHistory = true) {
   }
 }
 
-// 브라우저 뒤로가기 버튼 활성화 (popstate 이벤트)
+// 브라우저 뒤로가기 버튼 활성화 (popstate 이벤트
 window.addEventListener('popstate', (e) => {
     if(e.state && e.state.pageId) {
         showPage(e.state.pageId, false);
@@ -155,6 +155,7 @@ let authMode = 'signin';
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     currentUser = session ? session.user : null;
+    if (event === 'SIGNED_OUT') _mannerTempLoaded = false;
     updateProfileUI();
     if (currentUser) {
         // Logged in UI updates
@@ -1582,8 +1583,12 @@ function updateProfileUI() {
     fetchAndRenderMannerTemp();
 }
 
+let _mannerTempLoaded = false;
+
 async function fetchAndRenderMannerTemp() {
     if(!currentUser) return;
+    if(_mannerTempLoaded) return;
+    _mannerTempLoaded = true;
     
     const { data, error } = await supabaseClient
         .from('haema_reviews')
