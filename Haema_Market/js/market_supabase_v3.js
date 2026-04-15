@@ -1,4 +1,4 @@
-탭전환시검색초기화카테고리별매물필터링버그수정function showPage(id, pushHistory = true) {
+function showPage(id, pushHistory = true) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const targetPage = document.getElementById('page-' + id);
   if(targetPage) targetPage.classList.add('active');
