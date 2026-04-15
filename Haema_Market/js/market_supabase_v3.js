@@ -66,7 +66,7 @@ function triggerBottomNav(tab) {
   
   if(tab === 'community') {
       if(fabReg) fabReg.style.display = 'none';
-      if(fabTop) fabTop.style.marginBottom = '76px';
+      if(fabTop) fabTop.style.marginBottom = '0px';
   } else {
       if(fabReg) fabReg.style.display = 'flex';
       if(fabTop) fabTop.style.marginBottom = '0px';
