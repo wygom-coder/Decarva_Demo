@@ -68,7 +68,7 @@ function triggerBottomNav(tab) {
       if(fabReg) fabReg.style.display = 'none';
       if(fabTop) fabTop.style.marginBottom = '0px';
       const fabCont = document.querySelector('.fab-container');
-      if(fabCont) fabCont.style.bottom = '148px';
+      if(fabCont) fabCont.style.bottom = '138px';
   } else {
       if(fabReg) fabReg.style.display = 'flex';
       if(fabTop) fabTop.style.marginBottom = '0px';
