@@ -9,7 +9,8 @@
 
   <!-- Supabase & Custom Script -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./js/market_supabase_v3.js" defer></script>
+  <script src="./js/dummy_products.js" defer></script>
+    <script src="./js/market_supabase_v3.js" defer></script>
   
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="./css/market.css">
@@ -29,7 +30,7 @@
     </div>
     <div class="search-bar">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="#7A93B0" stroke-width="1.3"/><line x1="10" y1="10" x2="14" y2="14" stroke="#7A93B0" stroke-width="1.3" stroke-linecap="round"/></svg>
-      <input type="text" id="search-input" placeholder="선박 엔진, 앵커, 레이더 등 검색">
+      <input type="text" id="search-input" placeholder="선박 엔진, 앵커, 레이더 등 검색" autocomplete="off">
     </div>
     <div class="header-nav" style="gap: 8px;">
       <button class="btn-sell" id="header-cart-btn" onclick="showPage('cart'); renderCartPage();" style="background:#f4f9ff; color:#1A5FA0; border:1px solid #1A5FA0; position:relative;">
@@ -269,7 +270,7 @@
     </div>
     
     <!-- 플로팅 글쓰기 버튼 -->
-    <button style="position:absolute; bottom:80px; right:20px; width:56px; height:56px; border-radius:50%; background:#1A5FA0; color:#fff; border:none; box-shadow:0 4px 12px rgba(26,95,160,0.3); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:100;" onclick="openPostWriteModal()">
+    <button style="position:fixed; bottom:76px; right:16px; width:50px; height:50px; border-radius:50%; background:#1A5FA0; color:#fff; border:none; box-shadow:0 4px 12px rgba(26,95,160,0.3); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:999;" onclick="openPostWriteModal()">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
     </button>
   </div>

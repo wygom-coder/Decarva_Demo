@@ -8,7 +8,7 @@ function showPage(id, pushHistory = true) {
   }
 }
 
-// 브라우저 뒤로가기 버튼 활성화 (popstate 이벤트)
+// 브라우저 뒤로가기 버튼 활성화 (popstate 이벤트
 window.addEventListener('popstate', (e) => {
     if(e.state && e.state.pageId) {
         showPage(e.state.pageId, false);
@@ -66,10 +66,14 @@ function triggerBottomNav(tab) {
   
   if(tab === 'community') {
       if(fabReg) fabReg.style.display = 'none';
-      if(fabTop) fabTop.style.marginBottom = '76px';
+      if(fabTop) fabTop.style.marginBottom = '0px';
+      const fabCont = document.querySelector('.fab-container');
+      if(fabCont) fabCont.style.bottom = '138px';
   } else {
       if(fabReg) fabReg.style.display = 'flex';
       if(fabTop) fabTop.style.marginBottom = '0px';
+      const fabCont = document.querySelector('.fab-container');
+      if(fabCont) fabCont.style.bottom = '';
   }
 }
 
@@ -155,6 +159,7 @@ let authMode = 'signin';
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     currentUser = session ? session.user : null;
+    if (event === 'SIGNED_OUT') _mannerTempLoaded = false;
     updateProfileUI();
     if (currentUser) {
         // Logged in UI updates
@@ -334,6 +339,9 @@ function initTopCategory() {
           if(filterState.topCategory !== topVal) {
              filterState.topCategory = topVal;
              filterState.category = '전체'; // Reset sub-category on top category change
+             filterState.keyword = '';
+             const _si = document.getElementById('search-input');
+             if (_si) _si.value = '';
              renderSubCategories(topVal);
              renderProducts();
           }
@@ -1312,10 +1320,6 @@ window.renderCommunityPosts = async function() {
     }
 
     let filteredPosts = posts;
-    if (filterState.keyword) {
-        const kw = filterState.keyword.toLowerCase();
-        filteredPosts = posts.filter(p => p.title.toLowerCase().includes(kw) || p.content.toLowerCase().includes(kw));
-    }
     
     if (window.currentCommTag && window.currentCommTag !== '전체') {
         filteredPosts = filteredPosts.filter(p => p.tag === window.currentCommTag);
@@ -1582,8 +1586,12 @@ function updateProfileUI() {
     fetchAndRenderMannerTemp();
 }
 
+let _mannerTempLoaded = false;
+
 async function fetchAndRenderMannerTemp() {
     if(!currentUser) return;
+    if(_mannerTempLoaded) return;
+    _mannerTempLoaded = true;
     
     const { data, error } = await supabaseClient
         .from('haema_reviews')
@@ -2616,4 +2624,3 @@ window.scrollToTop = function() {
         });
     }
 }
-
