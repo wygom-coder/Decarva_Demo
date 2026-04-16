@@ -31,17 +31,10 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         }
     }, 0);
     
+    const topLoginBtn = document.getElementById('header-btn-login');
     if (currentUser) {
-        // Header Nav buttons
-        const topLoginBtn = document.getElementById('header-btn-login');
         if(topLoginBtn) topLoginBtn.style.display = 'none';
-        
-        
-        // Header Nav buttons
-        if(topLoginBtn) topLoginBtn.style.display = 'none';
-        
     } else {
-        // Header Nav buttons
         if(topLoginBtn) topLoginBtn.style.display = 'inline-block';
     }
 });
