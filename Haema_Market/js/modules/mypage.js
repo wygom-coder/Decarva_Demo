@@ -554,10 +554,43 @@ async function submitBusinessAuth() {
 
 
 async function toggleLike(productId) {
-    if(!currentUser) {
-        alert('로그인 후 이용 가능합니다.');
-        return;
+    if (!currentUser) { alert('로그인 후 이용 가능합니다.'); return; }
+    const btn = document.getElementById('modal-heart-btn');
+    if (!btn) return;
+    btn.style.transform = 'scale(0.8)';
+    setTimeout(() => btn.style.transform = 'scale(1)', 100);
+
+    const { data: existing } = await supabaseClient
+        .from('haema_likes')
+        .select('*')
+        .eq('product_id', productId)
+        .eq('user_id', currentUser.id)
+        .single();
+
+    if (existing) {
+        await supabaseClient.from('haema_likes').delete().eq('id', existing.id);
+        // ✅ textContent → innerHTML 로 SVG 정상 렌더링
+        btn.innerHTML = '';
+    } else {
+        await supabaseClient.from('haema_likes').insert({ product_id: productId, user_id: currentUser.id });
+        // ✅ textContent → innerHTML 로 SVG 정상 렌더링
+        btn.innerHTML = '';
     }
+}
+
+async function checkLikeStatus(productId) {
+    if (!currentUser || String(productId).startsWith('p')) return;
+    const { data } = await supabaseClient
+        .from('haema_likes').select('id')
+        .eq('product_id', productId).eq('user_id', currentUser.id).single();
+    const btn = document.getElementById('modal-heart-btn');
+    if (btn) {
+        // ✅ textContent → innerHTML 로 SVG 정상 렌더링
+        btn.innerHTML = data
+            ? ''
+            : '';
+    }
+}
     
     const btn = document.getElementById('modal-heart-btn');
     if(!btn) return;
@@ -650,50 +683,6 @@ function openMyListCommon(titleText) {
     document.getElementById('mylist-grid').innerHTML = '<div style="grid-column: span 3; padding:40px; text-align:center; color:#999; font-size:13px; display:flex; justify-content:center;">로딩 중...</div>';
 // [매너온도 (거래 후기) 로직]
 // ----------------------------------------
-let activeReviewProductId = null;
-let activeReviewTargetId = null;
-
-async function completeTransaction(productId, roomId) {
-    if(!confirm("정말 이 방의 유저와 거래를 완료하시겠습니까? 거래가 마감 처리됩니다.")) return;
-    
-    const p = products.find(x => x.id === productId);
-    if(!p) return;
-    
-    // 판매자가 누른 경우만
-    const { data: roomData } = await supabaseClient.from('haema_chat_rooms').select('buyer_id').eq('id', roomId).single();
-    if(!roomData) return;
-    const buyerId = roomData.buyer_id;
-    
-    // 상품 마감 처리
-    await supabaseClient.from('haema_products').update({ is_closed: true, highest_bidder_id: buyerId }).eq('id', productId);
-    
-    p.is_closed = true;
-    document.getElementById('chat-trade-btn').textContent = '후기 남기기';
-    document.getElementById('chat-trade-btn').onclick = () => openReviewModal(productId, buyerId);
-    
-    // 바로 리뷰 띄우기
-    openReviewModal(productId, buyerId);
-}
-
-function openReviewModal(productId, targetUserId) {
-    activeReviewProductId = productId;
-    activeReviewTargetId = targetUserId;
-    if(document.getElementById('review-content')) document.getElementById('review-content').value = '';
-    document.getElementById('review-modal').style.display = 'flex';
-}
-
-async function submitReview(score) {
-    if(!activeReviewProductId || !activeReviewTargetId) return;
-    
-    const content = document.getElementById('review-content') ? document.getElementById('review-content').value.trim() : '';
-    
-    const obj = {
-        product_id: activeReviewProductId,
-        reviewer_id: currentUser.id,
-        reviewee_id: activeReviewTargetId,
-        score: score,
-        content: content
-    };
     
     const { error } = await supabaseClient.from('haema_reviews').insert(obj);
     if(error) {
@@ -710,3 +699,62 @@ async function submitReview(score) {
     document.getElementById('review-modal').style.display = 'none';
 }
 }
+// ✅ [버그 수정] 기존에 openMyListCommon 안에 중첩 선언되어
+// 외부 호출이 불가능했던 함수들을 전역 스코프로 이동
+
+let activeReviewProductId = null;
+let activeReviewTargetId = null;
+
+window.completeTransaction = async function(productId, roomId) {
+    if (!confirm("정말 이 방의 유저와 거래를 완료하시겠습니까? 거래가 마감 처리됩니다.")) return;
+    const p = products.find(x => x.id === productId);
+    if (!p) return;
+
+    const { data: roomData } = await supabaseClient
+        .from('haema_chat_rooms').select('buyer_id').eq('id', roomId).single();
+    if (!roomData) return;
+    const buyerId = roomData.buyer_id;
+
+    await supabaseClient
+        .from('haema_products')
+        .update({ is_closed: true, highest_bidder_id: buyerId })
+        .eq('id', productId);
+
+    p.is_closed = true;
+    document.getElementById('chat-trade-btn').textContent = '후기 남기기';
+    document.getElementById('chat-trade-btn').onclick = () => openReviewModal(productId, buyerId);
+    openReviewModal(productId, buyerId);
+};
+
+window.openReviewModal = function(productId, targetUserId) {
+    activeReviewProductId = productId;
+    activeReviewTargetId = targetUserId;
+    if (document.getElementById('review-content'))
+        document.getElementById('review-content').value = '';
+    document.getElementById('review-modal').style.display = 'flex';
+};
+
+window.submitReview = async function(score) {
+    if (!activeReviewProductId || !activeReviewTargetId) return;
+    const content = document.getElementById('review-content')
+        ? document.getElementById('review-content').value.trim() : '';
+    const obj = {
+        product_id: activeReviewProductId,
+        reviewer_id: currentUser.id,
+        reviewee_id: activeReviewTargetId,
+        score: score,
+        content: content
+    };
+    const { error } = await supabaseClient.from('haema_reviews').insert(obj);
+    if (error) {
+        if (error.code === '23505') {
+            alert('이미 이 거래에 대해 후기를 남기셨습니다!');
+        } else {
+            console.error(error);
+            alert('후기 등록 중 오류가 발생했습니다.');
+        }
+    } else {
+        alert('소중한 후기가 등록되었습니다. 거래 신뢰도(별점)에 반영됩니다!');
+    }
+    document.getElementById('review-modal').style.display = 'none';
+};
