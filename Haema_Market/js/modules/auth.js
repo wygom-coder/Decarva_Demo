@@ -38,13 +38,10 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         
         
         // Header Nav buttons
-        const topLoginBtn = document.getElementById('header-btn-login');
-        
         if(topLoginBtn) topLoginBtn.style.display = 'none';
         
     } else {
         // Header Nav buttons
-        const topLoginBtn = document.getElementById('header-btn-login');
         if(topLoginBtn) topLoginBtn.style.display = 'inline-block';
     }
 });
