@@ -204,7 +204,7 @@ function updateProfileUI() {
     const bStatus = document.getElementById('biz-auth-status');
     if(bBadge) {
         if(isBiz) {
-            bBadge.textContent = "<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><polyline points="9 11 12 14 22 4"></polyline></svg> 인증 기업";
+            bBadge.textContent = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><polyline points="9 11 12 14 22 4"></polyline></svg> 인증 기업';
             bBadge.style.background = "var(--blue-600)";
             bBadge.style.color = "white";
             bBadge.style.border = "none";
