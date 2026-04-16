@@ -76,20 +76,22 @@ async function submitAuth() {
             btn.disabled = false; switchAuthMode('signup'); return; 
         }
         
-        const { data, error } = await supabaseClient.auth.signUp({
-            email: email,
-            password: pw
-        });
-        
-        if(error) {
-            errObj.textContent = error.message;
-        } else {
-            alert('회원가입이 완료되었습니다!');
-            showPage('home');
-            document.getElementById('auth-email').value = '';
-            document.getElementById('auth-pw').value = '';
-            document.getElementById('auth-pw-confirm').value = '';
-        }
+    const { data, error } = await supabaseClient.auth.signUp({
+  email: email,
+  password: pw,
+  options: {
+    emailRedirectTo: 'https://decarva-demo.vercel.app/Haema_Market/'
+  }
+});
+if(error) {
+  errObj.textContent = error.message;
+} else {
+  alert('📧 인증 이메일을 발송했습니다!\n받은 메일함을 확인하고 링크를 클릭하면 로그인됩니다.');
+  showPage('home');
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-pw').value = '';
+  document.getElementById('auth-pw-confirm').value = '';
+}
     } else {
         const { data, error } = await supabaseClient.auth.signInWithPassword({
             email: email,
