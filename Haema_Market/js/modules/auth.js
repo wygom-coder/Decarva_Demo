@@ -163,3 +163,4 @@ window.loginWithKakao = async function() {
         alert('카카오 로그인 중 오류가 발생했습니다: ' + error.message);
     }
 };
+
