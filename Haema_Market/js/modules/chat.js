@@ -51,7 +51,7 @@ async function startChat(productId) {
             .insert({
                 product_id: p.id,
                 buyer_id: currentUser.id,
-                seller_id: p.user_id
+                seller_id: p.seller_id
             })
             .select()
             .single();
