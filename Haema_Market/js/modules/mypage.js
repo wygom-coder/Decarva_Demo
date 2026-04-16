@@ -702,3 +702,4 @@ async function submitReview(score) {
     
     document.getElementById('review-modal').style.display = 'none';
 }
+}
