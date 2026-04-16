@@ -119,3 +119,18 @@ window.doLogout = async function() {
     }
 };
 
+
+
+// 카카오 소셜 로그인
+window.loginWithKakao = async function() {
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: {
+            redirectTo: window.location.origin + window.location.pathname
+        }
+    });
+    if (error) {
+        console.error('카카오 로그인 오류:', error.message);
+        alert('카카오 로그인 중 오류가 발생했습니다: ' + error.message);
+    }
+}
