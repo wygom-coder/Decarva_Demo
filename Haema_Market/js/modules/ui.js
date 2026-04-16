@@ -1,3 +1,12 @@
+// ✅ [보안] XSS 방지용 HTML 이스케이프 유틸 함수
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&')
+        .replace(//g, '>')
+        .replace(/"/g, '"')
+        .replace(/'/g, ''');
+}
 function showPage(id, pushHistory = true) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const targetPage = document.getElementById('page-' + id);
@@ -317,11 +326,11 @@ function openProductModal(id) {
         
         <div style="padding: 0 20px;">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                <div style="background:#EAEDF2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#7A93B0;">${p.tradeType}</div>
-                <div style="background:#E6F4EA; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#1E8E3E;">${p.condition}</div>
+                <div style="background:#EAEDF2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#7A93B0;">${escapeHtml(p.tradeType)}</div>
+                <div style="background:#E6F4EA; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#1E8E3E;">${escapeHtml(p.condition)}</div>
             </div>
-            <h2 style="margin:0 0 4px 0; font-size:20px; color:#1A2B4A;">${p.title}</h2>
-            <div style="color:#7A93B0; font-size:13px; margin-bottom:16px;">${p.sub}</div>
+            <h2 style="margin:0 0 4px 0; font-size:20px; color:#1A2B4A;">${escapeHtml(p.title)}</h2>
+            <div style="color:#7A93B0; font-size:13px; margin-bottom:16px;">${escapeHtml(p.sub)}</div>
             <div style="font-size:24px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">${p.price}</div>
             
             <div style="padding:16px; background:#fff; border:1px solid rgba(0,0,0,0.05); border-radius:12px; display:flex; align-items:center; gap:12px; margin-top:20px;">
@@ -332,7 +341,7 @@ function openProductModal(id) {
                 </div>
             </div>
             
-            <div style="margin-top:20px; white-space:pre-wrap; font-size:14px; color:#1A2B4A; line-height:1.6;">${safeContent}</div>
+            <div style="margin-top:20px; white-space:pre-wrap; font-size:14px; color:#1A2B4A; line-height:1.6;">${escapeHtml(safeContent)}</div>
             ${actionArea}
         </div>
     `;
