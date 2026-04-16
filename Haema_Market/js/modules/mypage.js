@@ -481,71 +481,78 @@ async function submitBusinessAuth() {
     const nameEl = document.getElementById('biz-name-input');
     const inputEl = document.getElementById('biz-number-input');
     const nameVal = nameEl ? nameEl.value.trim() : "";
-    const val = inputEl.value.trim();
+    const val = inputEl ? inputEl.value.trim() : "";
     
     if(!nameVal) {
         alert("국세청 검증을 위해 상호명(기업명)을 먼저 입력해주세요.");
         return;
     }
-    
     if(val.length !== 10) {
-        alert("하이픈(-)을 분리한 온전한 10자리 사업자등록번호를 입력해주세요.");
+        alert("하이픈(-)을 제외한 10자리 사업자등록번호를 입력해주세요.");
         return;
     }
     
     const btn = document.querySelector('#page-business-auth .submit-btn');
-    btn.textContent = "국세청 Live DB 조회 중...";
-    btn.disabled = true;
+    if(btn) { btn.textContent = "국세청 Live DB 조회 중..."; btn.disabled = true; }
     
     try {
-        const apiKey = "1fab7ffc37b6751c35449bc0179057e847708d7b1517791217a048566c385380";
-        const response = await fetch(`https://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=${apiKey}`, {
+        const res = await fetch('/api/verify-business', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ "b_no": [ val ] })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ b_no: val, biz_name: nameVal })
         });
+        const result = await res.json();
         
-        const result = await response.json();
-        
-        if(result && result.data && result.data.length > 0) {
-            const bizData = result.data[0];
-            
-            // 01: 계속사업자, 02: 휴업자, 03: 폐업자
-            if(bizData.b_stt_cd === "01") { 
-                // DB 업데이트 성공
-                const { data, error } = await supabaseClient.auth.updateUser({
-                    data: { is_business: true, biz_number: val, biz_name: nameVal }
-                });
-                
-                if(error) throw new Error("서버 프로필 업데이트 에러");
-                
-                alert('사업자 인증 성공!');
-                currentUser = data.user;
-                updateProfileUI(); // Reload UI
-                showPage('mypage');
-                if(inputEl) inputEl.value = "";
-                if(nameEl) nameEl.value = "";
-            } else if (bizData.b_stt_cd === "02" || bizData.b_stt_cd === "03") {
-                alert(`❌ 인증 거부: 현재 국세청에 [${bizData.b_stt}] 상태로 조회되어 거래 인증이 불가합니다.`);
-            } else {
-                alert(`❌ 인증 실패: 국세청에 등록되지 않은 허위 사업자등록번호이거나 조회할 수 없습니다. (응답: ${bizData.tax_type})`);
-            }
-        } else {
-            throw new Error("Invalid API Response");
+        if(result.error) {
+            alert("조회 실패: " + result.error);
+            return;
         }
+        
+        if(result.status === "01") {
+            // 업체명 교차 검증
+            if(!result.nameMatch) {
+                alert(`입력하신 업체명("${nameVal}")이 국세청에 등록된 업체명("${result.companyName}")과 일치하지 않습니다.\n업체명을 정확히 입력해주세요.`);
+                return;
+            }
+            
+            // DB 업데이트
+            const { data, error } = await supabaseClient.auth.updateUser({
+                data: { is_business: true, biz_number: val, biz_name: result.companyName }
+            });
+            if(error) throw new Error("서버 프로필 업데이트 에러");
+            
+            currentUser = data.user;
+            
+            // 인증 완료 UI 표시 (실제 업체명 노출)
+            const formEl = document.getElementById('biz-auth-form');
+            const verifiedEl = document.getElementById('biz-auth-verified');
+            const verifiedName = document.getElementById('biz-verified-name');
+            const verifiedNum = document.getElementById('biz-verified-number');
+            if(formEl) formEl.style.display = 'none';
+            if(verifiedEl) verifiedEl.style.display = 'block';
+            if(verifiedName) verifiedName.textContent = result.companyName;
+            if(verifiedNum) verifiedNum.textContent = val.replace(/(\d{3})(\d{2})(\d{5})/, '$1-$2-$3');
+            
+            updateProfileUI();
+            if(nameEl) nameEl.value = "";
+            if(inputEl) inputEl.value = "";
+            
+        } else if(result.status === "02" || result.status === "03") {
+            const msg = result.status === "02" ? "휴업 상태" : "폐업 상태";
+            alert(`해당 사업자번호는 현재 ${msg}입니다. 계속사업자만 인증이 가능합니다.`);
+        } else {
+            alert("국세청 DB에서 해당 사업자번호를 찾을 수 없습니다. 번호를 다시 확인해주세요.");
+        }
+        
     } catch(err) {
-        console.error("NTS API 연동 에러:", err);
-        alert("국세청 서버 장애 또는 통신 에러가 발생했습니다. 잠시 후 시도해주세요.");
+        console.error(err);
+        alert("인증 중 오류가 발생했습니다: " + err.message);
     } finally {
-        btn.disabled = false;
-        btn.textContent = "국세청 실시간 진위 확인 (Live)";
+        if(btn) { btn.textContent = "국세청 실시간 진위 확인 (Live)"; btn.disabled = false; }
     }
 }
-// [관심 목록 (찜하기) 로직]
-// ----------------------------------------
+
+
 async function toggleLike(productId) {
     if(!currentUser) {
         alert('로그인 후 이용 가능합니다.');
