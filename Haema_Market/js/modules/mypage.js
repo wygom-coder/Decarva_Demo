@@ -260,7 +260,11 @@ async function fetchAndRenderMannerTemp() {
 }
 // ==== 프로필 관련 동작 ====
 function openProfileEdit() {
-    if(!currentUser) return;
+    if(!currentUser) {
+        alert('로그인이 필요한 기능입니다.');
+        showPage('login');
+        return;
+    }
     showPage('profile-edit');
     
     // 리셋
@@ -436,8 +440,12 @@ async function verifyGPSLocation() {
 }
 // ==== 사업자 인증 로직 ====
 function openBusinessAuth() {
+    if(!currentUser) {
+        alert('로그인이 필요한 기능입니다.');
+        showPage('login');
+        return;
+    }
     showPage('business-auth');
-    if(!currentUser) return;
     
     const isBiz = currentUser.user_metadata?.is_business;
     const bizNum = currentUser.user_metadata?.biz_number;
@@ -579,6 +587,11 @@ async function checkLikeStatus(productId) {
 }
 
 async function loadLikedProducts() {
+    if(!currentUser) {
+        alert('로그인이 필요한 기능입니다.');
+        showPage('login');
+        return;
+    }
     triggerBottomNav('mypage'); // 탭 이동
     openMyListCommon("내 관심 목록 (찜)");
     

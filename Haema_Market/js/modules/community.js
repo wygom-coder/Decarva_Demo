@@ -21,6 +21,17 @@ window.renderCommunityPosts = async function() {
 
     let filteredPosts = posts;
     
+    // 키워드 검색 로직 (oninput 실시간 반영)
+    const searchInput = document.getElementById('comm-search-input');
+    const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    
+    if (keyword) {
+        filteredPosts = filteredPosts.filter(p => 
+            p.title.toLowerCase().includes(keyword) || 
+            p.content.toLowerCase().includes(keyword)
+        );
+    }
+    
     if (window.currentCommTag && window.currentCommTag !== '전체') {
         filteredPosts = filteredPosts.filter(p => p.tag === window.currentCommTag);
     }

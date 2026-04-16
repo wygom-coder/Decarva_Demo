@@ -5,19 +5,37 @@ let authMode = 'signin';
 supabaseClient.auth.onAuthStateChange((event, session) => {
     currentUser = session ? session.user : null;
     if (event === 'SIGNED_OUT') _mannerTempLoaded = false;
-    updateProfileUI();
-    if (currentUser) {
-        // Logged in UI updates
-        const myNameEl = document.querySelector('.my-name');
-        const myEmailEl = document.querySelector('.my-sub');
-        if (myNameEl) myNameEl.textContent = (currentUser.email ? currentUser.email.split('@')[0] : '유저') + '님';
-        if (myEmailEl) myEmailEl.innerHTML = (currentUser.email || '') + ' · 부산';
-        
-        // Hide login page if visible
-        const loginPage = document.getElementById('page-login');
-        if(loginPage && loginPage.classList.contains('active')) {
-            showPage('home');
+    setTimeout(() => {
+        if (typeof updateProfileUI === 'function') {
+            updateProfileUI();
         }
+        
+        if (currentUser) {
+            // Logged in UI updates
+            const myNameEl = document.querySelector('.my-name');
+            const myEmailEl = document.querySelector('.my-sub');
+            if (myNameEl) myNameEl.textContent = (currentUser.email ? currentUser.email.split('@')[0] : '유저') + '님';
+            if (myEmailEl) myEmailEl.innerHTML = (currentUser.email || '') + ' · 부산';
+            
+            // Hide login page if visible
+            const loginPage = document.getElementById('page-login');
+            if(loginPage && loginPage.classList.contains('active')) {
+                showPage('home');
+            }
+        } else {
+            // Logged out
+            const myNameEl = document.querySelector('.my-name');
+            const myEmailEl = document.querySelector('.my-sub');
+            if (myNameEl) myNameEl.textContent = '로그인이 필요합니다';
+            if (myEmailEl) myEmailEl.innerHTML = '비회원';
+        }
+    }, 0);
+    
+    if (currentUser) {
+        // Header Nav buttons
+        const topLoginBtn = document.getElementById('header-btn-login');
+        if(topLoginBtn) topLoginBtn.style.display = 'none';
+        
         
         // Header Nav buttons
         const topLoginBtn = document.getElementById('header-btn-login');
@@ -25,17 +43,9 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         if(topLoginBtn) topLoginBtn.style.display = 'none';
         
     } else {
-        // Logged out
-        const myNameEl = document.querySelector('.my-name');
-        const myEmailEl = document.querySelector('.my-sub');
-        if (myNameEl) myNameEl.textContent = '로그인이 필요합니다';
-        if (myEmailEl) myEmailEl.innerHTML = '비회원';
-        
         // Header Nav buttons
         const topLoginBtn = document.getElementById('header-btn-login');
-        
         if(topLoginBtn) topLoginBtn.style.display = 'inline-block';
-        
     }
 });
 
