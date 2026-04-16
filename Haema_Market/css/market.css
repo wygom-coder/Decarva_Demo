@@ -1,27 +1,27 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-serif; background: #eef2f5; margin: 0; padding: 0; }
+body { font-family: 'Inter', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-serif; background: #eef2f5; margin: 0; padding: 0; }
 
 :root {
-  --blue-50:  #EEF6FF;
-  --blue-100: #DAEEFF;
-  --blue-200: #B8DDFF;
-  --blue-400: #6DB8F5;
-  --blue-600: #3A90D9;
-  --blue-800: #1A5FA0;
-  --yellow-50:  #FFFBEA;
-  --yellow-100: #FFF3C0;
-  --yellow-300: #FFDA5A;
-  --yellow-400: #F5C518;
-  --yellow-600: #D4960A;
-  --yellow-800: #7A5200;
-  --text-primary:   #1A2B4A;
-  --text-secondary: #4A6080;
-  --text-muted:     #7A93B0;
-  --border:         #D4E8F8;
-  --surface:        #F4F9FF;
+  --blue-50:  #F0FDF4;
+  --blue-100: #E0E7FF;
+  --blue-200: #C7D2FE;
+  --blue-400: #818CF8;
+  --blue-600: #4F46E5;
+  --blue-800: #1E3A8A;
+  --yellow-50:  #FFFBEB;
+  --yellow-100: #FEF3C7;
+  --yellow-300: #FCD34D;
+  --yellow-400: #F59E0B;
+  --yellow-600: #D97706;
+  --yellow-800: #92400E;
+  --text-primary:   #0F172A;
+  --text-secondary: #475569;
+  --text-muted:     #64748B;
+  --border:         #E2E8F0;
+  --surface:        #F8FAFC;
 }
 
-.wrap { max-width: 1024px; margin: 0 auto; background: #fff; box-shadow: 0 4px 30px rgba(0,0,0,0.06); min-height: 100vh; position: relative; }
+.wrap { max-width: 1024px; margin: 0 auto; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.04); min-height: 100vh; position: relative; overflow-x: hidden; }
 
 .header { background: #fff; border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; align-items: center; gap: 12px; height: 58px; }
 .logo-area { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
