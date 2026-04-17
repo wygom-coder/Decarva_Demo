@@ -333,15 +333,247 @@ setInterval(() => {
 }, 5000);
 
 
-// 판매자 실 DB 매물 등록
+// ============================================================================
+// ✅ 매물 등록 / 수정 분기 처리
+// ============================================================================
+// editingProductId가 null이면 등록 모드(INSERT), 값이 있으면 수정 모드(UPDATE)
+// editMyProduct(id) 호출 시 폼 prefill + 모드 전환
+let editingProductId = null;
+
+// 등록 페이지 진입 시 모드 초기화 (외부에서 register 페이지로 보낼 때 호출)
+function resetRegisterFormToCreateMode() {
+    editingProductId = null;
+
+    // 헤더 텍스트 / 버튼 텍스트 복원
+    const headerTitle = document.querySelector('#page-register .sub-header .sub-title');
+    if (headerTitle) headerTitle.textContent = '매물 등록';
+
+    const submitBtn = document.querySelector('#page-register .submit-btn');
+    if (submitBtn) {
+        submitBtn.textContent = '등록하기';
+        submitBtn.disabled = false;
+    }
+
+    // 폼 필드 초기화
+    const titleInput = document.getElementById('title-input');
+    if (titleInput) { titleInput.value = ''; titleInput.disabled = false; }
+
+    const priceInput = document.getElementById('price-input');
+    if (priceInput) { priceInput.value = ''; priceInput.disabled = false; }
+
+    const auctionEndInput = document.getElementById('auction-end-input');
+    if (auctionEndInput) { auctionEndInput.value = ''; auctionEndInput.disabled = false; }
+
+    const photoInput = document.getElementById('photo-upload-input');
+    if (photoInput) photoInput.value = '';
+
+    if (typeof uploadedBase64 !== 'undefined') uploadedBase64 = null;
+    if (typeof uploadedBlob !== 'undefined') uploadedBlob = null;
+
+    const mainBox = document.getElementById('photo-box-main');
+    if (mainBox) {
+        mainBox.style.backgroundImage = 'none';
+        mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
+    }
+
+    // 카테고리 선택 초기화
+    const catSelect = document.querySelector('#page-register .form-select');
+    if (catSelect) catSelect.value = '카테고리 선택';
+
+    // 거래방식 칩 (직거래로)
+    document.querySelectorAll('#page-register .trade-chip').forEach(c => {
+        c.classList.toggle('on', c.textContent.trim() === '직거래');
+    });
+
+    // 상태 칩 (최상으로)
+    document.querySelectorAll('#page-register .cond-chip').forEach(c => {
+        c.classList.toggle('on', c.textContent.trim() === '최상');
+    });
+
+    // 경매 마감일 행 숨김
+    const auctionDateRow = document.getElementById('auction-date-row');
+    if (auctionDateRow) auctionDateRow.style.display = 'none';
+
+    // 안내문구 제거
+    const editLockNotice = document.getElementById('edit-lock-notice');
+    if (editLockNotice) editLockNotice.remove();
+}
+
+// ============================================================================
+// ✅ 본인 매물 편집 진입
+// ============================================================================
+window.editMyProduct = function(productId) {
+    if (!currentUser) {
+        alert('로그인이 필요합니다.');
+        return;
+    }
+
+    const p = products.find(x => String(x.id) === String(productId));
+    if (!p) {
+        alert('매물을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
+        return;
+    }
+
+    // 본인 매물 권한 체크 (1차 방어 — RLS가 진짜 방어선)
+    const isOwner = (p.seller_id && p.seller_id === currentUser.id)
+                 || (p.user_id && p.user_id === currentUser.id);
+    if (!isOwner) {
+        alert('본인이 등록한 매물만 수정할 수 있습니다.');
+        return;
+    }
+
+    // 거래완료 매물은 수정 불가
+    if (p.is_closed) {
+        alert('이미 거래가 완료된 매물은 수정할 수 없습니다.');
+        return;
+    }
+
+    // 등록 페이지로 이동
+    // ✅ hashchange 리스너에서 자동 reset이 일어나지 않도록 플래그 세팅
+    window._enteredViaEdit = true;
+    showPage('register');
+
+    // 모드 전환
+    editingProductId = productId;
+
+    // 헤더 / 버튼 텍스트 변경
+    const headerTitle = document.querySelector('#page-register .sub-header .sub-title');
+    if (headerTitle) headerTitle.textContent = '매물 수정';
+
+    const submitBtn = document.querySelector('#page-register .submit-btn');
+    if (submitBtn) {
+        submitBtn.textContent = '수정 완료';
+        submitBtn.disabled = false;
+    }
+
+    // 폼 필드 prefill
+    const titleInput = document.getElementById('title-input');
+    if (titleInput) titleInput.value = p.title || '';
+
+    // 가격: "₩ 1,000,000" 형식에서 숫자만 추출
+    const priceInput = document.getElementById('price-input');
+    if (priceInput) {
+        const numericPrice = (p.price || '').replace(/[^0-9]/g, '');
+        priceInput.value = numericPrice;
+    }
+
+    // 카테고리 select
+    const catSelect = document.querySelector('#page-register .form-select');
+    if (catSelect && p.category) {
+        catSelect.value = p.category;
+        // option에 없는 카테고리면 "카테고리 선택"으로
+        if (catSelect.value !== p.category) catSelect.value = '카테고리 선택';
+    }
+
+    // 거래방식 칩
+    const tradeType = p.tradeType || (p.auction ? '경매' : '직거래');
+    document.querySelectorAll('#page-register .trade-chip').forEach(c => {
+        c.classList.toggle('on', c.textContent.trim() === tradeType);
+    });
+
+    // 상태 칩
+    const condition = p.condition || '최상';
+    document.querySelectorAll('#page-register .cond-chip').forEach(c => {
+        c.classList.toggle('on', c.textContent.trim() === condition);
+    });
+
+    // 경매 마감일 행 (경매면 보이고 + 값 채움)
+    const auctionDateRow = document.getElementById('auction-date-row');
+    const auctionEndInput = document.getElementById('auction-end-input');
+    if (p.auction && p.auction_end) {
+        if (auctionDateRow) auctionDateRow.style.display = 'block';
+        if (auctionEndInput) {
+            // ISO → datetime-local 형식 변환 (YYYY-MM-DDTHH:MM)
+            const d = new Date(p.auction_end);
+            if (!isNaN(d.getTime())) {
+                const pad = n => String(n).padStart(2, '0');
+                auctionEndInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            }
+        }
+    } else {
+        if (auctionDateRow) auctionDateRow.style.display = 'none';
+        if (auctionEndInput) auctionEndInput.value = '';
+    }
+
+    // 지역
+    const regionInput = document.getElementById('region-input');
+    if (regionInput && p.region) regionInput.value = p.region;
+
+    // 사진 prefill (image_url 있으면 사진 박스에 미리보기)
+    const mainBox = document.getElementById('photo-box-main');
+    if (mainBox) {
+        if (p.image_url) {
+            // 기존 사진을 미리보기로 표시 + ✕ 삭제 버튼 (이번 세션에서 새로 변경하면 교체됨)
+            const safeUrl = escapeHtml(p.image_url);
+            mainBox.style.backgroundImage = `url(${safeUrl})`;
+            mainBox.style.backgroundSize = 'cover';
+            mainBox.style.backgroundPosition = 'center';
+            mainBox.style.position = 'relative';
+            mainBox.innerHTML = '<button type="button" id="photo-delete-btn" title="사진 삭제" style="position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0; box-shadow:0 2px 4px rgba(0,0,0,0.2); z-index:10;">✕</button>';
+            // 사진 삭제 버튼 핸들러 (수정 시 사진 비우기)
+            const delBtn = document.getElementById('photo-delete-btn');
+            if (delBtn) {
+                delBtn.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    if (typeof uploadedBase64 !== 'undefined') uploadedBase64 = null;
+                    if (typeof uploadedBlob !== 'undefined') uploadedBlob = null;
+                    const fileInput = document.getElementById('photo-upload-input');
+                    if (fileInput) fileInput.value = '';
+                    mainBox.style.backgroundImage = 'none';
+                    mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
+                    // 수정 모드에서 사진 삭제 시 → 사진을 NULL로 업데이트하도록 마킹
+                    window.__editPhotoCleared = true;
+                });
+            }
+            // 새로 업로드 안 하면 기존 image_url 유지
+            window.__editPhotoCleared = false;
+        } else {
+            mainBox.style.backgroundImage = 'none';
+            mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
+            window.__editPhotoCleared = false;
+        }
+    }
+
+    // 입찰자 있는 경매면 가격/마감일 잠금
+    const bidCount = parseInt(p.bid_count) || 0;
+    const isLocked = p.auction && bidCount > 0;
+    if (isLocked) {
+        if (priceInput) {
+            priceInput.disabled = true;
+            priceInput.style.background = '#f4f4f4';
+            priceInput.style.color = '#999';
+        }
+        if (auctionEndInput) {
+            auctionEndInput.disabled = true;
+            auctionEndInput.style.background = '#f4f4f4';
+            auctionEndInput.style.color = '#999';
+        }
+        // 안내 문구 추가 (이미 있으면 스킵)
+        if (!document.getElementById('edit-lock-notice')) {
+            const notice = document.createElement('div');
+            notice.id = 'edit-lock-notice';
+            notice.style.cssText = 'background:#FFF3E0; border:1px solid #F57C00; border-radius:8px; padding:12px; margin:12px 16px; font-size:13px; color:#D84315; line-height:1.5;';
+            notice.innerHTML = `⚠️ 이 경매는 입찰자(${bidCount}회)가 있어 <b>가격과 마감일은 수정할 수 없습니다.</b><br>제목·설명·사진·카테고리는 수정 가능합니다.`;
+            const subBody = document.querySelector('#page-register .sub-body');
+            if (subBody) subBody.insertBefore(notice, subBody.firstChild);
+        }
+    }
+};
+
+// ============================================================================
+// 판매자 실 DB 매물 등록 (편집 모드 분기 포함)
+// ============================================================================
 async function registerProduct() {
+  const isEditMode = (editingProductId !== null);
+
   const cat = document.querySelector('#page-register .form-select').value;
   const title = document.getElementById('title-input').value;
   let tradeType = '직거래';
   document.querySelectorAll('#page-register .trade-chip').forEach(c => {
       if(c.classList.contains('on')) tradeType = c.textContent.trim();
   });
-  
+
   let conditionStr = '최상';
   document.querySelectorAll('#page-register .cond-chip').forEach(c => {
       if(c.classList.contains('on')) conditionStr = c.textContent.trim();
@@ -349,117 +581,220 @@ async function registerProduct() {
 
   const priceInput = document.getElementById('price-input').value || '';
   const priceParsed = parseInt(priceInput.replace(/[^0-9]/g, '')) || 0;
-  
+
   const regionInput = document.getElementById('region-input');
   const regionVal = regionInput ? regionInput.value : '부산';
-  
+
   if (!title || cat === '카테고리 선택') { alert('상품명과 카테고리는 필수입니다.'); return; }
 
   // ✅ 추가 입력 검증
   if (title.length > 200) { alert('상품명은 200자 이하로 입력해주세요.'); return; }
   if (priceParsed < 0 || priceParsed > 99999999999) { alert('가격을 올바르게 입력해주세요.'); return; }
-  
+
   const isAuction = tradeType === '경매';
   const endInput = document.getElementById('auction-end-input').value;
   if(isAuction && !endInput) { alert('경매 마감일시를 설정해주세요.'); return; }
   if(isAuction) {
       const endTime = new Date(endInput).getTime();
-      if (endTime <= Date.now()) { alert('경매 마감일시는 현재 시각 이후로 설정해주세요.'); return; }
+      // 수정 모드에서 마감일 비활성화된 경우는 검증 건너뜀 (기존 값 유지)
+      const auctionEndDisabled = document.getElementById('auction-end-input').disabled;
+      if (!auctionEndDisabled && endTime <= Date.now()) {
+          alert('경매 마감일시는 현재 시각 이후로 설정해주세요.'); return;
+      }
   }
 
   const submitBtn = document.querySelector('#page-register .submit-btn');
-  submitBtn.textContent = '매물 등록 중...';
+  const originalBtnText = isEditMode ? '수정 완료' : '등록하기';
+  const inProgressText = isEditMode ? '수정 중...' : '매물 등록 중...';
+  submitBtn.textContent = inProgressText;
   submitBtn.disabled = true;
 
   let finalImageUrl = null;
-  
+
+  // 사진 업로드 처리
   if (uploadedBlob) {
-      // ✅ 사용자 친화 메시지 (사진 업로드 단계도 "매물 등록 중"으로 통일)
-      submitBtn.textContent = '매물 등록 중...';
+      // 새 사진 업로드 (등록 모드든 수정 모드든 동일)
+      submitBtn.textContent = inProgressText;
       const fileName = `public/product_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-      
+
       const { data: uploadData, error: uploadError } = await supabaseClient.storage
           .from('market_images')
           .upload(fileName, uploadedBlob, {
               contentType: 'image/jpeg'
           });
-          
+
       if (uploadError) {
-          // ✅ 사용자 친화 에러 메시지 + 사진 없이 계속 등록할지 선택권 제공
           const proceed = confirm(
               '사진 업로드에 실패했습니다.\n\n' +
-              '사진 없이 매물 정보만 등록하시겠습니까?\n' +
+              (isEditMode ? '사진 없이 다른 정보만 수정하시겠습니까?\n' : '사진 없이 매물 정보만 등록하시겠습니까?\n') +
               '(취소하시면 다시 시도하실 수 있습니다)\n\n' +
               '오류 코드: ' + (uploadError.message || '알 수 없음')
           );
           if (!proceed) {
-              submitBtn.textContent = '등록하기';
+              submitBtn.textContent = originalBtnText;
               submitBtn.disabled = false;
               return;
           }
-          // 사용자가 '확인' 누르면 사진 없이 진행 (finalImageUrl = null)
       } else {
           const { data: publicData } = supabaseClient.storage.from('market_images').getPublicUrl(fileName);
           finalImageUrl = publicData.publicUrl;
       }
   }
 
-  // ✅ HTML 문자열을 DB에 저장하지 않음 — image_url만 저장
-  //    렌더링 시점에 utils.js의 getProductImageHtml(p)가 안전하게 조립
-  let newProd = {
-    title: title,
-    sub: '방금 전 등록',
-    price: priceInput ? ('₩ ' + priceInput.replace('₩','').trim()) : '₩ 협의 가능',
-    category: cat,
-    "tradeType": tradeType,
-    region: regionVal,
-    seller_id: currentUser ? currentUser.id : null,
-    condition: conditionStr,
-    cert: '없음',
-    auth: true, 
-    auction: isAuction,
-    offer: false,
-    image_url: finalImageUrl   // ✅ URL만 저장 (HTML 문자열 X)
-    // svg 컬럼은 더 이상 쓰지 않음. 기존 데이터는 호환 코드로 처리.
+  // ✅ 분기 1) 등록 모드 → INSERT
+  if (!isEditMode) {
+      let newProd = {
+        title: title,
+        sub: '방금 전 등록',
+        price: priceInput ? ('₩ ' + priceInput.replace('₩','').trim()) : '₩ 협의 가능',
+        category: cat,
+        "tradeType": tradeType,
+        region: regionVal,
+        seller_id: currentUser ? currentUser.id : null,
+        condition: conditionStr,
+        cert: '없음',
+        auth: true,
+        auction: isAuction,
+        offer: false,
+        image_url: finalImageUrl
+      };
+
+      if(isAuction) {
+          newProd.auction_end = new Date(endInput).toISOString();
+          newProd.current_bid = priceParsed;
+          newProd.bid_count = 0;
+      }
+
+      const { error } = await supabaseClient.from('haema_products').insert([newProd]);
+
+      submitBtn.textContent = originalBtnText;
+      submitBtn.disabled = false;
+
+      if (error) {
+         alert('등록 중 에러가 발생했습니다: ' + error.message);
+         return;
+      }
+
+      // 폼 초기화 + 등록 완료 알림 + 홈 이동
+      resetRegisterFormToCreateMode();
+
+      alert('매물이 성공적으로 등록되었습니다!\n(하단 경매 탭에서도 바로 확인하실 수 있습니다.)');
+
+      filterState.category = '전체';
+      renderSubCategories(filterState.topCategory);
+      resetFilters();
+      showPage('home');
+      window.scrollTo(0, 0);
+
+      await fetchProducts();
+      return;
+  }
+
+  // ✅ 분기 2) 수정 모드 → UPDATE
+  // 기존 매물 객체 가져오기 (사진 처리 분기에 필요)
+  const existingProduct = products.find(x => String(x.id) === String(editingProductId));
+  if (!existingProduct) {
+      alert('수정 대상 매물을 찾을 수 없습니다.');
+      submitBtn.textContent = originalBtnText;
+      submitBtn.disabled = false;
+      return;
+  }
+
+  // 입찰자 있는 경매면 가격/마감일 변경 차단 (UI 잠금 우회 방어)
+  const bidCount = parseInt(existingProduct.bid_count) || 0;
+  const isLocked = existingProduct.auction && bidCount > 0;
+
+  // 사진 결정 로직:
+  //   1) 새 사진 업로드 → finalImageUrl (방금 받은 새 URL)
+  //   2) 사용자가 ✕로 사진 지움 → null
+  //   3) 둘 다 아님 → 기존 image_url 유지
+  let imageUrlToSave;
+  if (finalImageUrl) {
+      imageUrlToSave = finalImageUrl;
+  } else if (window.__editPhotoCleared) {
+      imageUrlToSave = null;
+  } else {
+      imageUrlToSave = existingProduct.image_url || null;
+  }
+
+  // UPDATE 페이로드 (락 걸린 필드는 빼고)
+  let updatePayload = {
+      title: title,
+      category: cat,
+      "tradeType": tradeType,
+      region: regionVal,
+      condition: conditionStr,
+      auction: isAuction,
+      image_url: imageUrlToSave
   };
 
-  if(isAuction) {
-      newProd.auction_end = new Date(endInput).toISOString();
-      newProd.current_bid = priceParsed;
-      newProd.bid_count = 0;
+  // 가격/마감일은 락 안 걸린 경우에만 변경 허용
+  if (!isLocked) {
+      updatePayload.price = priceInput ? ('₩ ' + priceInput.replace('₩','').trim()) : '₩ 협의 가능';
+      if (isAuction) {
+          updatePayload.auction_end = new Date(endInput).toISOString();
+          // current_bid는 입찰 없을 때만 시작가로 갱신 (이미 입찰 있으면 절대 건드리지 않음)
+          if (bidCount === 0) {
+              updatePayload.current_bid = priceParsed;
+          }
+      }
   }
 
-  const { error } = await supabaseClient.from('haema_products').insert([newProd]);
-  
-  submitBtn.textContent = '등록하기';
+  // ⚠️ seller_id 조건으로 본인 매물만 update (RLS가 진짜 방어)
+  const { error: updateErr } = await supabaseClient
+      .from('haema_products')
+      .update(updatePayload)
+      .eq('id', editingProductId)
+      .eq('seller_id', currentUser.id);
+
+  submitBtn.textContent = originalBtnText;
   submitBtn.disabled = false;
 
-  if (error) {
-     alert('등록 중 에러가 발생했습니다: ' + error.message);
-     return;
+  if (updateErr) {
+      alert('수정 중 오류가 발생했습니다: ' + updateErr.message);
+      return;
   }
 
-  // 폼 초기화
-  document.getElementById('title-input').value = '';
-  document.getElementById('price-input').value = '';
-  document.getElementById('photo-upload-input').value = '';
-  uploadedBase64 = null;
-  uploadedBlob = null;
-  const mainBox = document.getElementById('photo-box-main');
-  if(mainBox) {
-      mainBox.style.backgroundImage = 'none';
-      mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
+  // ✅ 새 사진을 업로드했으면 기존 사진 파일을 Storage에서 정리
+  //    (DB는 새 URL로 갱신됐으니 기존 파일은 고아 상태)
+  if (finalImageUrl && existingProduct.image_url
+      && existingProduct.image_url !== finalImageUrl) {
+      try {
+          const marker = '/market_images/';
+          const idx = existingProduct.image_url.indexOf(marker);
+          if (idx >= 0) {
+              const oldFilePath = existingProduct.image_url.substring(idx + marker.length);
+              await supabaseClient.storage.from('market_images').remove([oldFilePath]);
+          }
+      } catch (e) {
+          console.warn('기존 사진 정리 실패(무시):', e);
+      }
   }
-  
-  alert('매물이 성공적으로 등록되었습니다!\n(하단 경매 탭에서도 바로 확인하실 수 있습니다.)');
-  
-  filterState.category = '전체';
-  renderSubCategories(filterState.topCategory);
-  resetFilters();
-  showPage('home');
-  window.scrollTo(0, 0);
 
+  // ✅ 사용자가 사진을 지웠으면(__editPhotoCleared=true) 기존 파일도 Storage에서 삭제
+  if (window.__editPhotoCleared && existingProduct.image_url && !finalImageUrl) {
+      try {
+          const marker = '/market_images/';
+          const idx = existingProduct.image_url.indexOf(marker);
+          if (idx >= 0) {
+              const oldFilePath = existingProduct.image_url.substring(idx + marker.length);
+              await supabaseClient.storage.from('market_images').remove([oldFilePath]);
+          }
+      } catch (e) {
+          console.warn('지운 사진 정리 실패(무시):', e);
+      }
+  }
+
+  alert('매물 정보가 수정되었습니다.');
+
+  // 폼/모드 초기화 후 마이페이지 판매목록으로 복귀
+  resetRegisterFormToCreateMode();
   await fetchProducts();
+  if (typeof showMyList === 'function') {
+      showMyList();
+  } else {
+      showPage('mypage');
+  }
 }
 
 // [URL Parameter 처리: 더미 상품 페이지 연동]
@@ -496,4 +831,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 600);
         }
     }
+
+    // ============================================================================
+    // ✅ 등록/수정 모드 자동 감지 — register 페이지 진입 시 모드 동기화
+    // ============================================================================
+    // editMyProduct()는 자체 처리 후 _enteredViaEdit = true 플래그를 세움.
+    // 그 외 진입(+등록, FAB 등)은 무조건 등록 모드로 초기화.
+    let _wasOnRegisterPage = (window.location.hash === '#register');
+    window.addEventListener('hashchange', () => {
+        const isOnRegisterNow = (window.location.hash === '#register');
+
+        // register 페이지로 새로 진입했을 때만 처리
+        if (isOnRegisterNow && !_wasOnRegisterPage) {
+            if (window._enteredViaEdit === true) {
+                // editMyProduct에서 이미 prefill 했음 — 플래그만 끄고 유지
+                window._enteredViaEdit = false;
+            } else {
+                // 직접 진입 (+등록/FAB) — 등록 모드로 초기화
+                resetRegisterFormToCreateMode();
+            }
+        }
+
+        _wasOnRegisterPage = isOnRegisterNow;
+    });
 });
