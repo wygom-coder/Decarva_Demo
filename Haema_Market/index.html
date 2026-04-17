@@ -6,11 +6,15 @@
   <meta name="description" content="해마 마켓(Haema Market) - 조선/해양 B2B 조선기자재 중고 직거래 및 경매장 플랫폼. 선박 엔진, 레이더, 갑판 장비 등 인증받은 기업 간의 신뢰도 높은 해양 부품 거래처를 확보하세요.">
   <link rel="icon" href="images/seahorse_logo.png">
   <title>해마 마켓 - 중고 선박 기자재 거래 플랫폼</title>
-
+ 
   <!-- Supabase & Custom Script -->
+  <!-- ⚠️ 중요: defer 속성을 쓸 때, 스크립트는 HTML에 적힌 순서대로 실행됨.
+       utils.js는 escapeHtml/getProductImageHtml를 정의하므로 다른 모듈보다
+       먼저 와야 함 (config.js 다음 추천) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/dummy_products.js" defer></script>
   <script src="./js/modules/config.js" defer></script>
+  <script src="./js/modules/utils.js" defer></script>
   <script src="./js/modules/store.js" defer></script>
   <script src="./js/modules/ui.js" defer></script>
   <script src="./js/modules/auth.js" defer></script>
@@ -26,7 +30,7 @@
   <link rel="stylesheet" href="./css/market.css">
 </head>
 <body>
-
+ 
 <!-- 홈 -->
 <div class="page active" id="page-home">
 <div class="wrap">
@@ -52,7 +56,7 @@
       <button class="btn-sell" onclick="requireAuthAndShow('register')">+ 등록</button>
     </div>
   </div>
-
+ 
   <div class="top-nav-tabs" id="top-nav-tabs">
     <div class="top-tab active" data-top="전체">전체</div>
     <div class="top-tab" data-top="기부속">중고기부속</div>
@@ -60,7 +64,7 @@
     <div class="top-tab" data-top="안전장비">안전장비</div>
     <div class="top-tab" data-top="주/부식">주/부식</div>
   </div>
-
+ 
   <div class="cat-bar" id="sub-cat-bar">
     <div class="cat-item active">전체</div>
     <!-- JS will populate -->
@@ -69,7 +73,7 @@
   <div id="food-cat-bar" class="food-cat-bar" style="display:none; overflow-x:auto; white-space:nowrap; padding: 12px 20px; background:#f4f9ff; border-top:1px solid #eaedf2; border-bottom:1px solid #eaedf2; gap:8px;">
       <!-- JS will populate -->
   </div>
-
+ 
   <div class="filter-bar">
     <div class="filter-chip" onclick="applySubFilter('tradeType', '경매')" style="background:#FFF3C0; color:#D4960A; border-color:#D4960A; font-weight: 600;">진행중인 경매</div>
     <div class="filter-dropdown" data-target="region">지역 ▾</div>
@@ -80,7 +84,7 @@
     <div class="filter-dropdown" data-target="price">가격대 ▾</div>
     <div class="filter-reset">초기화 ↺</div>
   </div>
-
+ 
   <div class="filter-panels">
     <div class="filter-panel" id="panel-region">
       <div class="f-sub-chip on" data-key="region" data-val="전체">전체지역</div>
@@ -127,7 +131,7 @@
     </div>
   </div>
   <div style="height:1px; background:var(--border);"></div>
-
+ 
   <div class="banner">
     <div class="banner-left">
       <span class="banner-tag" id="banner-tag">NEW</span>
@@ -135,7 +139,7 @@
     </div>
     <button class="banner-btn">자세히 보기</button>
   </div>
-
+ 
   <div class="main">
     
     <div id="home-category-area">
@@ -144,7 +148,7 @@
         <!-- JS populated icons -->
       </div>
     </div>
-
+ 
     <!-- Recommendations Area for Bunjang-style curation -->
     <div id="home-recommendation-area" style="display: none; margin-bottom: 24px;">
       <div class="section-header"><span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>오늘의 추천 특가</span><span class="section-more">더보기 →</span></div>
@@ -157,16 +161,16 @@
         <!-- JS populated curation products -->
       </div>
     </div>
-
+ 
     <div class="section-header" id="main-product-title-header"><span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>최신 매물</span><span class="section-more">더보기 →</span></div>
     <div class="product-grid" id="main-product-grid">
       <!-- JS populated grid -->
     </div>
   </div>
-
+ 
     </div>
 </div>
-
+ 
 <!-- 매물등록 -->
 <div class="page" id="page-register">
 <div class="wrap">
@@ -180,7 +184,7 @@
   </div>
 </div>
 </div>
-
+ 
 <!-- 채팅 -->
 <div class="page" id="page-chat">
 <div class="wrap">
@@ -196,11 +200,11 @@
       <!-- 동적 메시지 영역 -->
     </div>
     <div class="chat-input-bar" style="background:#fff; border-top:1px solid #eee; padding:12px 16px; display:flex; gap:8px;"><input type="text" id="chat-input-text" placeholder="메시지를 입력하세요" onkeypress="if(event.key==='Enter') sendChatMessage()" style="flex:1; background:#f4f9ff; border:none; padding:10px 14px; border-radius:20px; font-size:14px; outline:none;"><button class="chat-send" onclick="sendChatMessage()" style="width:40px; height:40px; border-radius:50%; background:var(--yellow-400); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-6-5 6 5 6-12-6z" fill="#7A5200"/></svg></button></div>
-
+ 
   </div>
 </div>
 </div>
-
+ 
 <!-- 마이페이지 -->
 <div class="page" id="page-mypage">
 <div class="wrap">
@@ -245,7 +249,7 @@
   </div>
 </div>
 </div>
-
+ 
 <!-- 발주한 견적/결제 내역 페이지 -->
 <div class="page" id="page-myquotes">
   <div class="wrap" style="background:#f4f9ff; height:100vh; display:flex; flex-direction:column;">
@@ -266,7 +270,7 @@
       <h1 style="margin:0; font-size:26px; font-weight:800; color:var(--text-primary); letter-spacing:-0.5px;">해마 커뮤니티</h1>
       <p style="margin:8px 0 0 0; font-size:13px; color:var(--text-muted);">업계 전문가들과 해양 지식과 수리 경험을 공유하세요</p>
     </div>
-
+ 
     <!-- 검색 창 -->
     <div style="background:#fff; padding: 0 20px 16px 20px;">
       <div class="search-bar" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; height:44px; display:flex; align-items:center; padding:0 14px; gap:10px;">
@@ -282,7 +286,7 @@
       <div onclick="setCommTag('자유게시판', this)" class="comm-tag" style="padding:6px 14px; background:#f4f9ff; color:#7A93B0; border:1px solid #eaedf2; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer;">자유게시판</div>
       <div onclick="setCommTag('👨‍🔧 구인구직', this)" class="comm-tag" style="padding:6px 14px; background:#f4f9ff; color:#7A93B0; border:1px solid #eaedf2; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer;">👨‍🔧 구인구직</div>
     </div>
-
+ 
     <!-- 본문 내용 -->
     <div id="community-content-area" style="flex:1; overflow-y:auto; padding:16px 20px 120px 20px;">
       <!-- JS 렌더링 -->
@@ -294,7 +298,7 @@
     </button>
   </div>
 </div>
-
+ 
 <!-- 사업자 인증 페이지 -->
 <div class="page" id="page-business-auth">
 <div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
@@ -318,7 +322,7 @@
       </div>
       <button class="submit-btn" onclick="submitBusinessAuth()" style="margin-top: 30px;">국세청 실시간 진위 확인 (Live)</button>
     </div>
-
+ 
     <div id="biz-auth-verified" style="display:none; background:#E6F4EA; border:1px solid #1E8E3E; border-radius:12px; padding:24px; text-align:center;">
        <div style="font-size:24px; font-weight:700; color:#1E8E3E; margin-bottom:4px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M12 6h.01"></path><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path></svg> 인증된 기업입니다</div>
        <div id="biz-verified-name" style="font-size:16px; font-weight:700; color:#1A2B4A; margin-bottom:16px;"></div>
@@ -334,7 +338,7 @@
   </div>
 </div>
 </div>
-
+ 
 <!-- 거래 후기 뷰 페이지 -->
 <div class="page" id="page-reviews">
 <div class="wrap" style="background:#f4f9ff; height:100vh; display:flex; flex-direction:column;">
@@ -380,7 +384,7 @@
   </div>
 </div>
 </div>
-
+ 
 <!-- 내가 올린 판매 목록 -->
 <div class="page" id="page-mylist">
 <div class="wrap">
@@ -395,7 +399,7 @@
   </div>
 </div>
 </div>
-
+ 
 <!-- 설정 -->
 <div class="page" id="page-settings">
 <div class="wrap">
@@ -434,8 +438,8 @@
   </div>
 </div>
 </div>
-
-
+ 
+ 
 <!-- 프로필 편집 -->
 <div class="page" id="page-profile-edit">
 <div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
@@ -459,7 +463,7 @@
       <label class="form-label">내 상점 한 줄 소개</label>
       <input class="form-input" type="text" id="edit-bio-input" placeholder="(선택) 마켓 이용자들에게 보여질 소개말을 적어주세요">
     </div>
-
+ 
     <div class="form-row" style="margin-top:16px;">
       <label class="form-label">활동 지역 (시/도)</label>
       <div style="display:flex; gap:8px;">
@@ -479,13 +483,13 @@
       </div>
       <div style="font-size:10px; color:#7A93B0; margin-top:4px;">* 전국 통합 인증 시스템: 가짜 지역 선택을 방지하기 위해 스마트폰/PC의 GPS 위치와 교차 검증합니다.</div>
     </div>
-
+ 
     
     <button class="submit-btn" onclick="saveProfile()" style="margin-top: 10px;">저장하고 돌아가기</button>
   </div>
 </div>
 </div>
-
+ 
 <!-- 로그인 / 회원가입 -->
 <div class="page" id="page-login">
 <div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
@@ -534,7 +538,7 @@
   </div>
 </div>
 </div>
-
+ 
 <!-- 견적 장바구니 페이지 -->
 <div class="page" id="page-cart">
 <div class="wrap" style="background:#f4f9ff; height:100vh; display:flex; flex-direction:column;">
@@ -554,7 +558,7 @@
   </div>
 </div>
 </div>
-
+ 
 <!-- Product Detail Modal (Bottom Sheet style) -->
 <style>
 @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -592,7 +596,7 @@
     <div class="tab-label">마이페이지</div>
   </button>
 </nav>
-
+ 
 <!-- 우측 하단 플로팅 액션 버튼 (Top 이동 및 매물 등록) -->
 <div class="fab-container">
   <button class="fab-btn fab-top" onclick="scrollToTop()" title="최상단으로 이동">
@@ -602,7 +606,7 @@
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
   </button>
 </div>
-
+ 
 <!-- 평가 남기기 모달 -->
 <div id="review-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
   <div class="modal-box" style="width:320px; background:#fff; border-radius:16px; padding:24px; text-align:center;">
@@ -616,7 +620,7 @@
     <button onclick="document.getElementById('review-modal').style.display='none'" style="width:100%; padding:14px; background:#EAEDF2; color:#7A93B0; font-weight:700; border:none; border-radius:12px; cursor:pointer;">나중에 하기</button>
   </div>
 </div>
-
+ 
 <!-- 견적서 요청 모달 (주/부식 전용) -->
 <div id="quote-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
   <div class="modal-box" style="width:100%; max-width:360px; background:#fff; border-radius:20px; padding:24px; text-align:center; animation: popIn 0.2s ease-out; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
@@ -641,7 +645,7 @@
     </div>
   </div>
 </div>
-
+ 
 <!-- 커뮤니티 글쓰기 모달 -->
 <div id="post-write-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:flex-end; justify-content:center;">
   <div class="modal-box" style="width:100%; max-width:480px; height:85vh; background:#fff; border-radius:20px 20px 0 0; display:flex; flex-direction:column; animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
@@ -667,7 +671,7 @@
     </div>
   </div>
 </div>
-
+ 
 <!-- 커뮤니티 상세 보기 모달 -->
 <div id="post-detail-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:flex-end; justify-content:center;">
   <div class="modal-box" style="width:100%; max-width:480px; height:90vh; background:#fff; border-radius:20px 20px 0 0; display:flex; flex-direction:column; animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
@@ -688,6 +692,6 @@
     </div>
   </div>
 </div>
-
+ 
 </body>
 </html>
