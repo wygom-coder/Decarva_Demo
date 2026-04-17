@@ -372,6 +372,10 @@ function resetRegisterFormToCreateMode() {
     const photoInput = document.getElementById('photo-upload-input');
     if (photoInput) photoInput.value = '';
 
+    // P0-#2: desc reset
+    const descInput = document.getElementById('desc-input');
+    if (descInput) descInput.value = '';
+
     if (typeof uploadedBase64 !== 'undefined') uploadedBase64 = null;
     if (typeof uploadedBlob !== 'undefined') uploadedBlob = null;
 
@@ -466,13 +470,17 @@ window.editMyProduct = function(productId) {
 
     const submitBtn = document.querySelector('#page-register .submit-btn');
     if (submitBtn) {
-        submitBtn.textContent = '수정 완료';
+        submitBtn.textContent = '수정하기';
         submitBtn.disabled = false;
     }
 
     // 폼 필드 prefill
     const titleInput = document.getElementById('title-input');
     if (titleInput) titleInput.value = p.title || '';
+
+    // P0-#2: desc prefill
+    const descInput = document.getElementById('desc-input');
+    if (descInput) descInput.value = p.content || '';
 
     // 가격: "₩ 1,000,000" 형식에서 숫자만 추출
     const priceInput = document.getElementById('price-input');
@@ -609,6 +617,10 @@ async function registerProduct() {
   const regionInput = document.getElementById('region-input');
   const regionVal = regionInput ? regionInput.value : '부산';
 
+    // P0-#2: read desc
+    const descInputEl = document.getElementById('desc-input');
+    const descVal = descInputEl ? descInputEl.value.trim() : '';
+
   if (!title || cat === '카테고리 선택') { alert('상품명과 카테고리는 필수입니다.'); return; }
 
   // ✅ 추가 입력 검증
@@ -628,7 +640,7 @@ async function registerProduct() {
   }
 
   const submitBtn = document.querySelector('#page-register .submit-btn');
-  const originalBtnText = isEditMode ? '수정 완료' : '등록하기';
+  const originalBtnText = isEditMode ? '수정하기' : '등록하기';
   const inProgressText = isEditMode ? '수정 중...' : '매물 등록 중...';
   submitBtn.textContent = inProgressText;
   submitBtn.disabled = true;
@@ -680,7 +692,8 @@ async function registerProduct() {
         auth: true,
         auction: isAuction,
         offer: false,
-        image_url: finalImageUrl
+        image_url: finalImageUrl,
+        content: descVal
       };
 
       if(isAuction) {
@@ -749,7 +762,8 @@ async function registerProduct() {
       region: regionVal,
       condition: conditionStr,
       auction: isAuction,
-      image_url: imageUrlToSave
+      image_url: imageUrlToSave,
+      content: descVal
   };
 
   // 가격/마감일은 락 안 걸린 경우에만 변경 허용
