@@ -10,10 +10,12 @@ window.showMyQuotes = async function() {
             .order('created_at', { ascending: false });
         if(error) throw error;
         if(!data || data.length === 0) {
-            area.innerHTML = `<div style="padding: 80px 20px; text-align:center;">
-                <div style="font-size:48px; margin-bottom:16px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></div>
-                <div style="font-size:16px; font-weight:700; color:#1A2B4A; margin-bottom:8px;">요청한 견적 내역이 없습니다</div>
-                <div style="font-size:14px; color:#7A93B0;">장바구니를 통해 업체를 묶어서<br>편리하게 견적을 요청해 보세요.</div>
+            area.innerHTML = `
+            <div style="padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+                <div style="font-size:48px; margin-bottom:16px; color:#CBD5E1;"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <div style="font-size:18px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">요청한 견적 내역이 없습니다</div>
+                <div style="font-size:14px; color:#7A93B0; line-height:1.5; margin-bottom:24px;">장바구니를 통해 여러 업체를 묶어서<br>편리하게 일괄 견적을 요청해 보세요.</div>
+                <button onclick="triggerBottomNav('home')" style="background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; border-radius:12px; padding:16px 32px; cursor:pointer; width:100%; max-width:240px; margin-bottom:12px;">매물 둘러보기</button>
             </div>`;
             return;
         }
@@ -58,10 +60,12 @@ function showMyList() {
     if(!container) return;
     container.innerHTML = '';
     if(myProducts.length === 0) {
-        container.innerHTML = `<div style="grid-column: span 3; text-align:center; padding: 60px 20px; color:#aaa; font-size:14px; display:flex; flex-direction:column; align-items:center;">
-            <div style="font-size:32px; margin-bottom:12px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 21c4 0 7-4 10-4s6 4 10 4"></path><path d="M19 21v-4"></path><path d="M12 21v-5"></path><path d="M5 21v-4"></path><path d="M3 13h18l-2-6H5L3 13z"></path><path d="M8 7V3h8v4"></path></svg></div>
-            <div>아직 등록하신 판매 매물이 없습니다.</div>
-            <div style="margin-top:16px;"><button onclick="requireAuthAndShow('register')" style="padding: 10px 20px; background:var(--blue-50); color:var(--blue-800); border:1px solid var(--blue-200); border-radius:8px; cursor:pointer; font-weight:700;">첫 판매글 작성하기</button></div>
+        container.innerHTML = `
+        <div style="grid-column: span auto; padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+            <div style="font-size:48px; margin-bottom:16px; color:#CBD5E1;"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></div>
+            <div style="font-size:18px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">등록하신 판매 매물이 없습니다</div>
+            <div style="font-size:14px; color:#7A93B0; line-height:1.5; margin-bottom:24px;">보유하신 잉여 자재나 중고 부품을 올려<br>전국의 수많은 바이어와 바로 거래하세요.</div>
+            <button onclick="requireAuthAndShow('register')" style="background:var(--blue-50); color:var(--blue-800); border:1px solid var(--blue-200); font-size:15px; font-weight:700; border-radius:12px; padding:16px 32px; cursor:pointer; width:100%; max-width:240px; margin-bottom:12px;">첫 판매글 작성하기</button>
         </div>`;
         return;
     }
@@ -113,8 +117,8 @@ function updateProfileUI() {
     const bStatus = document.getElementById('biz-auth-status');
     if(bBadge) {
         if(isBiz) {
-            bBadge.textContent = '인증 기업';
-            bBadge.style.background = "var(--blue-600)"; bBadge.style.color = "white"; bBadge.style.border = "none";
+            bBadge.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="display:inline-block; margin-right:2px; vertical-align:-1px;"><path d="M20 6L9 17l-5-5"></path></svg>인증 기업`;
+            bBadge.style.background = "var(--blue-50)"; bBadge.style.color = "var(--blue-800)"; bBadge.style.border = "1px solid var(--blue-200)";
             if(bStatus) bStatus.style.display = "inline-block";
         } else {
             bBadge.textContent = "일반 회원";
@@ -352,9 +356,12 @@ async function loadLikedProducts() {
         .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false });
     if(error || !likes || likes.length === 0) {
-        document.getElementById('mylist-grid').innerHTML = `<div style="grid-column: span 3; padding:60px 20px; text-align:center; color:#999; font-size:14px; display:flex; flex-direction:column; align-items:center; gap:12px;">
-            <div>아직 찜을 누른 관심 매물이 없습니다.</div>
-            <button onclick="triggerBottomNav('home')" style="margin-top:16px; padding: 10px 20px; border-radius: 8px; background: #f4f9ff; color: #1a5fa0; border: 1px solid #cce5ff; font-weight: bold; cursor: pointer;">매물 둘러보기</button>
+        document.getElementById('mylist-grid').innerHTML = `
+        <div style="grid-column: span auto; padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+            <div style="font-size:48px; margin-bottom:16px; color:#CBD5E1;"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
+            <div style="font-size:18px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">아직 찜을 누른 매물이 없습니다</div>
+            <div style="font-size:14px; color:#7A93B0; line-height:1.5; margin-bottom:24px;">관심 있는 장비를 찜해두시면<br>마감 세일이나 협력 배송 알림을 받아볼 수 있습니다.</div>
+            <button onclick="triggerBottomNav('home')" style="background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; border-radius:12px; padding:16px 32px; cursor:pointer; width:100%; max-width:240px; margin-bottom:12px;">매물 둘러보기</button>
         </div>`;
         return;
     }

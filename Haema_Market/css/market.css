@@ -84,10 +84,10 @@ body { font-family: 'Inter', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR'
 .product-card { background: #fff; border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: border-color .15s; }
 .product-card:hover { border-color: var(--blue-400); }
 .product-img { width: 100%; aspect-ratio: 1; background: var(--blue-50); display: flex; align-items: center; justify-content: center; }
-.product-body { padding: 10px; }
-.product-title { font-size: 13px; color: var(--text-primary); font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.product-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
-.product-price { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.product-body { padding: 12px; }
+.product-title { font-size: 14px; color: var(--text-primary); font-weight: 600; margin-bottom: 4px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.product-sub { font-size: 12px; color: #7A93B0; margin-bottom: 8px; }
+.product-price { font-size: 16px; font-weight: 800; color: #111; letter-spacing: -0.5px; }
 .product-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
 .ptag { font-size: 10px; border-radius: 5px; padding: 2px 7px; font-weight: 600; }
 .ptag-b { background: var(--blue-100); color: var(--blue-800); }
@@ -344,3 +344,11 @@ body { padding-bottom: 70px; } /* 탭바 공간 확보 */
 .auth-tab.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background: var(--blue-700); }
 
 .auth-error { color: #E53E3E; font-size: 12px; font-weight: 600; margin-top: 10px; min-height: 20px; text-align: center; }
+
+/* 하트 마이크로 인터랙션 */
+.heart-btn {
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.1s;
+}
+.heart-btn:active {
+  transform: scale(0.7);
+}

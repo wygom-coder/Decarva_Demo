@@ -263,9 +263,9 @@ function openProductModal(id) {
         const storeName = storeMatch ? storeMatch[1] : '인증 협력업체';
         
         actionArea = `
-            <div style="background:#e6f4ea; border:1px solid #1E8E3E; padding:16px; border-radius:12px; margin-top:20px;">
+            <div style="background:var(--blue-50); border:1px solid var(--blue-200); padding:16px; border-radius:12px; margin-top:20px;">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <div style="background:#1E8E3E; color:#fff; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:700;">추천 벤더</div>
+                    <div style="background:var(--blue-600); color:#fff; font-size:11px; padding:3px 8px; border-radius:4px; font-weight:700; display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"></path></svg>추천 벤더</div>
                     <span style="font-size:14px; font-weight:700; color:#1A2B4A;">${storeName}</span>
                 </div>
                 <div style="margin-top:6px; font-size:13px; color:#333; line-height:1.4;">이 물품은 해당 지역의 우수 벤더가 납품합니다. 동일 업체의 식품을 여러 개 담아 견적을 요청하시면 물류비가 대폭 절감됩니다.</div>
@@ -321,7 +321,7 @@ function openProductModal(id) {
     body.innerHTML = `
         <div style="width:100%; aspect-ratio:4/3; background:#f4f4f4; border-radius:0 0 12px 12px; overflow:hidden; margin-bottom:16px; position:relative;">
             ${p.svg}
-            <div id="modal-heart-btn" onclick="toggleLike('${p.id}')" style="position:absolute; bottom:12px; right:12px; width:40px; height:40px; background:rgba(255,255,255,0.9); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1); transition:transform 0.1s;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
+            <div id="modal-heart-btn" class="heart-btn" onclick="toggleLike('${p.id}')" style="position:absolute; bottom:12px; right:12px; width:40px; height:40px; background:rgba(255,255,255,0.9); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
         </div>
         
         <div style="padding: 0 20px;">

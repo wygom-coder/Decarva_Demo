@@ -33,7 +33,13 @@ window.renderCartPage = function() {
     if(!area) return;
     
     if(userCart.length === 0) {
-        area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">장바구니가 비어있습니다.</div>';
+        area.innerHTML = `
+        <div style="padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+            <div style="font-size:48px; margin-bottom:16px; color:#CBD5E1;"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></div>
+            <div style="font-size:18px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">장바구니가 비어 있어요</div>
+            <div style="font-size:14px; color:#7A93B0; line-height:1.5; margin-bottom:24px;">수백 개의 인증된 해양 기자재와 선용품을<br>벤더 통합 배송으로 저렴하게 만나보세요.</div>
+            <button onclick="triggerBottomNav('home')" style="background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; border-radius:12px; padding:16px 32px; cursor:pointer; width:100%; max-width:240px; margin-bottom:12px;">실시간 특가 매물 보기</button>
+        </div>`;
         if(totalCountEl) totalCountEl.textContent = '0개';
         return;
     }
