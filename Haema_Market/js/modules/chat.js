@@ -3,8 +3,13 @@
 // ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
 
 let currentChatRoomId = null;
-let chatSubscription = null;
+let chatSubscription = null;       // 현재 열린 채팅방 구독
 let myChats = [];
+
+// ✅ NEW: 글로벌 알림용
+let globalChatSubscription = null; // 본인이 멤버인 모든 채팅방 구독
+let unreadChatCount = 0;           // 안읽은 메시지 카운트
+let _myChatRoomIdsCache = null;    // 본인이 멤버인 room id 캐시 (성능)
 
 async function startChat(productId) {
     if(!currentUser) {
@@ -27,11 +32,13 @@ async function startChat(productId) {
     
     if(p.user_id === currentUser.id || p.seller_id === currentUser.id) {
         alert("본인이 등록한 상품에는 채팅을 걸 수 없습니다.");
+        // ✅ 수정 #1: 본인 매물 체크 시 모달 닫기
+        closeProductModal();
         return;
     }
     
-    const btn = document.querySelector('.modal-box button');
-    if(btn) btn.textContent = "채팅방 연결 중...";
+    // ✅ 수정: .modal-box button 셀렉터 제거 — 첫 번째 button이 닫기(X)인 경우가 많아
+    //          엉뚱한 버튼 텍스트가 바뀌는 부수효과가 있었음.
     
     // ✅ 채팅방 존재 여부 확인 — .single() → .maybeSingle() (0행일 때 에러 안 던지게)
     const { data: existingRoom, error: fetchErr } = await supabaseClient
@@ -69,6 +76,8 @@ async function startChat(productId) {
             return;
         }
         roomId = newRoom.id;
+        // ✅ 새 방 만들었으니 캐시 무효화
+        _myChatRoomIdsCache = null;
     }
     
     closeProductModal();
@@ -78,6 +87,10 @@ async function startChat(productId) {
 // 하단 탭 '채팅' 눌렀을 때 목록 로드
 async function loadChats() {
     triggerBottomNav('chat');
+
+    // ✅ NEW: 채팅 탭 진입 시 안읽은 카운트 클리어
+    clearChatBadge();
+
     const container = document.getElementById('chat-list');
     
     if(!currentUser) {
@@ -102,8 +115,12 @@ async function loadChats() {
     
     if(!rooms || rooms.length === 0) {
          container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999; font-size:14px;">참여 중인 대화가 없습니다.</div>';
+         _myChatRoomIdsCache = [];
          return;
     }
+
+    // ✅ NEW: room id 목록 캐싱 (글로벌 알림 필터링에 사용)
+    _myChatRoomIdsCache = rooms.map(r => r.id);
     
     // JS 릴레이션 (haema_products) 수동 연결
     const pIds = rooms.map(r => r.product_id);
@@ -163,8 +180,26 @@ function openChatRoomByList(roomId) {
 async function openChatRoom(roomId, pData) {
     currentChatRoomId = roomId;
     
-    const chatroomEl = document.getElementById('chatroom');
-    chatroomEl.style.display = 'flex';
+    // ✅ 수정 #2: 채팅 페이지 자체를 먼저 활성화해야 chatroom이 보임
+    //    기존: chatroomEl.style.display = 'flex' 만 했음 — 부모 page-chat이
+    //    숨겨져 있으면 자식인 chatroom을 보이게 해도 화면에 안 나타남.
+    showPage('chat');
+
+    // chat-list 숨기고 chatroom만 보이게
+    if (typeof showChatRoom === 'function') {
+        showChatRoom();
+    } else {
+        // 폴백
+        const chatListEl = document.getElementById('chat-list');
+        if (chatListEl) chatListEl.style.display = 'none';
+        const chatroomEl = document.getElementById('chatroom');
+        if (chatroomEl) chatroomEl.style.display = 'flex';
+        const fab = document.querySelector('.fab-container');
+        if (fab) fab.style.display = 'none';
+    }
+
+    // ✅ 채팅방 진입 시 안읽은 카운트 클리어
+    clearChatBadge();
     
     // ✅ textContent 사용 → 자동 escape (XSS 안전)
     document.getElementById('chat-product-title').textContent = pData ? (pData.title || '상품 정보') : '상품 정보';
@@ -177,7 +212,6 @@ async function openChatRoom(roomId, pData) {
         if (typeof getProductImageHtml === 'function') {
             imgEl.innerHTML = getProductImageHtml(pData);
         } else if (pData.image_url) {
-            // utils.js가 로드 안 됐을 때 폴백
             const safeUrl = escapeHtml(pData.image_url);
             imgEl.innerHTML = `<img src="${safeUrl}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
         } else {
@@ -229,7 +263,7 @@ async function openChatRoom(roomId, pData) {
     
     scrollChatToBottom();
     
-    // 소켓 구독 시작
+    // 소켓 구독 시작 (현재 방 전용)
     subscribeToMessages(roomId);
 }
 
@@ -279,7 +313,6 @@ function renderMessage(msg) {
 }
 
 // ⚠️ 기존 chat.js에 있던 escapeHtml 정의는 삭제됨 (utils.js 사용)
-// function escapeHtml(unsafe) { ... }   ← 제거
 
 function scrollChatToBottom() {
     const msgContainer = document.getElementById('chat-messages-container');
@@ -303,7 +336,6 @@ async function sendChatMessage() {
     
     if(msgErr) {
          console.error("메시지 전송 실패", msgErr);
-         // ✅ 사용자에게 알림 + 입력값 복구
          alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
          inputEl.value = content;
          return;
@@ -316,13 +348,12 @@ async function sendChatMessage() {
     }).eq('id', currentChatRoomId);
 }
 
-// 실시간 변화 구독 함수
+// 실시간 변화 구독 함수 (현재 열린 방 전용)
 function subscribeToMessages(roomId) {
     if(chatSubscription) {
         supabaseClient.removeChannel(chatSubscription);
     }
     
-    // ✅ 채널명을 roomId 기반 고유 이름으로 변경 (방마다 분리)
     chatSubscription = supabaseClient.channel(`chat-room-${roomId}`)
       .on(
         'postgres_changes',
@@ -347,3 +378,103 @@ window.hideChatRoom = function() {
     // 리스트 다시 로드시켜 최신 메시지 반영
     loadChats();
 };
+
+// ============================================================================
+// ✅ NEW: 글로벌 채팅 알림 시스템 (수정 #3)
+// ============================================================================
+// 목적: 사용자가 다른 페이지에 있을 때도 새 메시지 도착을 감지하여
+//       마이페이지 "채팅" 메뉴의 빨간 N 뱃지를 업데이트.
+//
+// 구현:
+//   - 본인이 멤버인 모든 chat_rooms의 INSERT 이벤트를 구독
+//   - 본인이 보낸 메시지, 현재 보고있는 방의 메시지는 카운트 안 함
+//   - loadChats() 진입 시 카운트 0으로 초기화
+//
+// 호출처:
+//   - subscribeToGlobalMessages(): auth.js의 onAuthStateChange (SIGNED_IN 시)
+//   - unsubscribeFromGlobalMessages(): auth.js의 onAuthStateChange (SIGNED_OUT 시)
+// ============================================================================
+
+window.subscribeToGlobalMessages = function() {
+    if (!currentUser) return;
+    
+    // 기존 구독 해제 (재로그인 등 대비)
+    if (globalChatSubscription) {
+        supabaseClient.removeChannel(globalChatSubscription);
+        globalChatSubscription = null;
+    }
+    
+    globalChatSubscription = supabaseClient
+        .channel(`global-chat-${currentUser.id}`)
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'haema_messages' },
+            async (payload) => {
+                const msg = payload.new;
+                if (!msg) return;
+
+                // 1) 본인이 보낸 메시지 → 무시
+                if (msg.sender_id === currentUser.id) return;
+
+                // 2) 현재 열려있는 방의 메시지 → 이미 chatSubscription이 처리함
+                if (currentChatRoomId && msg.room_id === currentChatRoomId) return;
+
+                // 3) 내가 멤버인 방인지 확인 (캐시 우선, 없으면 DB 조회)
+                let isMyRoom = false;
+                if (Array.isArray(_myChatRoomIdsCache)) {
+                    isMyRoom = _myChatRoomIdsCache.includes(msg.room_id);
+                }
+                if (!isMyRoom) {
+                    // 캐시에 없거나 신규 방일 수 있음 → 한번 더 DB 조회
+                    const { data: room } = await supabaseClient
+                        .from('haema_chat_rooms')
+                        .select('id, buyer_id, seller_id')
+                        .eq('id', msg.room_id)
+                        .maybeSingle();
+                    if (!room) return;
+                    if (room.buyer_id !== currentUser.id && room.seller_id !== currentUser.id) return;
+                    
+                    // 캐시 갱신
+                    if (Array.isArray(_myChatRoomIdsCache) && !_myChatRoomIdsCache.includes(room.id)) {
+                        _myChatRoomIdsCache.push(room.id);
+                    }
+                    isMyRoom = true;
+                }
+
+                if (!isMyRoom) return;
+
+                // 4) 카운트 증가 + 뱃지 갱신
+                unreadChatCount += 1;
+                updateChatBadge();
+            }
+        )
+        .subscribe();
+};
+
+window.unsubscribeFromGlobalMessages = function() {
+    if (globalChatSubscription) {
+        supabaseClient.removeChannel(globalChatSubscription);
+        globalChatSubscription = null;
+    }
+    unreadChatCount = 0;
+    _myChatRoomIdsCache = null;
+    updateChatBadge();
+};
+
+function updateChatBadge() {
+    // 마이페이지 메뉴의 채팅 뱃지
+    const badge = document.getElementById('chat-badge');
+    if (badge) {
+        if (unreadChatCount > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = unreadChatCount > 99 ? '99+' : String(unreadChatCount);
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+function clearChatBadge() {
+    unreadChatCount = 0;
+    updateChatBadge();
+}
