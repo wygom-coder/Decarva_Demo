@@ -98,13 +98,8 @@ export default async function handler(req, res) {
     return res.status(502).json({ error: '국세청 API 호출 오류: ' + err.message });
   }
 
-  // ── 5) 이름 매칭 검사 ────────────────────────────────────────────────────
-  const apiName = (bizData.b_nm || '').replace(/\s/g, '').toLowerCase();
-  const inputName = String(biz_name).replace(/\s/g, '').toLowerCase();
-  const nameMatch = !!(
-    apiName && inputName &&
-    (apiName.includes(inputName) || inputName.includes(apiName))
-  );
+  // ── 5) 이름 매칭 불가 (NTS status API는 상호명을 반환하지 않음) ─────────
+  // 입력받은 biz_name을 신뢰하고 상태만 검증
 
   // ── 6) 휴업/폐업 차단 ────────────────────────────────────────────────────
   if (bizData.b_stt_cd === '02' || bizData.b_stt_cd === '03') {
@@ -118,19 +113,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── 7) 이름 불일치 차단 ──────────────────────────────────────────────────
-  if (!nameMatch) {
-    return res.status(200).json({
-      success: false,
-      status: bizData.b_stt_cd,
-      statusText: bizData.b_stt,
-      companyName: bizData.b_nm,
-      nameMatch: false,
-      error: `입력하신 업체명과 국세청 등록 업체명("${bizData.b_nm}")이 일치하지 않습니다.`
-    });
-  }
-
-  // ── 8) 인증 성공 → service_role로 app_metadata 직접 업데이트 ─────────────
+  // ── 7) 인증 성공 → service_role로 app_metadata 직접 업데이트 ─────────────
   //     이 부분이 핵심. user_metadata가 아닌 app_metadata에 기록.
   //     클라이언트는 app_metadata를 절대 못 씀 (READ만 가능).
   try {
@@ -146,7 +129,7 @@ export default async function handler(req, res) {
           ...existingAppMeta, // 기존 app_metadata 보존 (provider 등)
           is_business: true,
           biz_number: b_no,
-          biz_name: bizData.b_nm,
+          biz_name: biz_name, // 국세청 응답에 없으므로 사용자 입력값 사용
           verified_at: new Date().toISOString()
         }
       })
@@ -162,12 +145,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: '인증 결과 저장 중 오류: ' + err.message });
   }
 
-  // ── 9) 성공 응답 ─────────────────────────────────────────────────────────
+  // ── 8) 성공 응답 ─────────────────────────────────────────────────────────
   return res.status(200).json({
     success: true,
     status: bizData.b_stt_cd,
     statusText: bizData.b_stt,
-    companyName: bizData.b_nm,
-    nameMatch: true
+    companyName: biz_name // Vercel Front-end 응답용
   });
 }
