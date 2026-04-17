@@ -14,9 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 filterState.keyword = e.target.value.trim();
                 const activePage = document.querySelector('.page.active');
                 if (activePage && activePage.id === 'page-community') {
-                    renderCommunityPosts();
+                    // 커뮤니티 무한 스크롤 및 필터 연동 시 reset=true
+                    fetchCommunityPosts && fetchCommunityPosts(true);
                 } else {
-                    renderProducts();
+                    fetchProducts(true);
                 }
             }, 250); // 250ms 대기 후 렌더링 호출
         });
@@ -91,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
             filterState.minPrice = minVal ? parseInt(minVal, 10) : null;
             filterState.maxPrice = maxVal ? parseInt(maxVal, 10) : null;
             updateFilterStyles();
-            renderProducts();
+            fetchProducts(true);
             
             // 시각적 피드백
             priceApplyBtn.textContent = '적용됨✓';
@@ -103,60 +104,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-        // 매물 사진 업로드 (Base64 변환)
+    // 매물 사진 업로드 (Base64 변환 & WebP 리사이징)
     const photoInput = document.getElementById('photo-upload-input');
     if(photoInput) {
-        photoInput.addEventListener('change', function(e) {
+        photoInput.addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if(!file) return;
             
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 400;
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    uploadedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                    canvas.toBlob((blob) => {
-                        uploadedBlob = blob;
-                    }, 'image/jpeg', 0.8);
-                    
-                    const mainBox = document.getElementById('photo-box-main');
-                    mainBox.style.backgroundImage = `url(${uploadedBase64})`;
-                    // ✅ 업로드한 사진 우상단에 ✕ 삭제 버튼 추가
-                    //    버튼 클릭 시 부모(파일선택) 트리거 안 되도록 stopPropagation
-                    mainBox.innerHTML = '<button type="button" id="photo-delete-btn" title="사진 삭제" style="position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0; box-shadow:0 2px 4px rgba(0,0,0,0.2); z-index:10;">✕</button>';
-                    // 사진 박스가 position:relative 가 아니면 절대 위치 적용 안 됨 → 강제 적용
-                    if (getComputedStyle(mainBox).position === 'static') {
-                        mainBox.style.position = 'relative';
-                    }
-                    // 삭제 버튼 핸들러
-                    const delBtn = document.getElementById('photo-delete-btn');
-                    if (delBtn) {
-                        delBtn.addEventListener('click', function(ev) {
-                            ev.stopPropagation();  // 사진 박스 onclick(파일선택) 트리거 방지
-                            ev.preventDefault();
-                            // 상태 초기화
-                            uploadedBase64 = null;
-                            uploadedBlob = null;
-                            const fileInput = document.getElementById('photo-upload-input');
-                            if (fileInput) fileInput.value = '';
-                            // UI 복원
-                            mainBox.style.backgroundImage = 'none';
-                            mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
-                        });
-                    }
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
+            try {
+                // utils.js의 스마트 리사이징 모듈 활용 (1080px WebP 압축)
+                const result = await resizeAndCompressImage(file, { maxWidth: 1080, quality: 0.85 });
+                uploadedBase64 = result.base64;
+                uploadedBlob = result.blob;
+                
+                const mainBox = document.getElementById('photo-box-main');
+                mainBox.style.backgroundImage = `url(${uploadedBase64})`;
+                
+                // ✅ 업로드한 사진 우상단에 ✕ 삭제 버튼 추가
+                mainBox.innerHTML = '<button type="button" id="photo-delete-btn" title="사진 삭제" style="position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0; box-shadow:0 2px 4px rgba(0,0,0,0.2); z-index:10;">✕</button>';
+                
+                if (getComputedStyle(mainBox).position === 'static') {
+                    mainBox.style.position = 'relative';
+                }
+                
+                // 삭제 버튼 핸들러
+                const delBtn = document.getElementById('photo-delete-btn');
+                if (delBtn) {
+                    delBtn.addEventListener('click', function(ev) {
+                        ev.stopPropagation();
+                        ev.preventDefault();
+                        uploadedBase64 = null;
+                        uploadedBlob = null;
+                        if (photoInput) photoInput.value = '';
+                        mainBox.style.backgroundImage = 'none';
+                        mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
+                    });
+                }
+            } catch (err) {
+                console.error('이미지 압축 실패:', err);
+                alert('이미지 처리 중 오류가 발생했습니다. (' + err.message + ')');
+            }
         });
     }
 

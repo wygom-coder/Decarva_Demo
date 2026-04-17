@@ -80,7 +80,7 @@ function renderSubCategories(topCat) {
             const catName = el.getAttribute('data-cat');
             filterState.category = filterState.category === catName ? '전체' : catName;
             renderSubCategories(topCat);
-            renderProducts();
+            fetchProducts(true);
         });
     });
 }
@@ -99,7 +99,7 @@ function initTopCategory() {
                 const si = document.getElementById('search-input');
                 if (si) si.value = '';
                 renderSubCategories(topVal);
-                renderProducts();
+                fetchProducts(true);
             }
         });
     });
@@ -119,7 +119,7 @@ function renderFoodBar() {
         el.addEventListener('click', () => {
             filterState.foodCategory = el.getAttribute('data-food');
             renderFoodBar();
-            renderProducts();
+            fetchProducts(true);
         });
     });
 }
@@ -141,7 +141,7 @@ function updateFilterStyles() {
 function applySubFilter(key, val) {
     filterState[key] = val;
     updateFilterStyles();
-    renderProducts();
+    fetchProducts(true);
 }
 
 function resetFilters() {
@@ -151,7 +151,7 @@ function resetFilters() {
     document.querySelectorAll('.filter-dropdown').forEach(b => b.classList.remove('open'));
     document.querySelectorAll('.filter-panel').forEach(p => p.classList.remove('show'));
     updateFilterStyles();
-    renderProducts();
+    fetchProducts(true);
 }
 
 function openProductModal(id) {

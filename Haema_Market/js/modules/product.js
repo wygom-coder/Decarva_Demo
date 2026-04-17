@@ -55,119 +55,87 @@ function createProductCardHTML(p) {
 }
 
 // 화면 렌더링 로직
-function renderProducts() {
-  const grid = document.getElementById('main-product-grid');
+// 화면 렌더링 로직 (무한 스크롤 및 서버 필터링 호환)
+function renderProductsHeader() {
   const catArea = document.getElementById('home-category-area');
   const recArea = document.getElementById('home-recommendation-area');
   const listTitle = document.getElementById('main-product-title-header');
   
-  if(!grid) return;
-  grid.innerHTML = '';
-  
-  let filtered = products.filter(p => {
-    let topOfP = CAT_TO_TOP_MAP[p.category] || p.category;
-    if (['쌀·곡물', '육류', '수산물', '청과류', '가공·음료', '주/부식'].includes(p.category)) {
-        topOfP = '주/부식';
-    }
-    if (filterState.topCategory !== '전체' && topOfP !== filterState.topCategory) return false;
-    
-    if (filterState.keyword) {
-        const kw = filterState.keyword.toLowerCase();
-        const bodyTxt = ((p.title || '') + ' ' + (p.category || '')).toLowerCase();
-        if(!bodyTxt.includes(kw)) return false;
-    }
-    if (filterState.category !== '전체') {
-        if (p.category !== filterState.category) return false;
-    }
-    
-    if (filterState.region !== '전체' && p.region !== filterState.region) return false;
-    if (filterState.condition !== '전체' && p.condition !== filterState.condition) return false;
-    if (filterState.cert !== '전체' && p.cert !== filterState.cert) return false;
-    if (filterState.tradeType !== '전체') {
-        if (filterState.tradeType === '직거래' && p.tradeType !== '직거래') return false;
-        if (filterState.tradeType === '경매' && !p.auction) return false;
-        if (filterState.tradeType === '가격제안' && !p.offer) return false;
-    }
-    if (filterState.supplier !== '전체') {
-        const titleStr = p.title || '';
-        const match = titleStr.match(/^\[(.*?)\]/);
-        const extractedSupplier = match ? match[1] : '';
-        if (!extractedSupplier.includes(filterState.supplier) && !titleStr.includes(filterState.supplier)) {
-            return false;
-        }
-    }
-    const valObj = (p.price || '').replace(/[^0-9]/g, '');
-    if (valObj) {
-        const val = parseInt(valObj);
-        if (filterState.minPrice !== null && val < filterState.minPrice) return false;
-        if (filterState.maxPrice !== null && val > filterState.maxPrice) return false;
-    }
-    return true;
-  });
-
-  grid.innerHTML = '';
-
   if (filterState.topCategory === '전체' && filterState.keyword === '') {
       if(catArea) catArea.style.display = 'block';
       if(recArea) recArea.style.display = 'block';
       if(listTitle) listTitle.innerHTML = '<span class="section-title">최신 전체 매물</span><span class="section-more">더보기 →</span>';
-      
-      const recList = document.getElementById('recommendation-list');
-      const curList = document.getElementById('curation-list');
-      
-      if(recList && curList) {
-          recList.innerHTML = ''; curList.innerHTML = '';
-          const shuffled = [...filtered].sort(() => 0.5 - Math.random());
-          const recItems = shuffled.slice(0, 4);
-          const curItems = shuffled.slice(4, 8);
-          
-          if(recItems.length > 0) recItems.forEach(p => recList.innerHTML += createProductCardHTML(p));
-          else recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">등록된 매물이 없습니다.</div>';
-          
-          if(curItems.length > 0) curItems.forEach(p => curList.innerHTML += createProductCardHTML(p));
-          else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">등록된 매물이 없습니다.</div>';
-      }
-      
   } else if (filterState.category === '전체' && filterState.keyword === '') {
       if(catArea) catArea.style.display = 'block';
       if(recArea) recArea.style.display = 'block';
       if(listTitle) listTitle.innerHTML = '<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>최신 매물</span><span class="section-more">더보기 →</span>';
-      
-      const recList = document.getElementById('recommendation-list');
-      const curList = document.getElementById('curation-list');
-      
-      if(recList && curList) {
-          recList.innerHTML = ''; curList.innerHTML = '';
-          const shuffled = [...filtered].sort(() => 0.5 - Math.random());
-          const recItems = shuffled.slice(0, 4);
-          const curItems = shuffled.slice(4, 8);
-          
-          if(recItems.length > 0) recItems.forEach(p => recList.innerHTML += createProductCardHTML(p));
-          else recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">조건에 맞는 매물이 없습니다.</div>';
-          
-          if(curItems.length > 0) curItems.forEach(p => curList.innerHTML += createProductCardHTML(p));
-          else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">조건에 맞는 매물이 없습니다.</div>';
-      }
-      
   } else {
       if(catArea) catArea.style.display = 'block';
       if(recArea) recArea.style.display = 'none';
-      // ✅ 카테고리 이름 escape (현재는 시스템 데이터지만 방어)
       if(listTitle) listTitle.innerHTML = `<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>${escapeHtml(filterState.category)} 결과</span>`;
   }
+}
 
-  if (filtered.length === 0) {
-    grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 100px 20px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); font-size: 14px;">선택한 조건에 맞는 매물이 없습니다.</div>';
-    return;
-  }
+function renderProductsEmpty() {
+    const grid = document.getElementById('main-product-grid');
+    if(grid) grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 100px 20px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); font-size: 14px;">선택한 조건에 맞는 매물이 없습니다.</div>';
+}
 
-  filtered.forEach(p => {
-    grid.innerHTML += createProductCardHTML(p);
-  });
+function renderProductsAppend(newItems) {
+    const grid = document.getElementById('main-product-grid');
+    if (!grid) return;
+    
+    // 큐레이션 영역 채우기 (처음 로딩 시에만)
+    const recList = document.getElementById('recommendation-list');
+    const curList = document.getElementById('curation-list');
+    if (products.length <= Math.max(20, newItems.length) && recList && curList && filterState.keyword === '') {
+        recList.innerHTML = ''; curList.innerHTML = '';
+        const shuffled = [...products].sort(() => 0.5 - Math.random());
+        const recItems = shuffled.slice(0, 4);
+        const curItems = shuffled.slice(4, 8);
+        
+        if(recItems.length > 0) recItems.forEach(p => recList.innerHTML += createProductCardHTML(p));
+        else recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">매물이 없습니다.</div>';
+        
+        if(curItems.length > 0) curItems.forEach(p => curList.innerHTML += createProductCardHTML(p));
+        else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">매물이 없습니다.</div>';
+    }
+    
+    newItems.forEach(p => {
+        grid.innerHTML += createProductCardHTML(p);
+    });
+    
+    if (hasMoreProducts) setupInfiniteScroll();
+    setupAuctionTimers();
+}
 
-  if(auctionInterval) clearInterval(auctionInterval);
+let scrollObserver = null;
+function setupInfiniteScroll() {
+    const grid = document.getElementById('main-product-grid');
+    if (!grid) return;
+    
+    if (scrollObserver) scrollObserver.disconnect();
+    
+    const target = document.createElement('div');
+    target.id = 'product-infinite-scroll-target';
+    target.style.height = '20px';
+    target.style.gridColumn = '1 / -1';
+    grid.appendChild(target);
+    
+    scrollObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            scrollObserver.disconnect();
+            if (target.parentNode) target.remove();
+            fetchProducts(false); // Load next page
+        }
+    }, { rootMargin: '200px' });
+    
+    scrollObserver.observe(target);
+}
 
-  auctionInterval = setInterval(() => {
+function setupAuctionTimers() {
+  if(typeof auctionInterval !== 'undefined' && auctionInterval) clearInterval(auctionInterval);
+  window.auctionInterval = setInterval(() => {
     const timeNow = new Date().getTime();
     document.querySelectorAll('.auction-timer-tag').forEach(tag => {
        const end = new Date(tag.getAttribute('data-end')).getTime();
@@ -184,6 +152,11 @@ function renderProducts() {
        }
     });
   }, 1000);
+}
+
+// 기존 renderProducts 호환용
+window.renderProducts = function() {
+    fetchProducts(true);
 }
 
 let currentQuoteProductId = null;
@@ -278,16 +251,108 @@ async function submitBid(id) {
 }
 
 
-// 서버에서 매물 불러오기
-async function fetchProducts() {
-    const { data, error } = await supabaseClient.from('haema_products').select('*').order('created_at', { ascending: false });
+let lastProductCreatedAt = null;
+let isFetchingProducts = false;
+let hasMoreProducts = true;
+
+// 서버에서 매물 불러오기 (무한 스크롤 cursor 지원)
+async function fetchProducts(reset = true) {
+    if (isFetchingProducts) return;
+    
+    const grid = document.getElementById('main-product-grid');
+    if (reset) {
+        lastProductCreatedAt = null;
+        hasMoreProducts = true;
+        products = [];
+        if (grid) grid.innerHTML = '';
+        renderProductsHeader();
+    }
+    
+    if (!hasMoreProducts) return;
+    isFetchingProducts = true;
+    
+    if (grid) {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'product-loading-indicator';
+        loadingDiv.style = 'grid-column: 1 / -1; padding: 20px; text-align: center; color: var(--text-muted); font-size:14px;';
+        loadingDiv.innerHTML = '매물 데이터를 불러오는 중입니다...';
+        grid.appendChild(loadingDiv);
+    }
+    
+    let query = supabaseClient.from('haema_products').select('*');
+    
+    // --- DB Pushdown 필터링 ---
+    if (filterState.category !== '전체') {
+        query = query.eq('category', filterState.category);
+    } else if (filterState.topCategory !== '전체') {
+        const subCats = Object.keys(CAT_TO_TOP_MAP || {}).filter(k => CAT_TO_TOP_MAP[k] === filterState.topCategory);
+        if (filterState.topCategory === '주/부식') subCats.push('쌀·곡물', '육류', '수산물', '청과류', '가공·음료', '주/부식');
+        if (subCats.length > 0) query = query.in('category', subCats);
+    }
+
+    if (filterState.region !== '전체') query = query.eq('region', filterState.region);
+    if (filterState.condition !== '전체') query = query.eq('condition', filterState.condition);
+    if (filterState.cert !== '전체') query = query.eq('cert', filterState.cert);
+
+    if (filterState.tradeType === '직거래') query = query.eq('tradeType', '직거래');
+    if (filterState.tradeType === '경매') query = query.eq('auction', true);
+    if (filterState.tradeType === '가격제안') query = query.eq('offer', true);
+
+    if (filterState.keyword) {
+        query = query.or(`title.ilike.%${filterState.keyword}%,category.ilike.%${filterState.keyword}%`);
+    }
+    if (filterState.supplier !== '전체') {
+        query = query.ilike('title', `%${filterState.supplier}%`);
+    }
+
+    // Cursor (무한스크롤 락 포인트)
+    if (lastProductCreatedAt) {
+        query = query.lt('created_at', lastProductCreatedAt);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(20);
+    
+    const indicator = document.getElementById('product-loading-indicator');
+    if (indicator) indicator.remove();
+    isFetchingProducts = false;
+
     if (error) {
         console.error('Supabase load error:', error);
         return;
     }
-    
-    products = data || [];
-    renderProducts();
+
+    if (!data || data.length === 0) {
+        hasMoreProducts = false;
+        if (reset) renderProductsEmpty();
+        return;
+    }
+
+    // Price는 문자열이라 DB 푸시다운이 완벽하지 않으므로 Client에서 후처리
+    let finalData = data;
+    if (filterState.minPrice !== null || filterState.maxPrice !== null) {
+        finalData = finalData.filter(p => {
+            const valObj = (p.price || '').replace(/[^0-9]/g, '');
+            if (!valObj) return true;
+            const val = parseInt(valObj, 10);
+            if (filterState.minPrice !== null && val < filterState.minPrice) return false;
+            if (filterState.maxPrice !== null && val > filterState.maxPrice) return false;
+            return true;
+        });
+    }
+
+    products = [...products, ...finalData];
+    lastProductCreatedAt = data[data.length - 1].created_at;
+    if (data.length < 20) {
+        hasMoreProducts = false;
+    }
+
+    if(finalData.length > 0) {
+        renderProductsAppend(finalData);
+    } else {
+        // 필터링되어 0개가 되었고 아직 더 가져올게 남았다면 재귀 호출
+        if(hasMoreProducts) fetchProducts(false);
+        else if (reset) renderProductsEmpty();
+    }
 }
 
 async function closeAuction(p) {

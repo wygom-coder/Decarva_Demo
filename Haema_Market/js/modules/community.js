@@ -1,50 +1,81 @@
 // ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
 
-window.renderCommunityPosts = async function() {
+let lastCommunityPostCreatedAt = null;
+let isFetchingCommunityPosts = false;
+let hasMoreCommunityPosts = true;
+window.communityPosts = [];
+
+window.fetchCommunityPosts = async function(reset = true) {
+    if (isFetchingCommunityPosts) return;
     const area = document.getElementById('community-content-area');
     if(!area) return;
     
-    area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">게시글을 불러오는 중입니다...</div>';
+    if (reset) {
+        lastCommunityPostCreatedAt = null;
+        hasMoreCommunityPosts = true;
+        window.communityPosts = [];
+        area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">게시글을 불러오는 중입니다...</div>';
+    } else {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'comm-loading-indicator';
+        loadingDiv.style = 'padding: 20px; font-size:14px; color:#999; text-align:center;';
+        loadingDiv.textContent = '게시글을 불러오는 중입니다...';
+        area.appendChild(loadingDiv);
+    }
+    
+    if (!hasMoreCommunityPosts) return;
+    isFetchingCommunityPosts = true;
 
-    const { data: posts, error } = await supabaseClient
-        .from('haema_posts')
-        .select('*')
-        .order('created_at', { ascending: false });
-        
+    let query = supabaseClient.from('haema_posts').select('*');
+    
+    const searchInput = document.getElementById('comm-search-input');
+    const keyword = searchInput ? searchInput.value.trim() : '';
+    if (keyword) {
+        query = query.or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`);
+    }
+    
+    if (window.currentCommTag && window.currentCommTag !== '전체') {
+        query = query.eq('tag', window.currentCommTag);
+    }
+    
+    if (lastCommunityPostCreatedAt) {
+        query = query.lt('created_at', lastCommunityPostCreatedAt);
+    }
+    
+    const { data: posts, error } = await query.order('created_at', { ascending: false }).limit(20);
+    
+    isFetchingCommunityPosts = false;
+    const indicator = document.getElementById('comm-loading-indicator');
+    if(indicator) indicator.remove();
+
     if(error) {
-        area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:red; text-align:center;">게시글을 불러오지 못했습니다.</div>';
+        if(reset) area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:red; text-align:center;">게시글을 불러오지 못했습니다.</div>';
         return;
     }
     
     if(!posts || posts.length === 0) {
-        area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">등록된 커뮤니티 글이 없습니다.</div>';
+        hasMoreCommunityPosts = false;
+        if(reset) {
+            area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">조건에 맞는 게시글이 없습니다.</div>';
+        }
         return;
     }
-
-    let filteredPosts = posts;
     
-    const searchInput = document.getElementById('comm-search-input');
-    const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    lastCommunityPostCreatedAt = posts[posts.length - 1].created_at;
+    if(posts.length < 20) hasMoreCommunityPosts = false;
     
-    if (keyword) {
-        filteredPosts = filteredPosts.filter(p => 
-            (p.title || '').toLowerCase().includes(keyword) || 
-            (p.content || '').toLowerCase().includes(keyword)
-        );
-    }
+    window.communityPosts = [...window.communityPosts, ...posts];
     
-    if (window.currentCommTag && window.currentCommTag !== '전체') {
-        filteredPosts = filteredPosts.filter(p => p.tag === window.currentCommTag);
-    }
+    if(reset) area.innerHTML = '';
+    renderCommunityPostsAppend(posts);
+}
 
-    if (filteredPosts.length === 0) {
-        area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">검색된 게시글이 없습니다.</div>';
-        return;
-    }
-
+function renderCommunityPostsAppend(posts) {
+    const area = document.getElementById('community-content-area');
+    if(!area) return;
+    
     let html = '';
-    filteredPosts.forEach(post => {
-        // ✅ 모든 사용자 입력 필드 escape
+    posts.forEach(post => {
         const safeId = escapeHtml(post.id);
         const safeTag = escapeHtml(post.tag);
         const safeTagBg = escapeHtml(post.tag_bg);
@@ -82,7 +113,34 @@ window.renderCommunityPosts = async function() {
         `;
     });
     
-    area.innerHTML = html;
+    area.innerHTML += html;
+    
+    if(hasMoreCommunityPosts) setupCommInfiniteScroll();
+}
+
+let commScrollObserver = null;
+function setupCommInfiniteScroll() {
+    const area = document.getElementById('community-content-area');
+    if(!area) return;
+    if(commScrollObserver) commScrollObserver.disconnect();
+    
+    const target = document.createElement('div');
+    target.style.height = '20px';
+    area.appendChild(target);
+    
+    commScrollObserver = new IntersectionObserver((entries) => {
+        if(entries[0].isIntersecting) {
+            commScrollObserver.disconnect();
+            if(target.parentNode) target.remove();
+            window.fetchCommunityPosts(false);
+        }
+    }, { rootMargin: '200px' });
+    commScrollObserver.observe(target);
+}
+
+// 하위 호환성 유지용 (index.html에서 초기화 시 호출될 수 있음)
+window.renderCommunityPosts = function() {
+    window.fetchCommunityPosts(true);
 }
 
 // ==========================================

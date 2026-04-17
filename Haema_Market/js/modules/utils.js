@@ -47,3 +47,58 @@ function getProductImageHtml(p) {
     }
     return getCategorySvg(p ? p.category : null);
 }
+
+// ✅ 클라이언트 사이드 이미지 압축 모듈 (WebP 변환)
+// 사용자가 10MB 원본 파일을 올려도 브라우저에서 1080px WebP로 초경량 압축 후 Blob 반환
+async function resizeAndCompressImage(file, { maxWidth = 1080, quality = 0.85 } = {}) {
+    return new Promise((resolve, reject) => {
+        if (!file || !file.type.startsWith('image/')) {
+            reject(new Error('이미지 파일이 아닙니다.'));
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // 비율 유지하며 가로 최대 크기 리사이징
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
+                    width = maxWidth;
+                    height = height * ratio;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // WebP 지원 확인 후 압축, 미지원 시 JPEG 폴백
+                // 1080px 기준 85% 품질일 경우 약 100~300KB 사이로 매우 쾌적해짐
+                let mimeType = 'image/webp';
+                // Safari 구형 지원 고려
+                const testWebP = canvas.toDataURL('image/webp');
+                if (!testWebP.startsWith('data:image/webp')) {
+                    mimeType = 'image/jpeg';
+                }
+
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        resolve({ blob, mimeType, base64: canvas.toDataURL(mimeType, quality) });
+                    } else {
+                        reject(new Error('Canvas Blob 생성 실패'));
+                    }
+                }, mimeType, quality);
+            };
+            img.onerror = () => reject(new Error('이미지 로딩 실패'));
+            img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('파일 읽기 오류'));
+        reader.readAsDataURL(file);
+    });
+}
