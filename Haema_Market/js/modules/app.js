@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const isAuction = chip.textContent.trim() === '경매';
             document.getElementById('auction-date-row').style.display = isAuction ? 'block' : 'none';
-            document.getElementById('price-label').innerHTML = isAuction ? '경매 시작가<span>*</span>' : '판매 희망가<span>*</span>';
+            document.getElementById('price-label').innerHTML = isAuction ? '경매 시작가<span>*</span>' : '파매 펄막가<span>*</span>';
         });
     });
 
@@ -130,7 +130,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     const mainBox = document.getElementById('photo-box-main');
                     mainBox.style.backgroundImage = `url(${uploadedBase64})`;
-                    mainBox.innerHTML = '';
+                    // ✅ 업로드한 사진 우상단에 ✕ 삭제 버튼 추가
+                    //    버튼 클릭 시 부모(파일선택) 트리거 안 되도록 stopPropagation
+                    mainBox.innerHTML = '<button type="button" id="photo-delete-btn" title="사진 삭제" style="position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0; box-shadow:0 2px 4px rgba(0,0,0,0.2); z-index:10;">✕</button>';
+                    // 사진 박스가 position:relative 가 아니면 절대 위치 적용 안 됨 → 강제 적용
+                    if (getComputedStyle(mainBox).position === 'static') {
+                        mainBox.style.position = 'relative';
+                    }
+                    // 삭제 버튼 핸들러
+                    const delBtn = document.getElementById('photo-delete-btn');
+                    if (delBtn) {
+                        delBtn.addEventListener('click', function(ev) {
+                            ev.stopPropagation();  // 사진 박스 onclick(파일선택) 트리거 방지
+                            ev.preventDefault();
+                            // 상태 초기화
+                            uploadedBase64 = null;
+                            uploadedBlob = null;
+                            const fileInput = document.getElementById('photo-upload-input');
+                            if (fileInput) fileInput.value = '';
+                            // UI 복원
+                            mainBox.style.backgroundImage = 'none';
+                            mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
+                        });
+                    }
                 };
                 img.src = event.target.result;
             };

@@ -368,13 +368,14 @@ async function registerProduct() {
   }
 
   const submitBtn = document.querySelector('#page-register .submit-btn');
-  submitBtn.textContent = '저장소 연결 중...';
+  submitBtn.textContent = '매물 등록 중...';
   submitBtn.disabled = true;
 
   let finalImageUrl = null;
   
   if (uploadedBlob) {
-      submitBtn.textContent = '사진 클라우드 업로드 중...';
+      // ✅ 사용자 친화 메시지 (사진 업로드 단계도 "매물 등록 중"으로 통일)
+      submitBtn.textContent = '매물 등록 중...';
       const fileName = `public/product_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
       
       const { data: uploadData, error: uploadError } = await supabaseClient.storage
@@ -384,14 +385,23 @@ async function registerProduct() {
           });
           
       if (uploadError) {
-          alert('사진 업로드 실패 (버킷이 Public 상태인지 확인해주세요): ' + uploadError.message);
-          submitBtn.textContent = '등록하기';
-          submitBtn.disabled = false;
-          return;
+          // ✅ 사용자 친화 에러 메시지 + 사진 없이 계속 등록할지 선택권 제공
+          const proceed = confirm(
+              '사진 업로드에 실패했습니다.\n\n' +
+              '사진 없이 매물 정보만 등록하시겠습니까?\n' +
+              '(취소하시면 다시 시도하실 수 있습니다)\n\n' +
+              '오류 코드: ' + (uploadError.message || '알 수 없음')
+          );
+          if (!proceed) {
+              submitBtn.textContent = '등록하기';
+              submitBtn.disabled = false;
+              return;
+          }
+          // 사용자가 '확인' 누르면 사진 없이 진행 (finalImageUrl = null)
+      } else {
+          const { data: publicData } = supabaseClient.storage.from('market_images').getPublicUrl(fileName);
+          finalImageUrl = publicData.publicUrl;
       }
-      
-      const { data: publicData } = supabaseClient.storage.from('market_images').getPublicUrl(fileName);
-      finalImageUrl = publicData.publicUrl;
   }
 
   // ✅ HTML 문자열을 DB에 저장하지 않음 — image_url만 저장
