@@ -1,3 +1,5 @@
+// ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
+
 window.renderCommunityPosts = async function() {
     const area = document.getElementById('community-content-area');
     if(!area) return;
@@ -21,14 +23,13 @@ window.renderCommunityPosts = async function() {
 
     let filteredPosts = posts;
     
-    // 키워드 검색 로직 (oninput 실시간 반영)
     const searchInput = document.getElementById('comm-search-input');
     const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
     
     if (keyword) {
         filteredPosts = filteredPosts.filter(p => 
-            p.title.toLowerCase().includes(keyword) || 
-            p.content.toLowerCase().includes(keyword)
+            (p.title || '').toLowerCase().includes(keyword) || 
+            (p.content || '').toLowerCase().includes(keyword)
         );
     }
     
@@ -43,26 +44,38 @@ window.renderCommunityPosts = async function() {
 
     let html = '';
     filteredPosts.forEach(post => {
+        // ✅ 모든 사용자 입력 필드 escape
+        const safeId = escapeHtml(post.id);
+        const safeTag = escapeHtml(post.tag);
+        const safeTagBg = escapeHtml(post.tag_bg);
+        const safeTagColor = escapeHtml(post.tag_color);
+        const safeTitle = escapeHtml(post.title);
+        const safeContent = escapeHtml(post.content);
+        const safeAuthorName = escapeHtml(post.author_name);
+        const safeAuthorRole = escapeHtml(post.author_role);
+        const views = parseInt(post.views) || 0;
+        const commentsCount = parseInt(post.comments_count) || 0;
+
         html += `
-            <div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #eaedf2; box-shadow:0 2px 4px rgba(0,0,0,0.02); cursor:pointer;" onclick="openPostDetail('${post.id}')">
-                <div style="display:inline-block; font-size:11px; font-weight:800; background:${post.tag_bg}; color:${post.tag_color}; padding:4px 8px; border-radius:6px; margin-bottom:8px;">
-                    ${post.tag}
+            <div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #eaedf2; box-shadow:0 2px 4px rgba(0,0,0,0.02); cursor:pointer;" onclick="openPostDetail('${safeId}')">
+                <div style="display:inline-block; font-size:11px; font-weight:800; background:${safeTagBg}; color:${safeTagColor}; padding:4px 8px; border-radius:6px; margin-bottom:8px;">
+                    ${safeTag}
                 </div>
                 <div style="font-size:15px; font-weight:700; color:#1A2B4A; margin-bottom:6px; line-height:1.4;">
-                    ${post.title}
+                    ${safeTitle}
                 </div>
                 <div style="font-size:13px; color:#4A5568; line-height:1.5; margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
-                    ${post.content}
+                    ${safeContent}
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#7A93B0;">
                     <div style="display:flex; align-items:center; gap:6px;">
-                        <span style="font-weight:700; color:#1A2B4A;">${post.author_name}</span>
-                        <span style="font-size:10px; background:#EAEDF2; padding:2px 6px; border-radius:4px;">${post.author_role}</span>
+                        <span style="font-weight:700; color:#1A2B4A;">${safeAuthorName}</span>
+                        <span style="font-size:10px; background:#EAEDF2; padding:2px 6px; border-radius:4px;">${safeAuthorRole}</span>
                         <span>· 방금 전</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="display:flex; align-items:center; gap:2px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke="currentColor" stroke-width="2"/></svg>${post.views || 0}</span>
-                        <span style="display:flex; align-items:center; gap:2px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2"/></svg>${post.comments_count || 0}</span>
+                        <span style="display:flex; align-items:center; gap:2px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke="currentColor" stroke-width="2"/></svg>${views}</span>
+                        <span style="display:flex; align-items:center; gap:2px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2"/></svg>${commentsCount}</span>
                     </div>
                 </div>
             </div>
@@ -100,6 +113,10 @@ window.submitPost = async function() {
         alert("제목과 내용을 모두 입력해주세요.");
         return;
     }
+
+    // ✅ 입력 길이 검증 추가
+    if (title.length > 200) { alert("제목은 200자 이하로 입력해주세요."); return; }
+    if (content.length > 10000) { alert("본문은 10,000자 이하로 입력해주세요."); return; }
     
     let tagBg = '#F4F9FF';
     let tagColor = '#1A5FA0';
@@ -134,7 +151,7 @@ window.submitPost = async function() {
     }
 
     closePostWriteModal();
-    renderCommunityPosts(); // 리스트 갱신
+    renderCommunityPosts();
 }
 
 let currentPostId = null;
@@ -145,49 +162,82 @@ window.openPostDetail = async function(postId) {
     const body = document.getElementById('post-detail-body');
     body.innerHTML = '<div style="text-align:center; padding: 40px; color:#999;">불러오는 중...</div>';
     
-    const { data: postData } = await supabaseClient.from('haema_posts').select('*').eq('id', postId).single();
+    // ✅ .single() → .maybeSingle() (없을 때 에러 방지)
+    const { data: postData, error: postErr } = await supabaseClient
+        .from('haema_posts').select('*').eq('id', postId).maybeSingle();
+
+    if(postErr) {
+        console.error('게시글 조회 에러:', postErr);
+    }
+
     if(postData) {
-        await supabaseClient.from('haema_posts').update({ views: postData.views + 1 }).eq('id', postId);
-        postData.views += 1;
+        // ⚠️ views 카운트 — 클라이언트 +1 방식은 race condition + 임의 조작 가능.
+        //     2차 작업에서 PostgreSQL rpc()로 atomic increment로 전환 예정.
+        //     임시로 그대로 두되, 실패해도 UI는 진행.
+        try {
+            await supabaseClient.from('haema_posts')
+                .update({ views: (postData.views || 0) + 1 })
+                .eq('id', postId);
+            postData.views = (postData.views || 0) + 1;
+        } catch (e) {
+            console.warn('조회수 업데이트 실패:', e);
+        }
     } else {
         body.innerHTML = '<div style="text-align:center; padding: 40px; color:red;">삭제되었거나 없는 게시글입니다.</div>';
         return;
     }
 
-    const { data: comments } = await supabaseClient.from('haema_post_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+    const { data: comments } = await supabaseClient
+        .from('haema_post_comments').select('*')
+        .eq('post_id', postId).order('created_at', { ascending: true });
+
+    // ✅ 모든 사용자 입력 필드 escape
+    const safeTag = escapeHtml(postData.tag);
+    const safeTagBg = escapeHtml(postData.tag_bg);
+    const safeTagColor = escapeHtml(postData.tag_color);
+    const safeTitle = escapeHtml(postData.title);
+    const safeAuthorName = escapeHtml(postData.author_name);
+    const safeAuthorRole = escapeHtml(postData.author_role);
+    const safePostContent = escapeHtml(postData.content);
+    const safeViews = escapeHtml(postData.views);
+    const commentsCount = comments ? comments.length : 0;
     
     let html = `
         <div style="margin-bottom:20px;">
-            <div style="display:inline-block; font-size:12px; font-weight:800; background:${postData.tag_bg}; color:${postData.tag_color}; padding:4px 8px; border-radius:6px; margin-bottom:12px;">
-                ${postData.tag}
+            <div style="display:inline-block; font-size:12px; font-weight:800; background:${safeTagBg}; color:${safeTagColor}; padding:4px 8px; border-radius:6px; margin-bottom:12px;">
+                ${safeTag}
             </div>
-            <h2 style="margin:0 0 12px 0; font-size:20px; color:#1A2B4A; line-height:1.4;">${postData.title}</h2>
+            <h2 style="margin:0 0 12px 0; font-size:20px; color:#1A2B4A; line-height:1.4;">${safeTitle}</h2>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px; border-bottom:1px solid #eaedf2; padding-bottom:16px;">
                 <div style="width:36px; height:36px; border-radius:50%; background:#f4f9ff; display:flex; align-items:center; justify-content:center; font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
                 <div>
-                    <div style="font-size:14px; font-weight:700; color:#1A2B4A;">${postData.author_name}</div>
-                    <div style="font-size:12px; color:#7A93B0;">${postData.author_role} · 방금 전 · 조회 ${postData.views}</div>
+                    <div style="font-size:14px; font-weight:700; color:#1A2B4A;">${safeAuthorName}</div>
+                    <div style="font-size:12px; color:#7A93B0;">${safeAuthorRole} · 방금 전 · 조회 ${safeViews}</div>
                 </div>
             </div>
-            <div style="font-size:15px; color:#1A2B4A; line-height:1.6; white-space:pre-wrap;">${postData.content}</div>
+            <div style="font-size:15px; color:#1A2B4A; line-height:1.6; white-space:pre-wrap;">${safePostContent}</div>
         </div>
         
         <div style="margin-top:32px;">
-            <h4 style="margin:0 0 16px 0; font-size:15px; color:#1A2B4A;">댓글 <span style="color:#1A5FA0;">${comments ? comments.length : 0}</span></h4>
+            <h4 style="margin:0 0 16px 0; font-size:15px; color:#1A2B4A;">댓글 <span style="color:#1A5FA0;">${commentsCount}</span></h4>
             <div id="comments-list" style="display:flex; flex-direction:column; gap:16px;">
     `;
     
     if(comments && comments.length > 0) {
         comments.forEach(c => {
+            // ✅ 댓글 모든 필드 escape (가장 흔한 XSS 통로)
+            const safeCAuthor = escapeHtml(c.author_name);
+            const safeCRole = escapeHtml(c.author_role);
+            const safeCContent = escapeHtml(c.content);
             html += `
                 <div style="display:flex; gap:12px;">
                     <div style="width:28px; height:28px; border-radius:50%; background:#eaedf2; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:14px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
                     <div>
                         <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                            <span style="font-size:13px; font-weight:700; color:#1A2B4A;">${c.author_name}</span>
-                            <span style="font-size:11px; background:#f4f9ff; color:#7A93B0; padding:2px 6px; border-radius:4px;">${c.author_role}</span>
+                            <span style="font-size:13px; font-weight:700; color:#1A2B4A;">${safeCAuthor}</span>
+                            <span style="font-size:11px; background:#f4f9ff; color:#7A93B0; padding:2px 6px; border-radius:4px;">${safeCRole}</span>
                         </div>
-                        <div style="font-size:14px; color:#4A5568; line-height:1.4;">${c.content}</div>
+                        <div style="font-size:14px; color:#4A5568; line-height:1.4;">${safeCContent}</div>
                     </div>
                 </div>
             `;
@@ -216,8 +266,14 @@ window.submitComment = async function() {
     const content = input.value.trim();
     if(!content) return;
 
-    input.value = '등록 중...';
+    // ✅ 댓글 길이 검증
+    if (content.length > 2000) { alert("댓글은 2,000자 이하로 입력해주세요."); return; }
+
+    // ✅ input.value를 '등록 중...'으로 덮지 않음 — 사용자 작성 내용 보존
+    //    대신 disabled만 처리하고, 별도 로딩 표시
+    const originalPlaceholder = input.placeholder;
     input.disabled = true;
+    input.placeholder = '등록 중...';
 
     const newComment = {
         post_id: currentPostId,
@@ -231,18 +287,25 @@ window.submitComment = async function() {
     
     if(error) {
         alert("댓글 등록 실패: " + error.message);
-        input.value = content;
         input.disabled = false;
+        input.placeholder = originalPlaceholder;
         return;
     }
 
-    const { data: pData } = await supabaseClient.from('haema_posts').select('comments_count').eq('id', currentPostId).single();
+    // ⚠️ comments_count 카운트 — 2차에서 RPC로 전환 예정
+    const { data: pData } = await supabaseClient
+        .from('haema_posts').select('comments_count')
+        .eq('id', currentPostId).maybeSingle();
     if(pData) {
-        await supabaseClient.from('haema_posts').update({ comments_count: (pData.comments_count || 0) + 1 }).eq('id', currentPostId);
+        await supabaseClient.from('haema_posts')
+            .update({ comments_count: (pData.comments_count || 0) + 1 })
+            .eq('id', currentPostId);
     }
 
+    // ✅ 성공 시에만 input.value를 비움
     input.value = '';
     input.disabled = false;
+    input.placeholder = originalPlaceholder;
     
     openPostDetail(currentPostId);
     renderCommunityPosts();
@@ -253,7 +316,6 @@ window.currentCommTag = '전체';
 window.setCommTag = function(tagName, el) {
     window.currentCommTag = tagName;
     
-    // Update styling
     const tags = document.querySelectorAll('.comm-tag');
     tags.forEach(t => {
         t.style.background = '#f4f9ff';
@@ -266,9 +328,7 @@ window.setCommTag = function(tagName, el) {
         el.style.border = 'none';
     }
     
-    // Re-render
     if (typeof renderCommunityPosts === 'function') {
         renderCommunityPosts();
     }
 }
-

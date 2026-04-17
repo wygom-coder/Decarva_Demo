@@ -1,8 +1,5 @@
-// ✅ XSS 방지 escapeHtml — 한 줄 유지로 // 주석 오파싱 방지
-function escapeHtml(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-}
+// ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
+// 모든 HTML 문자열 보간(`${...}`)에는 escapeHtml() 적용 필수
 
 function showPage(id, pushHistory = true) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -69,9 +66,13 @@ function renderSubCategories(topCat) {
     if (fb) fb.style.display = 'flex';
     catBar.innerHTML = '';
 
+    // ✅ c.name과 c.bg는 KATEGORY_MAP의 시스템 데이터(사용자 입력 아님)이지만,
+    //    방어 차원에서 escape 처리. c.svg는 system-defined SVG라 그대로 둠.
     catGrid.innerHTML = subCats.map(c => {
         const isActive = filterState.category === c.name;
-        return `<div class="cat-icon-item" data-cat="${c.name}"><div class="cat-icon-box" style="background:${c.bg};${isActive ? 'box-shadow:0 0 0 2px #1E8E3E;' : ''}">${c.svg}</div><span class="cat-icon-label"${isActive ? ' style="color:#1E8E3E;font-weight:800;"' : ''}>${c.name}</span></div>`;
+        const safeName = escapeHtml(c.name);
+        const safeBg = escapeHtml(c.bg);
+        return `<div class="cat-icon-item" data-cat="${safeName}"><div class="cat-icon-box" style="background:${safeBg};${isActive ? 'box-shadow:0 0 0 2px #1E8E3E;' : ''}">${c.svg}</div><span class="cat-icon-label"${isActive ? ' style="color:#1E8E3E;font-weight:800;"' : ''}>${safeName}</span></div>`;
     }).join('');
 
     catGrid.querySelectorAll('.cat-icon-item').forEach(el => {
@@ -111,7 +112,8 @@ function renderFoodBar() {
     const Foods = ['전체', '쌀·곡물', '육류', '수산물', '청과류', '가공·음료'];
     foodBar.innerHTML = Foods.map(f => {
         const on = filterState.foodCategory === f;
-        return `<div class="food-pill" data-food="${f}" style="padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;border:1px solid;cursor:pointer;flex-shrink:0;${on ? 'background:#1E8E3E;color:#fff;border-color:#1E8E3E;' : 'background:#fff;color:#7A93B0;border-color:#eaedf2;'}">${f}</div>`;
+        const safeF = escapeHtml(f);
+        return `<div class="food-pill" data-food="${safeF}" style="padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;border:1px solid;cursor:pointer;flex-shrink:0;${on ? 'background:#1E8E3E;color:#fff;border-color:#1E8E3E;' : 'background:#fff;color:#7A93B0;border-color:#eaedf2;'}">${safeF}</div>`;
     }).join('');
     foodBar.querySelectorAll('.food-pill').forEach(el => {
         el.addEventListener('click', () => {
@@ -163,23 +165,37 @@ function openProductModal(id) {
     if (!KATEGORY_MAP[topCat]) topCat = '기부속';
     if (['쌀·곡물', '육류', '수산물', '청과류', '가공·음료', '주/부식'].includes(catTrimmed)) topCat = '주/부식';
 
+    // ✅ p.id를 onclick에 직접 삽입 — escape (UUID 외 임의 문자열 들어올 때 방어)
+    const safeId = escapeHtml(p.id);
+
     if (topCat === '주/부식') {
-        const storeMatch = p.title.match(/^\[(.*?)\]/);
+        const storeMatch = p.title ? p.title.match(/^\[(.*?)\]/) : null;
         const storeName = storeMatch ? storeMatch[1] : '인증 협력업체';
-        actionArea = `<div style="background:var(--blue-50);border:1px solid var(--blue-200);padding:16px;border-radius:12px;margin-top:20px;"><div style="display:flex;align-items:center;gap:8px;"><div style="background:var(--blue-600);color:#fff;font-size:11px;padding:3px 8px;border-radius:4px;font-weight:700;">추천 벤더</div><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${escapeHtml(storeName)}</span></div><div style="margin-top:6px;font-size:13px;color:#333;line-height:1.4;">동일 업체의 식품을 묶어 견적 요청 시 물류비가 절감됩니다.</div></div><div style="margin-top:16px;margin-bottom:24px;"><button style="width:100%;padding:14px;border-radius:12px;background:#1E8E3E;color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;" onclick="addToCart('${p.id}');closeProductModal();">[${escapeHtml(storeName)}] 전용 견적 장바구니에 담기</button></div>`;
+        const safeStoreName = escapeHtml(storeName);
+        actionArea = `<div style="background:var(--blue-50);border:1px solid var(--blue-200);padding:16px;border-radius:12px;margin-top:20px;"><div style="display:flex;align-items:center;gap:8px;"><div style="background:var(--blue-600);color:#fff;font-size:11px;padding:3px 8px;border-radius:4px;font-weight:700;">추천 벤더</div><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${safeStoreName}</span></div><div style="margin-top:6px;font-size:13px;color:#333;line-height:1.4;">동일 업체의 식품을 묶어 견적 요청 시 물류비가 절감됩니다.</div></div><div style="margin-top:16px;margin-bottom:24px;"><button style="width:100%;padding:14px;border-radius:12px;background:#1E8E3E;color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;" onclick="addToCart('${safeId}');closeProductModal();">[${safeStoreName}] 전용 견적 장바구니에 담기</button></div>`;
     } else if (topCat === '선용품' || topCat === '안전장비') {
-        actionArea = `<div style="margin-top:20px;margin-bottom:24px;display:flex;gap:12px;"><button style="flex:1;padding:14px;border-radius:12px;background:#fff;color:#1A5FA0;border:1px solid #1A5FA0;font-size:15px;font-weight:700;cursor:pointer;" onclick="addToCart('${p.id}');closeProductModal();">견적 장바구니 담기</button><button style="flex:1;padding:14px;border-radius:12px;background:#1A5FA0;color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;" onclick="startChat('${p.id}')">판매자와 네고하기</button></div>`;
+        actionArea = `<div style="margin-top:20px;margin-bottom:24px;display:flex;gap:12px;"><button style="flex:1;padding:14px;border-radius:12px;background:#fff;color:#1A5FA0;border:1px solid #1A5FA0;font-size:15px;font-weight:700;cursor:pointer;" onclick="addToCart('${safeId}');closeProductModal();">견적 장바구니 담기</button><button style="flex:1;padding:14px;border-radius:12px;background:#1A5FA0;color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;" onclick="startChat('${safeId}')">판매자와 네고하기</button></div>`;
     } else if (p.auction) {
-        const displayPrice = p.current_bid ? p.current_bid.toLocaleString() : p.price.replace(/[^0-9]/g, '');
+        const displayPriceRaw = p.current_bid ? p.current_bid.toLocaleString() : (p.price || '').replace(/[^0-9]/g, '');
+        const safeDisplayPrice = escapeHtml(displayPriceRaw);
         const remainText = p.is_closed ? '경매 종료됨' : (p.auction_end ? '마감: ' + new Date(p.auction_end).toLocaleString() : '진행중');
-        const numPrice = parseInt(displayPrice.replace(/,/g, ''));
-        actionArea = `<div style="background:#F4F9FF;border:1px solid #1A5FA0;padding:16px;border-radius:12px;margin-top:20px;margin-bottom:24px;"><div style="color:#1A5FA0;font-size:12px;font-weight:700;margin-bottom:8px;">최고 입찰자만이 낙찰자가 됩니다!</div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:13px;color:#7A93B0;">현재 최고가 (입찰 ${p.bid_count || 0}회)</span><span style="font-size:20px;font-weight:800;color:#1A2B4A;">₩ ${displayPrice}</span></div><div style="font-size:12px;color:#E53E3E;font-weight:600;margin-bottom:16px;">${remainText}</div>${p.is_closed ? '<button style="width:100%;padding:14px;border-radius:12px;background:#EAEDF2;color:#7A93B0;font-size:15px;font-weight:700;border:none;" disabled>마감된 경매입니다</button>' : `<div style="display:flex;gap:8px;margin-bottom:12px;"><button type="button" onclick="document.getElementById('bid-amount').value=${numPrice + 10000}" style="flex:1;padding:10px;background:#fff;border:1px solid #1A5FA0;color:#1A5FA0;border-radius:8px;font-weight:600;cursor:pointer;">+ 1만원</button><button type="button" onclick="document.getElementById('bid-amount').value=${numPrice + 50000}" style="flex:1;padding:10px;background:#fff;border:1px solid #1A5FA0;color:#1A5FA0;border-radius:8px;font-weight:600;cursor:pointer;">+ 5만원</button></div><div style="display:flex;gap:8px;"><input type="number" id="bid-amount" placeholder="희망가 입력" style="flex:1;padding:12px 14px;border:1px solid #ccc;border-radius:8px;outline:none;font-size:15px;font-weight:600;"><button onclick="submitBid('${p.id}')" class="auction-bid-btn" style="background:#D4960A;color:#fff;border:none;border-radius:8px;padding:0 24px;font-weight:700;font-size:15px;cursor:pointer;">입찰</button></div>`}</div>`;
+        const safeRemainText = escapeHtml(remainText);
+        const numPrice = parseInt(displayPriceRaw.replace(/,/g, '')) || 0;
+        const bidCount = parseInt(p.bid_count) || 0;
+        actionArea = `<div style="background:#F4F9FF;border:1px solid #1A5FA0;padding:16px;border-radius:12px;margin-top:20px;margin-bottom:24px;"><div style="color:#1A5FA0;font-size:12px;font-weight:700;margin-bottom:8px;">최고 입찰자만이 낙찰자가 됩니다!</div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:13px;color:#7A93B0;">현재 최고가 (입찰 ${bidCount}회)</span><span style="font-size:20px;font-weight:800;color:#1A2B4A;">₩ ${safeDisplayPrice}</span></div><div style="font-size:12px;color:#E53E3E;font-weight:600;margin-bottom:16px;">${safeRemainText}</div>${p.is_closed ? '<button style="width:100%;padding:14px;border-radius:12px;background:#EAEDF2;color:#7A93B0;font-size:15px;font-weight:700;border:none;" disabled>마감된 경매입니다</button>' : `<div style="display:flex;gap:8px;margin-bottom:12px;"><button type="button" onclick="document.getElementById('bid-amount').value=${numPrice + 10000}" style="flex:1;padding:10px;background:#fff;border:1px solid #1A5FA0;color:#1A5FA0;border-radius:8px;font-weight:600;cursor:pointer;">+ 1만원</button><button type="button" onclick="document.getElementById('bid-amount').value=${numPrice + 50000}" style="flex:1;padding:10px;background:#fff;border:1px solid #1A5FA0;color:#1A5FA0;border-radius:8px;font-weight:600;cursor:pointer;">+ 5만원</button></div><div style="display:flex;gap:8px;"><input type="number" id="bid-amount" placeholder="희망가 입력" style="flex:1;padding:12px 14px;border:1px solid #ccc;border-radius:8px;outline:none;font-size:15px;font-weight:600;"><button onclick="submitBid('${safeId}')" class="auction-bid-btn" style="background:#D4960A;color:#fff;border:none;border-radius:8px;padding:0 24px;font-weight:700;font-size:15px;cursor:pointer;">입찰</button></div>`}</div>`;
     } else {
-        actionArea = `<div style="margin-top:20px;margin-bottom:24px;display:flex;gap:12px;"><button style="flex:1;padding:14px;border-radius:12px;background:#1A5FA0;color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;" onclick="startChat('${p.id}')">판매자와 채팅하기</button></div>`;
+        actionArea = `<div style="margin-top:20px;margin-bottom:24px;display:flex;gap:12px;"><button style="flex:1;padding:14px;border-radius:12px;background:#1A5FA0;color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;" onclick="startChat('${safeId}')">판매자와 채팅하기</button></div>`;
     }
 
     const safeContent = (p.content && p.content !== 'undefined') ? p.content : '상세 설명이 없습니다.';
-    body.innerHTML = `<div style="width:100%;aspect-ratio:4/3;background:#f4f4f4;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:16px;position:relative;">${p.svg}<div id="modal-heart-btn" class="heart-btn" onclick="toggleLike('${p.id}')" style="position:absolute;bottom:12px;right:12px;width:40px;height:40px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div></div><div style="padding:0 20px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div style="background:#EAEDF2;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#7A93B0;">${escapeHtml(p.tradeType)}</div><div style="background:#E6F4EA;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#1E8E3E;">${escapeHtml(p.condition)}</div></div><h2 style="margin:0 0 4px 0;font-size:20px;color:#1A2B4A;">${escapeHtml(p.title)}</h2><div style="color:#7A93B0;font-size:13px;margin-bottom:16px;">${escapeHtml(p.sub)}</div><div style="font-size:24px;font-weight:800;color:#1A2B4A;margin-bottom:8px;">${p.price}</div><div style="padding:16px;background:#fff;border:1px solid rgba(0,0,0,0.05);border-radius:12px;display:flex;align-items:center;gap:12px;margin-top:20px;"><div style="width:40px;height:40px;border-radius:50%;background:#1A5FA0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">판</div><div><div style="font-size:13px;font-weight:700;color:#1A2B4A;">판매자 정보 (보호됨)</div><div style="font-size:11px;color:#7A93B0;">안전거래 사용 우수 판매자</div></div></div><div style="margin-top:20px;white-space:pre-wrap;font-size:14px;color:#1A2B4A;line-height:1.6;">${escapeHtml(safeContent)}</div>${actionArea}</div>`;
+    // ✅ p.svg → getProductImageHtml(p) 로 교체. DB에 HTML이 저장되어 있을 수 있는
+    //    레거시 데이터를 위해 호환 코드 추가: p.svg가 문자열로 저장돼있으면 그대로 사용,
+    //    그렇지 않으면 getProductImageHtml로 안전하게 조립.
+    const productImageHtml = (typeof getProductImageHtml === 'function')
+        ? getProductImageHtml(p)
+        : (p.svg || '');
+
+    body.innerHTML = `<div style="width:100%;aspect-ratio:4/3;background:#f4f4f4;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:16px;position:relative;">${productImageHtml}<div id="modal-heart-btn" class="heart-btn" onclick="toggleLike('${safeId}')" style="position:absolute;bottom:12px;right:12px;width:40px;height:40px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div></div><div style="padding:0 20px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div style="background:#EAEDF2;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#7A93B0;">${escapeHtml(p.tradeType)}</div><div style="background:#E6F4EA;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#1E8E3E;">${escapeHtml(p.condition)}</div></div><h2 style="margin:0 0 4px 0;font-size:20px;color:#1A2B4A;">${escapeHtml(p.title)}</h2><div style="color:#7A93B0;font-size:13px;margin-bottom:16px;">${escapeHtml(p.sub)}</div><div style="font-size:24px;font-weight:800;color:#1A2B4A;margin-bottom:8px;">${escapeHtml(p.price)}</div><div style="padding:16px;background:#fff;border:1px solid rgba(0,0,0,0.05);border-radius:12px;display:flex;align-items:center;gap:12px;margin-top:20px;"><div style="width:40px;height:40px;border-radius:50%;background:#1A5FA0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">판</div><div><div style="font-size:13px;font-weight:700;color:#1A2B4A;">판매자 정보 (보호됨)</div><div style="font-size:11px;color:#7A93B0;">안전거래 사용 우수 판매자</div></div></div><div style="margin-top:20px;white-space:pre-wrap;font-size:14px;color:#1A2B4A;line-height:1.6;">${escapeHtml(safeContent)}</div>${actionArea}</div>`;
     checkLikeStatus(p.id);
 }
 

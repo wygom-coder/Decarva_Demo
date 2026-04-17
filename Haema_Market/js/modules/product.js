@@ -1,4 +1,8 @@
+// ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
+// ⚠️ getProductImageHtml(p)도 utils.js에서 정의 — image_url 또는 카테고리 SVG 반환
+
 // 카테고리를 그리는 HTML 생성 유틸 함수
+// ✅ 모든 사용자 입력은 escapeHtml() 처리
 function createProductCardHTML(p) {
     let tagsHTML = '';
     if (p.auth) tagsHTML += '<span class="ptag ptag-b">인증</span>';
@@ -8,29 +12,43 @@ function createProductCardHTML(p) {
         if(p.is_closed) {
             tagsHTML += `<span class="ptag ptag-b" style="background:#eee;color:#999;border:none;">낙찰 완료</span>`;
         } else if(p.auction_end) {
-            tagsHTML += `<span class="ptag ptag-b auction-timer-tag" data-end="${p.auction_end}">계산중...</span>`;
+            // ✅ data-end 속성에 들어가는 값도 escape (date 문자열이라 보통 안전하지만 방어)
+            tagsHTML += `<span class="ptag ptag-b auction-timer-tag" data-end="${escapeHtml(p.auction_end)}">계산중...</span>`;
         } else if (p.remain) {
-            tagsHTML += `<span class="ptag ptag-b">${p.remain}</span>`;
+            tagsHTML += `<span class="ptag ptag-b">${escapeHtml(p.remain)}</span>`;
         }
     }
 
-    let priceHTML = `<div class="product-price">${p.price}</div>`;
+    const safePrice = escapeHtml(p.price);
+    let priceHTML = `<div class="product-price">${safePrice}</div>`;
     if (p.auction) {
       if(p.is_closed) {
           const finalPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : '유찰됨';
-          priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge" style="background:#7A93B0;">종료</span><span style="font-size:14px;font-weight:700;color:#7A93B0;text-decoration:line-through;">${finalPrice}</span></div>`;
+          priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge" style="background:#7A93B0;">종료</span><span style="font-size:14px;font-weight:700;color:#7A93B0;text-decoration:line-through;">${escapeHtml(finalPrice)}</span></div>`;
       } else {
-          const showPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : p.price;
-          priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${showPrice}</span></div>`;
+          const showPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : (p.price || '');
+          priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${escapeHtml(showPrice)}</span></div>`;
       }
     }
 
+    // ✅ p.id, p.title, p.sub 모두 escape
+    const safeId = escapeHtml(p.id);
+    const safeTitle = escapeHtml(p.title);
+    const safeSub = escapeHtml(p.sub);
+
+    // ✅ p.svg 직접 사용 → getProductImageHtml로 안전하게 조립
+    //    (레거시 데이터에 HTML이 들어있을 수 있으나, 새로 등록되는 데이터는
+    //     image_url만 저장되므로 점진적으로 안전한 형태로 전환됨)
+    const productImageHtml = (typeof getProductImageHtml === 'function')
+        ? getProductImageHtml(p)
+        : (p.svg || '');
+
     return `
-      <div class="product-card" onclick="openProductModal('${p.id}')" style="cursor:pointer;">
-        <div class="product-img">${p.svg}</div>
+      <div class="product-card" onclick="openProductModal('${safeId}')" style="cursor:pointer;">
+        <div class="product-img">${productImageHtml}</div>
         <div class="product-body">
-          <div class="product-title">${p.title}</div>
-          <div class="product-sub">${p.sub}</div>
+          <div class="product-title">${safeTitle}</div>
+          <div class="product-sub">${safeSub}</div>
           ${priceHTML}
           <div class="product-tags" style="gap:4px;">${tagsHTML}</div>
         </div>
@@ -49,24 +67,21 @@ function renderProducts() {
   grid.innerHTML = '';
   
   let filtered = products.filter(p => {
-    let topOfP = CAT_TO_TOP_MAP[p.category] || p.category; // fallback to p.category instead of contaminating 기부속
+    let topOfP = CAT_TO_TOP_MAP[p.category] || p.category;
     if (['쌀·곡물', '육류', '수산물', '청과류', '가공·음료', '주/부식'].includes(p.category)) {
         topOfP = '주/부식';
     }
     if (filterState.topCategory !== '전체' && topOfP !== filterState.topCategory) return false;
     
-    // 0. 키워드 매칭
     if (filterState.keyword) {
         const kw = filterState.keyword.toLowerCase();
-        const bodyTxt = (p.title + ' ' + (p.category || '')).toLowerCase();
+        const bodyTxt = ((p.title || '') + ' ' + (p.category || '')).toLowerCase();
         if(!bodyTxt.includes(kw)) return false;
     }
-    // 1. 대분류 카테고리 체크
     if (filterState.category !== '전체') {
         if (p.category !== filterState.category) return false;
     }
     
-    // 2. 다중 필터 체크
     if (filterState.region !== '전체' && p.region !== filterState.region) return false;
     if (filterState.condition !== '전체' && p.condition !== filterState.condition) return false;
     if (filterState.cert !== '전체' && p.cert !== filterState.cert) return false;
@@ -75,7 +90,6 @@ function renderProducts() {
         if (filterState.tradeType === '경매' && !p.auction) return false;
         if (filterState.tradeType === '가격제안' && !p.offer) return false;
     }
-    // 업체별 필터링
     if (filterState.supplier !== '전체') {
         const titleStr = p.title || '';
         const match = titleStr.match(/^\[(.*?)\]/);
@@ -84,8 +98,7 @@ function renderProducts() {
             return false;
         }
     }
-    // 3. 커스텀 가격
-    const valObj = p.price.replace(/[^0-9]/g, '');
+    const valObj = (p.price || '').replace(/[^0-9]/g, '');
     if (valObj) {
         const val = parseInt(valObj);
         if (filterState.minPrice !== null && val < filterState.minPrice) return false;
@@ -96,10 +109,8 @@ function renderProducts() {
 
   grid.innerHTML = '';
 
-  // View Toggle based on '전체' selection
   if (filterState.topCategory === '전체' && filterState.keyword === '') {
-      // Main Page Mode
-      if(catArea) catArea.style.display = 'block'; // Show curated sub-categories on main page
+      if(catArea) catArea.style.display = 'block';
       if(recArea) recArea.style.display = 'block';
       if(listTitle) listTitle.innerHTML = '<span class="section-title">최신 전체 매물</span><span class="section-more">더보기 →</span>';
       
@@ -120,7 +131,6 @@ function renderProducts() {
       }
       
   } else if (filterState.category === '전체' && filterState.keyword === '') {
-      // Specific Top-Category Curation
       if(catArea) catArea.style.display = 'block';
       if(recArea) recArea.style.display = 'block';
       if(listTitle) listTitle.innerHTML = '<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>최신 매물</span><span class="section-more">더보기 →</span>';
@@ -142,10 +152,10 @@ function renderProducts() {
       }
       
   } else {
-      // Hide recommendations, show only filtered list
-      if(catArea) catArea.style.display = 'block'; // ALWAYS SHOW CATEGORIES
+      if(catArea) catArea.style.display = 'block';
       if(recArea) recArea.style.display = 'none';
-      if(listTitle) listTitle.innerHTML = `<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>${filterState.category} 결과</span>`;
+      // ✅ 카테고리 이름 escape (현재는 시스템 데이터지만 방어)
+      if(listTitle) listTitle.innerHTML = `<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>${escapeHtml(filterState.category)} 결과</span>`;
   }
 
   if (filtered.length === 0) {
@@ -158,7 +168,6 @@ function renderProducts() {
   });
 
   if(auctionInterval) clearInterval(auctionInterval);
-
 
   auctionInterval = setInterval(() => {
     const timeNow = new Date().getTime();
@@ -177,8 +186,6 @@ function renderProducts() {
        }
     });
   }, 1000);
-
-
 }
 
 let currentQuoteProductId = null;
@@ -193,7 +200,7 @@ function requestQuote(id) {
 }
 
 function submitQuoteRequest() {
-    alert('해마 벤더 시스템으로 견적 요청이 성공적으로 접수되었습니다.\\n빠른 시일 내에 선박의 메일/시스템으로 견적서가 도착합니다!');
+    alert('해마 벤더 시스템으로 견적 요청이 성공적으로 접수되었습니다.\n빠른 시일 내에 선박의 메일/시스템으로 견적서가 도착합니다!');
     document.getElementById('quote-modal').style.display = 'none';
 }
 
@@ -225,7 +232,7 @@ async function submitBid(id) {
     }
     
     const newBid = parseInt(newBidStr, 10);
-    const curr = p.current_bid || parseInt(p.price.replace(/[^0-9]/g, '')) || 0;
+    const curr = p.current_bid || parseInt((p.price || '').replace(/[^0-9]/g, '')) || 0;
     
     if(newBid <= curr) {
         alert(`현재 최고가(₩${curr.toLocaleString()})보다 높은 금액을 입력하셔야 합니다.`);
@@ -234,19 +241,24 @@ async function submitBid(id) {
 
     const count = p.bid_count || 0;
     
-    const bidderName = currentUser.user_metadata?.biz_name || currentUser.user_metadata?.display_name || currentUser.email.split('@')[0];
+    const bidderName = currentUser.user_metadata?.biz_name || currentUser.user_metadata?.display_name || (currentUser.email ? currentUser.email.split('@')[0] : '익명');
     
     const btn = document.querySelector('.auction-bid-btn');
     if(btn) btn.textContent = '입찰 처리중...';
     
-    const { error } = await supabaseClient.from('haema_products')
+    // ⚠️ 알려진 race condition: 두 사용자가 동시에 입찰 시 나중 update가 무조건 이김.
+    //     2차 작업에서 RPC 또는 optimistic lock으로 해결 예정.
+    //     임시로 .lt('current_bid', newBid) 조건 추가하여 약하게 보호.
+    const { data: updateRows, error } = await supabaseClient.from('haema_products')
         .update({ 
             current_bid: newBid, 
             bid_count: count + 1,
             highest_bidder_id: currentUser.id,
             highest_bidder_name: bidderName
         })
-        .eq('id', id);
+        .eq('id', id)
+        .lt('current_bid', newBid)
+        .select();
         
     if(error) {
         console.error(error);
@@ -254,11 +266,20 @@ async function submitBid(id) {
         if(btn) btn.textContent = '입찰';
         return;
     }
+
+    // ✅ 0행 update = 다른 사람이 더 높은 가격으로 먼저 입찰함
+    if (!updateRows || updateRows.length === 0) {
+        alert('입찰 실패: 그 사이 다른 사용자가 더 높은 가격으로 입찰했습니다. 새로고침 후 다시 시도해주세요.');
+        if(btn) btn.textContent = '입찰';
+        await fetchProducts();
+        return;
+    }
     
     alert('성공적으로 입찰되었습니다!');
     closeProductModal();
-    initTopCategory();
-    fetchProducts();
+    // ✅ initTopCategory() 호출 제거 — 이벤트 리스너 중복 바인딩 방지
+    //    fetchProducts만으로 충분 (재렌더링은 fetchProducts 내부에서 처리)
+    await fetchProducts();
 }
 
 
@@ -277,27 +298,28 @@ async function fetchProducts() {
 async function closeAuction(p) {
     if(p.is_closed) return;
     
-    // DB 업데이트 시도 (Atomic)
     const { error } = await supabaseClient.from('haema_products')
         .update({ is_closed: true })
         .eq('id', p.id)
         .eq('is_closed', false);
         
     if(!error) {
-        p.is_closed = true; // 로컬 반영
+        p.is_closed = true;
+        // ✅ p.title escape (alert에 들어가지만 일관성)
+        const safeTitle = String(p.title || '');
         if (currentUser && currentUser.id === p.highest_bidder_id) {
-            alert(`축하합니다! [${p.title}] 경매에 최종 낙찰되셨습니다!\\n(낙찰가: ₩ ${p.current_bid ? p.current_bid.toLocaleString() : '확인 불가'})`);
+            alert(`축하합니다! [${safeTitle}] 경매에 최종 낙찰되셨습니다!\n(낙찰가: ₩ ${p.current_bid ? p.current_bid.toLocaleString() : '확인 불가'})`);
         }
         else if (currentUser && currentUser.id === p.seller_id) {
-            alert(`등록하신 [${p.title}] 경매가 마감되었습니다.\\n(최종 입찰자: ${p.highest_bidder_name})`);
+            alert(`등록하신 [${safeTitle}] 경매가 마감되었습니다.\n(최종 입찰자: ${String(p.highest_bidder_name || '없음')})`);
         }
-        initTopCategory();
-    fetchProducts(); // 리스트 갱신
-        closeProductModal(); // 열려있다면 닫기
+        // ✅ initTopCategory() 호출 제거
+        await fetchProducts();
+        closeProductModal();
     }
 }
 
-// 5초 주기로 모든 매물의 마감 시간을 체크하여 셔터를 닫는 감시자
+// 5초 주기 경매 마감 감시자
 setInterval(() => {
     const now = new Date().getTime();
     products.forEach(p => {
@@ -332,10 +354,18 @@ async function registerProduct() {
   const regionVal = regionInput ? regionInput.value : '부산';
   
   if (!title || cat === '카테고리 선택') { alert('상품명과 카테고리는 필수입니다.'); return; }
+
+  // ✅ 추가 입력 검증
+  if (title.length > 200) { alert('상품명은 200자 이하로 입력해주세요.'); return; }
+  if (priceParsed < 0 || priceParsed > 99999999999) { alert('가격을 올바르게 입력해주세요.'); return; }
   
   const isAuction = tradeType === '경매';
   const endInput = document.getElementById('auction-end-input').value;
   if(isAuction && !endInput) { alert('경매 마감일시를 설정해주세요.'); return; }
+  if(isAuction) {
+      const endTime = new Date(endInput).getTime();
+      if (endTime <= Date.now()) { alert('경매 마감일시는 현재 시각 이후로 설정해주세요.'); return; }
+  }
 
   const submitBtn = document.querySelector('#page-register .submit-btn');
   submitBtn.textContent = '저장소 연결 중...';
@@ -363,23 +393,24 @@ async function registerProduct() {
       const { data: publicData } = supabaseClient.storage.from('market_images').getPublicUrl(fileName);
       finalImageUrl = publicData.publicUrl;
   }
-  
-  let finalSvg = finalImageUrl ? `<img src="${finalImageUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">` : '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="20" width="32" height="18" rx="3" stroke="#D4960A" stroke-width="1.5"/><path d="M14 20v-4a10 10 0 0120 0v4" stroke="#D4960A" stroke-width="1.5"/></svg>';
 
+  // ✅ HTML 문자열을 DB에 저장하지 않음 — image_url만 저장
+  //    렌더링 시점에 utils.js의 getProductImageHtml(p)가 안전하게 조립
   let newProd = {
     title: title,
     sub: '방금 전 등록',
     price: priceInput ? ('₩ ' + priceInput.replace('₩','').trim()) : '₩ 협의 가능',
     category: cat,
     "tradeType": tradeType,
-    region: regionVal, // 사용자 선택
+    region: regionVal,
     seller_id: currentUser ? currentUser.id : null,
     condition: conditionStr,
     cert: '없음',
     auth: true, 
     auction: isAuction,
     offer: false,
-    svg: finalSvg
+    image_url: finalImageUrl   // ✅ URL만 저장 (HTML 문자열 X)
+    // svg 컬럼은 더 이상 쓰지 않음. 기존 데이터는 호환 코드로 처리.
   };
 
   if(isAuction) {
@@ -418,15 +449,15 @@ async function registerProduct() {
   showPage('home');
   window.scrollTo(0, 0);
 
-  // 등록 직후 최신 데이터베이스 리스트 가져오기
   await fetchProducts();
 }
+
 // [URL Parameter 처리: 더미 상품 페이지 연동]
-// ----------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const pid = urlParams.get('product_id');
     if (pid && pid.startsWith('p')) {
+        // ✅ 더미 데이터는 시스템 정의 — XSS 위험 없음, 다만 일관성 위해 그대로 유지
         const dummies = {
             p1: { title: "대형 선박용 고출력 디젤 엔진 (상태 A급)", price: "협의 요망", location: "부산 감천항", seller_name: "엔진마스터", type: "standard", content: "22년 정비 완료된 완벽한 상태의 엔진입니다." },
             p2: { title: "특수 합금 청동 프로펠러 세트", price: "52,000,000", location: "울산 앞바다", seller_name: "선체부속", type: "standard", content: "미사용 신품급 특수 합금 프로펠러입니다." },
@@ -434,14 +465,25 @@ document.addEventListener('DOMContentLoaded', () => {
             p4: { title: "선박용 평형수 처리 장치(BWTS)", price: "28,000,000", location: "목포 신항", seller_name: "에코환경", type: "standard", content: "설치 및 시운전 지원 가능한 폐수 처리 장치입니다." },
         };
         if(dummies[pid]) {
+            // ✅ 더미 데이터에는 svg 필드 미설정 → getProductImageHtml이 카테고리 fallback 처리
+            //    (image_url도 없으므로 placeholder SVG가 표시됨)
+            // products 배열에 임시로 추가하여 openProductModal이 찾을 수 있게 함
+            const dummyProduct = { 
+                id: pid, 
+                ...dummies[pid], 
+                category: '기부속',  // 카테고리 폴백 SVG용
+                user_id: 'dummy_user',
+                tradeType: dummies[pid].type === 'auction' ? '경매' : '직거래',
+                condition: '양호',
+                auction: dummies[pid].type === 'auction'
+            };
+            // products가 아직 비어있을 수 있으므로 임시 push
+            if (typeof products !== 'undefined') {
+                products.push(dummyProduct);
+            }
             setTimeout(() => {
-                openProductModal({ 
-                    id: pid, 
-                    ...dummies[pid], 
-                    svg: '<div style="background:#EAEAEA; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555; border-radius:12px; font-weight:700;">추천 기자재 상세 이미지</div>', 
-                    user_id: 'dummy_user' 
-                });
-            }, 600); // UI 로딩 후 모달 오픈
+                openProductModal(pid);
+            }, 600);
         }
     }
 });

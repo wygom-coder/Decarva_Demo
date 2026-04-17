@@ -1,3 +1,5 @@
+// ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
+
 window.showMyQuotes = async function() {
     if(!currentUser) { alert('로그인이 필요한 기능입니다.'); return showPage('login'); }
     showPage('myquotes');
@@ -26,29 +28,39 @@ window.showMyQuotes = async function() {
             let statusText = '결제/견적 대기중', statusColor = '#F57C00', statusBg = '#FFF3E0';
             if(q.status === 'replied')  { statusText = '답변 완료 (승인)'; statusColor = '#1E8E3E'; statusBg = '#E8F5E9'; }
             if(q.status === 'completed'){ statusText = '계약/결제 완료';  statusColor = '#1A5FA0'; statusBg = '#F4F9FF'; }
+
             let itemSummary = '상품 내용 없음';
             if(q.items && q.items.length > 0) {
                 const firstTitle = q.items[0].title;
                 const totalQty = q.items.reduce((acc, curr) => acc + (curr.qty || 1), 0);
                 itemSummary = q.items.length === 1 ? `${firstTitle} (${totalQty}개)` : `${firstTitle} 외 ${q.items.length - 1}건 (총 ${totalQty}개)`;
             }
+
+            // ✅ 모든 동적 값 escape
+            const safeDateStr = escapeHtml(dateStr);
+            const safeVendorName = escapeHtml(q.vendor_name);
+            const safeStatusText = escapeHtml(statusText);
+            const safeItemSummary = escapeHtml(itemSummary);
+
             html += `<div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #eaedf2; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
                     <div>
-                        <div style="font-size:12px; color:#7A93B0; margin-bottom:4px;">${dateStr} 발주</div>
-                        <div style="font-size:15px; font-weight:800; color:#1A2B4A;">[${q.vendor_name}]</div>
+                        <div style="font-size:12px; color:#7A93B0; margin-bottom:4px;">${safeDateStr} 발주</div>
+                        <div style="font-size:15px; font-weight:800; color:#1A2B4A;">[${safeVendorName}]</div>
                     </div>
-                    <div style="font-size:11px; font-weight:800; background:${statusBg}; color:${statusColor}; padding:4px 8px; border-radius:6px;">${statusText}</div>
+                    <div style="font-size:11px; font-weight:800; background:${statusBg}; color:${statusColor}; padding:4px 8px; border-radius:6px;">${safeStatusText}</div>
                 </div>
                 <div style="background:#f8f9fc; border-radius:8px; padding:12px; display:flex; align-items:center; justify-content:space-between;">
-                    <div style="font-size:13px; font-weight:600; color:#4A5568;">${itemSummary}</div>
+                    <div style="font-size:13px; font-weight:600; color:#4A5568;">${safeItemSummary}</div>
                     <button style="background:#fff; border:1px solid #eaedf2; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:700; color:#1A5FA0; cursor:pointer;" onclick="alert('품목 상세 내역 확인 기능은 추후 연동됩니다.')">상세보기</button>
                 </div>
             </div>`;
         });
         area.innerHTML = html;
     } catch(err) {
-        area.innerHTML = `<div style="padding: 60px 20px; font-size:14px; color:#D32F2F; text-align:center;">오류가 발생했습니다:<br>${err.message}</div>`;
+        // ✅ err.message escape (서버 에러에 사용자 입력 echo될 가능성)
+        const safeErr = escapeHtml(err.message || '알 수 없는 오류');
+        area.innerHTML = `<div style="padding: 60px 20px; font-size:14px; color:#D32F2F; text-align:center;">오류가 발생했습니다:<br>${safeErr}</div>`;
     }
 };
 
@@ -71,14 +83,27 @@ function showMyList() {
     }
     myProducts.forEach((p, idx) => {
         let tagsHtml = '';
-        if(p.auction) tagsHtml += `<span class="ptag ptag-y" style="background:#1A2B4A; color:#fff;">경매 ${p.bid_count}회</span> `;
+        const bidCount = parseInt(p.bid_count) || 0;
+        if(p.auction) tagsHtml += `<span class="ptag ptag-y" style="background:#1A2B4A; color:#fff;">경매 ${bidCount}회</span> `;
         if(p.offer)   tagsHtml += `<span class="ptag ptag-b">가격제안</span> `;
         if(!p.auction && !p.offer) tagsHtml += `<span class="ptag" style="background:#EAEDF2; color:#7A93B0;">직거래</span> `;
+
+        // ✅ 모든 사용자 입력 필드 escape
+        const safeRegion = escapeHtml(p.region);
+        const safeCondition = escapeHtml(p.condition);
+        const safeTitle = escapeHtml(p.title);
+        const safePrice = escapeHtml(p.price);
+
+        // ✅ p.svg → getProductImageHtml(p)
+        const productImageHtml = (typeof getProductImageHtml === 'function')
+            ? getProductImageHtml(p)
+            : (p.svg || '');
+
         const card = document.createElement('div');
         card.className = 'product-card';
         card.style.cursor = 'pointer';
         card.onclick = () => openProductModal(p.id);
-        card.innerHTML = `<div class="product-img">${p.svg}</div><div class="product-body"><div class="product-sub">${p.region} · ${p.condition}</div><div class="product-title">${p.title}</div><div class="product-price">${p.price}</div><div class="product-tags">${tagsHtml}</div></div>`;
+        card.innerHTML = `<div class="product-img">${productImageHtml}</div><div class="product-body"><div class="product-sub">${safeRegion} · ${safeCondition}</div><div class="product-title">${safeTitle}</div><div class="product-price">${safePrice}</div><div class="product-tags">${tagsHtml}</div></div>`;
         container.appendChild(card);
     });
 }
@@ -94,13 +119,20 @@ function updateProfileUI() {
         if(rBadge) rBadge.style.display = 'none';
         return;
     }
-    const email = currentUser.email;
+    const email = currentUser.email || '';
     const metaName = currentUser.user_metadata?.display_name;
     const metaBio  = currentUser.user_metadata?.bio;
     const metaRegion = currentUser.user_metadata?.region;
     const isVerified = currentUser.user_metadata?.is_region_verified;
-    const nameStr = metaName ? metaName : email.split('@')[0];
+    // ✅ 이메일 앞부분을 그대로 노출하지 않고, 사용자 익명 ID로 폴백
+    //    (full_name도 display_name도 없을 때만 적용)
+    const nameStr = metaName ? metaName : (
+        currentUser.user_metadata?.full_name 
+            ? currentUser.user_metadata.full_name 
+            : `해마유저_${currentUser.id ? currentUser.id.substring(0, 6) : '익명'}`
+    );
     const firstChar = nameStr.charAt(0).toUpperCase();
+    // ✅ textContent 사용 → 자동 escape (innerHTML 아님)
     const pName = document.getElementById('profile-name');   if(pName)  pName.textContent  = nameStr;
     const pEmail = document.getElementById('profile-email'); if(pEmail) pEmail.textContent = metaBio ? metaBio : email;
     const sEmail = document.getElementById('settings-email');if(sEmail) sEmail.textContent = email;
@@ -117,6 +149,7 @@ function updateProfileUI() {
     const bStatus = document.getElementById('biz-auth-status');
     if(bBadge) {
         if(isBiz) {
+            // ✅ 시스템 정의 SVG라 안전하지만, innerHTML은 보수적으로 사용
             bBadge.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="display:inline-block; margin-right:2px; vertical-align:-1px;"><path d="M20 6L9 17l-5-5"></path></svg>인증 기업`;
             bBadge.style.background = "var(--blue-50)"; bBadge.style.color = "var(--blue-800)"; bBadge.style.border = "1px solid var(--blue-200)";
             if(bStatus) bStatus.style.display = "inline-block";
@@ -163,7 +196,12 @@ function openProfileEdit() {
     const metaBio  = currentUser.user_metadata?.bio || '';
     const metaRegion = currentUser.user_metadata?.region || '';
     const isVerified = currentUser.user_metadata?.is_region_verified || false;
-    const nameStr = metaName ? metaName : currentUser.email.split('@')[0];
+    // ✅ 이메일 앞부분 노출 방지 (위와 동일 정책)
+    const nameStr = metaName ? metaName : (
+        currentUser.user_metadata?.full_name 
+            ? currentUser.user_metadata.full_name 
+            : `해마유저_${currentUser.id ? currentUser.id.substring(0, 6) : '익명'}`
+    );
     const nameInput = document.getElementById('edit-nickname-input');
     const bioInput  = document.getElementById('edit-bio-input');
     const regionSelector = document.getElementById('edit-region-select');
@@ -190,7 +228,12 @@ async function saveProfile() {
     const inputBio  = bioInput ? bioInput.value.trim() : '';
     const selectedRegion = regionSelector ? regionSelector.value : '';
     if(!nameInput.disabled && !inputName) { alert('닉네임을 먼저 입력해주세요.'); return; }
-    btn.textContent = '메타데이터 굽는 중...'; btn.disabled = true;
+
+    // ✅ 입력 검증
+    if (inputName.length > 30) { alert('닉네임은 30자 이하로 입력해주세요.'); return; }
+    if (inputBio.length > 500) { alert('소개는 500자 이하로 입력해주세요.'); return; }
+
+    btn.textContent = '메타데이터 저장 중...'; btn.disabled = true;
     let isVeri = (tempVerifiedRegion !== null && tempVerifiedRegion === selectedRegion);
     if(selectedRegion && !isVeri) isVeri = false;
     let updatePayload = { bio: inputBio, region: selectedRegion, is_region_verified: isVeri };
@@ -257,6 +300,7 @@ function openBusinessAuth() {
         if(formBox) formBox.style.display = 'none';
         if(authDesc) authDesc.style.display = 'none';
         if(verifiedBox) verifiedBox.style.display = 'block';
+        // ✅ textContent로 자동 escape
         if(nameDisplay) nameDisplay.textContent = bizName ? bizName : "인증된 해마마켓 기업";
         if(numDisplay) {
             const raw = bizNum.replace(/[^0-9]/g, '');
@@ -277,8 +321,13 @@ async function submitBusinessAuth() {
     const val     = inputEl ? inputEl.value.trim() : "";
     if(!nameVal) { alert("국세청 검증을 위해 상호명(기업명)을 먼저 입력해주세요."); return; }
     if(val.length !== 10) { alert("하이픈(-)을 제외한 10자리 사업자등록번호를 입력해주세요."); return; }
+    if (!/^\d{10}$/.test(val)) { alert("사업자등록번호는 숫자 10자리여야 합니다."); return; }
     const btn = document.querySelector('#page-business-auth .submit-btn');
     if(btn) { btn.textContent = "국세청 Live DB 조회 중..."; btn.disabled = true; }
+
+    // ⚠️ 알려진 보안 이슈: 사업자 인증 결과를 클라이언트에서 auth.updateUser로 직접 메타데이터 설정.
+    //     공격자가 /api/verify-business를 우회하고 직접 updateUser 호출 가능.
+    //     2차 작업에서 서버측 처리(Vercel Function + service_role)로 전환 예정.
     try {
         const res = await fetch('/api/verify-business', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -297,6 +346,7 @@ async function submitBusinessAuth() {
             if(verifiedEl) verifiedEl.style.display = 'block';
             const verifiedName = document.getElementById('biz-verified-name');
             const verifiedNum  = document.getElementById('biz-verified-number');
+            // ✅ textContent로 자동 escape
             if(verifiedName) verifiedName.textContent = result.companyName;
             if(verifiedNum)  verifiedNum.textContent  = val.replace(/(\d{3})(\d{2})(\d{5})/, '$1-$2-$3');
             updateProfileUI();
@@ -314,16 +364,16 @@ async function submitBusinessAuth() {
     }
 }
 
-// ✅ [수정] toggleLike — innerHTML로 SVG 정상 렌더링
 async function toggleLike(productId) {
     if(!currentUser) { alert('로그인 후 이용 가능합니다.'); return; }
     const btn = document.getElementById('modal-heart-btn');
     if(!btn) return;
     btn.style.transform = 'scale(0.8)';
     setTimeout(() => btn.style.transform = 'scale(1)', 100);
+    // ✅ .single() → .maybeSingle()
     const { data: existing } = await supabaseClient
         .from('haema_likes').select('*')
-        .eq('product_id', productId).eq('user_id', currentUser.id).single();
+        .eq('product_id', productId).eq('user_id', currentUser.id).maybeSingle();
     if(existing) {
         await supabaseClient.from('haema_likes').delete().eq('id', existing.id);
         btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
@@ -333,12 +383,12 @@ async function toggleLike(productId) {
     }
 }
 
-// ✅ [수정] checkLikeStatus — innerHTML로 SVG 정상 렌더링
 async function checkLikeStatus(productId) {
     if(!currentUser || String(productId).startsWith('p')) return;
+    // ✅ .single() → .maybeSingle()
     const { data } = await supabaseClient
         .from('haema_likes').select('id')
-        .eq('product_id', productId).eq('user_id', currentUser.id).single();
+        .eq('product_id', productId).eq('user_id', currentUser.id).maybeSingle();
     const btn = document.getElementById('modal-heart-btn');
     if(btn) {
         btn.innerHTML = data
@@ -371,10 +421,17 @@ async function loadLikedProducts() {
     const container = document.getElementById('mylist-grid');
     container.innerHTML = '';
     sortedProducts.forEach(p => {
+        // ✅ 모든 사용자 입력 escape
+        const safeTitle = escapeHtml(p.title);
+        const safePrice = escapeHtml(p.price);
+        const productImageHtml = (typeof getProductImageHtml === 'function')
+            ? getProductImageHtml(p)
+            : (p.svg || '');
+
         const card = document.createElement('div');
         card.className = 'product-card'; card.style.cursor = 'pointer';
         card.onclick = () => openProductModal(p.id);
-        card.innerHTML = `<div class="product-img" style="position:relative;">${p.svg}<div style="position:absolute; bottom:8px; right:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#E53E3E" stroke="#E53E3E" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div></div><div class="product-body"><div class="product-title">${p.title}</div><div class="product-price">${p.price}</div></div>`;
+        card.innerHTML = `<div class="product-img" style="position:relative;">${productImageHtml}<div style="position:absolute; bottom:8px; right:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#E53E3E" stroke="#E53E3E" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div></div><div class="product-body"><div class="product-title">${safeTitle}</div><div class="product-price">${safePrice}</div></div>`;
         container.appendChild(card);
     });
 }
@@ -386,7 +443,7 @@ function openMyListCommon(titleText) {
     document.getElementById('mylist-grid').innerHTML = '<div style="grid-column: span 3; padding:40px; text-align:center; color:#999; font-size:13px; display:flex; justify-content:center;">로딩 중...</div>';
 }
 
-// ✅ [버그 수정] 전역 스코프로 이동 — 거래완료/후기 기능 복구
+// 거래완료/후기 — 전역 스코프
 let activeReviewProductId = null;
 let activeReviewTargetId  = null;
 
@@ -394,8 +451,18 @@ window.completeTransaction = async function(productId, roomId) {
     if(!confirm("정말 이 방의 유저와 거래를 완료하시겠습니까? 거래가 마감 처리됩니다.")) return;
     const p = products.find(x => x.id === productId);
     if(!p) return;
+
+    // ⚠️ 알려진 보안 이슈: 판매자 권한 체크 없음 (클라이언트만).
+    //     2차 작업에서 RLS 또는 RPC로 강화 예정.
+    //     임시로 클라이언트 단 체크라도 추가:
+    if (currentUser && p.seller_id && p.seller_id !== currentUser.id && p.user_id !== currentUser.id) {
+        alert('판매자만 거래 완료를 처리할 수 있습니다.');
+        return;
+    }
+
+    // ✅ .single() → .maybeSingle()
     const { data: roomData } = await supabaseClient
-        .from('haema_chat_rooms').select('buyer_id').eq('id', roomId).single();
+        .from('haema_chat_rooms').select('buyer_id').eq('id', roomId).maybeSingle();
     if(!roomData) return;
     const buyerId = roomData.buyer_id;
     await supabaseClient.from('haema_products')
@@ -418,6 +485,10 @@ window.submitReview = async function(score) {
     if(!activeReviewProductId || !activeReviewTargetId) return;
     const content = document.getElementById('review-content')
         ? document.getElementById('review-content').value.trim() : '';
+
+    // ✅ 후기 길이 검증
+    if (content.length > 1000) { alert("후기는 1,000자 이하로 입력해주세요."); return; }
+
     const { error } = await supabaseClient.from('haema_reviews').insert({
         product_id:  activeReviewProductId,
         reviewer_id: currentUser.id,
