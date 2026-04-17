@@ -102,11 +102,125 @@ function showMyList() {
         const card = document.createElement('div');
         card.className = 'product-card';
         card.style.cursor = 'pointer';
+        card.style.position = 'relative';  // ✕ 버튼 절대위치용
         card.onclick = () => openProductModal(p.id);
-        card.innerHTML = `<div class="product-img">${productImageHtml}</div><div class="product-body"><div class="product-sub">${safeRegion} · ${safeCondition}</div><div class="product-title">${safeTitle}</div><div class="product-price">${safePrice}</div><div class="product-tags">${tagsHtml}</div></div>`;
+
+        // ✅ 본인 매물 삭제 버튼 (우상단 ✕)
+        //    - p.id를 escape (UUID 외 임의값 방어)
+        //    - 클릭 시 부모 카드 onclick(상세 모달) 트리거 안 되도록 stopPropagation
+        const safePid = escapeHtml(p.id);
+        const deleteBtnHtml = `<button type="button" class="my-product-delete-btn" data-pid="${safePid}" title="이 매물 삭제" style="position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.65); color:#fff; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0; box-shadow:0 2px 4px rgba(0,0,0,0.25); z-index:10;">✕</button>`;
+
+        card.innerHTML = `<div class="product-img" style="position:relative;">${productImageHtml}${deleteBtnHtml}</div><div class="product-body"><div class="product-sub">${safeRegion} · ${safeCondition}</div><div class="product-title">${safeTitle}</div><div class="product-price">${safePrice}</div><div class="product-tags">${tagsHtml}</div></div>`;
+
+        // 삭제 버튼 클릭 핸들러 — 카드 클릭 이벤트와 분리
+        const delBtn = card.querySelector('.my-product-delete-btn');
+        if (delBtn) {
+            delBtn.addEventListener('click', function(ev) {
+                ev.stopPropagation();
+                ev.preventDefault();
+                deleteMyProduct(p.id);
+            });
+        }
+
         container.appendChild(card);
     });
 }
+
+// ============================================================================
+// ✅ 매물 삭제 함수 (본인 매물만)
+// ============================================================================
+// ⚠️ 알려진 한계 (1차 패치):
+//   - 권한 체크가 클라이언트 단 — 콘솔에서 직접 Supabase 호출하면 우회 가능
+//   - 진짜 보안은 2차 작업의 RLS 정책(haema_products INSERT/UPDATE/DELETE)에서 확정
+//   - Storage 사진 삭제도 마찬가지로 RLS 필요
+window.deleteMyProduct = async function(productId) {
+    if (!currentUser) {
+        alert('로그인이 필요합니다.');
+        return;
+    }
+
+    // 1) 매물 객체 찾기 (캐시된 products에서)
+    const p = products.find(x => String(x.id) === String(productId));
+    if (!p) {
+        alert('매물을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
+        return;
+    }
+
+    // 2) 본인 매물인지 확인 (클라이언트 단 1차 방어)
+    //    seller_id 또는 user_id 어느 쪽으로든 본인이어야 함
+    const isOwner = (p.seller_id && p.seller_id === currentUser.id)
+                 || (p.user_id && p.user_id === currentUser.id);
+    if (!isOwner) {
+        alert('본인이 등록한 매물만 삭제할 수 있습니다.');
+        return;
+    }
+
+    // 3) 거래 진행 중인 매물은 차단
+    //    - 입찰자가 있는 경매 (bid_count > 0)
+    //    - 이미 마감된 거래 (is_closed)
+    if (p.is_closed) {
+        alert('이미 거래가 완료된 매물은 삭제할 수 없습니다.\n(거래 기록 보존을 위해)');
+        return;
+    }
+    const bidCount = parseInt(p.bid_count) || 0;
+    if (p.auction && bidCount > 0) {
+        alert(`입찰자가 있는 경매(${bidCount}회 입찰)는 삭제할 수 없습니다.\n경매 마감 후 처리해주세요.`);
+        return;
+    }
+
+    // 4) 2단계 확인
+    const titleForConfirm = (p.title || '').substring(0, 30);
+    const confirmed = confirm(
+        `정말 [${titleForConfirm}] 매물을 삭제하시겠습니까?\n\n` +
+        '⚠️ 이 작업은 되돌릴 수 없습니다.\n' +
+        '매물 정보와 첨부된 사진이 영구 삭제됩니다.'
+    );
+    if (!confirmed) return;
+
+    // 5) Storage에서 사진 파일 삭제 (있는 경우만)
+    //    image_url 형식: https://.../storage/v1/object/public/market_images/public/product_xxx.jpg
+    //    버킷명 다음의 경로만 추출해서 삭제 요청
+    if (p.image_url && typeof p.image_url === 'string') {
+        try {
+            const marker = '/market_images/';
+            const idx = p.image_url.indexOf(marker);
+            if (idx >= 0) {
+                const filePath = p.image_url.substring(idx + marker.length);
+                // 사진 삭제 실패는 치명적이지 않으므로 에러 무시 (DB 삭제는 진행)
+                const { error: storageErr } = await supabaseClient.storage
+                    .from('market_images').remove([filePath]);
+                if (storageErr) {
+                    console.warn('사진 파일 삭제 실패(무시하고 진행):', storageErr);
+                }
+            }
+        } catch (e) {
+            console.warn('사진 경로 파싱 실패(무시):', e);
+        }
+    }
+
+    // 6) DB에서 매물 행 삭제 (본인 매물 조건 한 번 더)
+    //    .eq('seller_id', currentUser.id) 가 추가 방어선 — RLS 없는 동안 임시
+    const { error: deleteErr } = await supabaseClient
+        .from('haema_products')
+        .delete()
+        .eq('id', productId)
+        .eq('seller_id', currentUser.id);
+
+    if (deleteErr) {
+        console.error('매물 삭제 실패:', deleteErr);
+        alert('매물 삭제 중 오류가 발생했습니다.\n오류: ' + (deleteErr.message || '알 수 없음'));
+        return;
+    }
+
+    alert('매물이 삭제되었습니다.');
+
+    // 7) 목록 갱신 — 전체 fetchProducts 후 다시 showMyList
+    if (typeof fetchProducts === 'function') {
+        await fetchProducts();
+    }
+    showMyList();
+};
 
 // ==== 프로필 UI 자동 렌더링 ====
 function updateProfileUI() {
