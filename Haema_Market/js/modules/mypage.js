@@ -72,6 +72,7 @@ function showMyList() {
     if(!container) return;
     container.innerHTML = '';
     if(myProducts.length === 0) {
+        // ✅ P0-A 안전망: onclick을 goToRegisterCreateMode로 (혹시 이전 변경이 캐시였을 경우 재적용)
         container.innerHTML = `
         <div style="grid-column: span auto; padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
             <div style="font-size:48px; margin-bottom:16px; color:#CBD5E1;"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></div>
@@ -104,8 +105,6 @@ function showMyList() {
         card.style.cursor = 'pointer';
         card.style.position = 'relative';  // ✕ 버튼 절대위치용
         // ✅ 마이페이지 판매목록의 카드 클릭 = 편집 진입 (상세 모달 X)
-        //    홈에서는 여전히 openProductModal 사용. 마이페이지만 다른 동작.
-        //    editMyProduct가 정의 안 됐을 때를 위한 폴백 포함.
         card.onclick = () => {
             if (typeof editMyProduct === 'function') {
                 editMyProduct(p.id);
@@ -116,8 +115,6 @@ function showMyList() {
         };
 
         // ✅ 본인 매물 삭제 버튼 (우상단 ✕)
-        //    - p.id를 escape (UUID 외 임의값 방어)
-        //    - 클릭 시 부모 카드 onclick(상세 모달) 트리거 안 되도록 stopPropagation
         const safePid = escapeHtml(p.id);
         const deleteBtnHtml = `<button type="button" class="my-product-delete-btn" data-pid="${safePid}" title="이 매물 삭제" style="position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.65); color:#fff; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0; box-shadow:0 2px 4px rgba(0,0,0,0.25); z-index:10;">✕</button>`;
 
@@ -140,25 +137,18 @@ function showMyList() {
 // ============================================================================
 // ✅ 매물 삭제 함수 (본인 매물만)
 // ============================================================================
-// ⚠️ 알려진 한계 (1차 패치):
-//   - 권한 체크가 클라이언트 단 — 콘솔에서 직접 Supabase 호출하면 우회 가능
-//   - 진짜 보안은 2차 작업의 RLS 정책(haema_products INSERT/UPDATE/DELETE)에서 확정
-//   - Storage 사진 삭제도 마찬가지로 RLS 필요
 window.deleteMyProduct = async function(productId) {
     if (!currentUser) {
         alert('로그인이 필요합니다.');
         return;
     }
 
-    // 1) 매물 객체 찾기 (캐시된 products에서)
     const p = products.find(x => String(x.id) === String(productId));
     if (!p) {
         alert('매물을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
         return;
     }
 
-    // 2) 본인 매물인지 확인 (클라이언트 단 1차 방어)
-    //    seller_id 또는 user_id 어느 쪽으로든 본인이어야 함
     const isOwner = (p.seller_id && p.seller_id === currentUser.id)
                  || (p.user_id && p.user_id === currentUser.id);
     if (!isOwner) {
@@ -166,9 +156,6 @@ window.deleteMyProduct = async function(productId) {
         return;
     }
 
-    // 3) 거래 진행 중인 매물은 차단
-    //    - 입찰자가 있는 경매 (bid_count > 0)
-    //    - 이미 마감된 거래 (is_closed)
     if (p.is_closed) {
         alert('이미 거래가 완료된 매물은 삭제할 수 없습니다.\n(거래 기록 보존을 위해)');
         return;
@@ -179,7 +166,6 @@ window.deleteMyProduct = async function(productId) {
         return;
     }
 
-    // 4) 2단계 확인
     const titleForConfirm = (p.title || '').substring(0, 30);
     const confirmed = confirm(
         `정말 [${titleForConfirm}] 매물을 삭제하시겠습니까?\n\n` +
@@ -188,16 +174,12 @@ window.deleteMyProduct = async function(productId) {
     );
     if (!confirmed) return;
 
-    // 5) Storage에서 사진 파일 삭제 (있는 경우만)
-    //    image_url 형식: https://.../storage/v1/object/public/market_images/public/product_xxx.jpg
-    //    버킷명 다음의 경로만 추출해서 삭제 요청
     if (p.image_url && typeof p.image_url === 'string') {
         try {
             const marker = '/market_images/';
             const idx = p.image_url.indexOf(marker);
             if (idx >= 0) {
                 const filePath = p.image_url.substring(idx + marker.length);
-                // 사진 삭제 실패는 치명적이지 않으므로 에러 무시 (DB 삭제는 진행)
                 const { error: storageErr } = await supabaseClient.storage
                     .from('market_images').remove([filePath]);
                 if (storageErr) {
@@ -209,8 +191,6 @@ window.deleteMyProduct = async function(productId) {
         }
     }
 
-    // 6) DB에서 매물 행 삭제 (본인 매물 조건 한 번 더)
-    //    .eq('seller_id', currentUser.id) 가 추가 방어선 — RLS 없는 동안 임시
     const { error: deleteErr } = await supabaseClient
         .from('haema_products')
         .delete()
@@ -225,7 +205,6 @@ window.deleteMyProduct = async function(productId) {
 
     alert('매물이 삭제되었습니다.');
 
-    // 7) 목록 갱신 — 전체 fetchProducts 후 다시 showMyList
     if (typeof fetchProducts === 'function') {
         await fetchProducts();
     }
@@ -248,15 +227,14 @@ function updateProfileUI() {
     const metaBio  = currentUser.user_metadata?.bio;
     const metaRegion = currentUser.user_metadata?.region;
     const isVerified = currentUser.user_metadata?.is_region_verified;
-    // ✅ 이메일 앞부분을 그대로 노출하지 않고, 사용자 익명 ID로 폴백
-    //    (full_name도 display_name도 없을 때만 적용)
+    // ✅ 이메일 앞부분 노출 방지 (full_name도 display_name도 없을 때만 익명 ID 폴백)
     const nameStr = metaName ? metaName : (
         currentUser.user_metadata?.full_name 
             ? currentUser.user_metadata.full_name 
             : `해마유저_${currentUser.id ? currentUser.id.substring(0, 6) : '익명'}`
     );
     const firstChar = nameStr.charAt(0).toUpperCase();
-    // ✅ textContent 사용 → 자동 escape (innerHTML 아님)
+    // ✅ textContent 사용 → 자동 escape
     const pName = document.getElementById('profile-name');   if(pName)  pName.textContent  = nameStr;
     const pEmail = document.getElementById('profile-email'); if(pEmail) pEmail.textContent = metaBio ? metaBio : email;
     const sEmail = document.getElementById('settings-email');if(sEmail) sEmail.textContent = email;
@@ -268,12 +246,13 @@ function updateProfileUI() {
         else if(metaRegion)           { rBadge.textContent = metaRegion + " (미인증)"; rBadge.style.background = "#FFFBEA"; rBadge.style.color = "#D4960A"; }
         else                          { rBadge.textContent = "지역 미설정";             rBadge.style.background = "#EAEDF2"; rBadge.style.color = "#7A93B0"; }
     }
-    const isBiz = currentUser.user_metadata?.is_business;
+
+    // ✅ P0-#4 수정: 신뢰 가능한 app_metadata에서만 읽음 (user_metadata는 위조 가능)
+    const isBiz = !!currentUser.app_metadata?.is_business;
     const bBadge = document.getElementById('profile-biz-badge');
     const bStatus = document.getElementById('biz-auth-status');
     if(bBadge) {
         if(isBiz) {
-            // ✅ 시스템 정의 SVG라 안전하지만, innerHTML은 보수적으로 사용
             bBadge.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="display:inline-block; margin-right:2px; vertical-align:-1px;"><path d="M20 6L9 17l-5-5"></path></svg>인증 기업`;
             bBadge.style.background = "var(--blue-50)"; bBadge.style.color = "var(--blue-800)"; bBadge.style.border = "1px solid var(--blue-200)";
             if(bStatus) bStatus.style.display = "inline-block";
@@ -320,7 +299,6 @@ function openProfileEdit() {
     const metaBio  = currentUser.user_metadata?.bio || '';
     const metaRegion = currentUser.user_metadata?.region || '';
     const isVerified = currentUser.user_metadata?.is_region_verified || false;
-    // ✅ 이메일 앞부분 노출 방지 (위와 동일 정책)
     const nameStr = metaName ? metaName : (
         currentUser.user_metadata?.full_name 
             ? currentUser.user_metadata.full_name 
@@ -353,7 +331,6 @@ async function saveProfile() {
     const selectedRegion = regionSelector ? regionSelector.value : '';
     if(!nameInput.disabled && !inputName) { alert('닉네임을 먼저 입력해주세요.'); return; }
 
-    // ✅ 입력 검증
     if (inputName.length > 30) { alert('닉네임은 30자 이하로 입력해주세요.'); return; }
     if (inputBio.length > 500) { alert('소개는 500자 이하로 입력해주세요.'); return; }
 
@@ -412,9 +389,10 @@ async function verifyGPSLocation() {
 function openBusinessAuth() {
     if(!currentUser) { alert('로그인이 필요한 기능입니다.'); showPage('login'); return; }
     showPage('business-auth');
-    const isBiz = currentUser.user_metadata?.is_business;
-    const bizNum = currentUser.user_metadata?.biz_number;
-    const bizName = currentUser.user_metadata?.biz_name;
+    // ✅ P0-#4 수정: app_metadata 사용 (서버에서만 쓸 수 있는 신뢰 영역)
+    const isBiz = !!currentUser.app_metadata?.is_business;
+    const bizNum = currentUser.app_metadata?.biz_number;
+    const bizName = currentUser.app_metadata?.biz_name;
     const formBox = document.getElementById('biz-auth-form');
     const authDesc = document.getElementById('biz-auth-desc');
     const verifiedBox = document.getElementById('biz-auth-verified');
@@ -427,7 +405,7 @@ function openBusinessAuth() {
         // ✅ textContent로 자동 escape
         if(nameDisplay) nameDisplay.textContent = bizName ? bizName : "인증된 해마마켓 기업";
         if(numDisplay) {
-            const raw = bizNum.replace(/[^0-9]/g, '');
+            const raw = String(bizNum).replace(/[^0-9]/g, '');
             numDisplay.textContent = raw.length === 10 ? raw.substring(0,3) + "-" + raw.substring(3,5) + "-*****" : bizNum;
         }
     } else {
@@ -437,6 +415,14 @@ function openBusinessAuth() {
     }
 }
 
+// ============================================================================
+// ✅ P0-#4 수정: 사업자 인증 서버화
+// ============================================================================
+// 변경 핵심:
+//   - 클라이언트 auth.updateUser({is_business:true}) 호출 제거 (위조 가능)
+//   - Authorization 헤더로 세션 토큰 전송 → 서버가 JWT 검증 후 service_role로
+//     app_metadata 직접 업데이트 (위조 불가)
+//   - 응답 후 refreshSession()으로 새 app_metadata가 currentUser에 반영
 async function submitBusinessAuth() {
     if(!currentUser) return;
     const nameEl  = document.getElementById('biz-name-input');
@@ -449,21 +435,35 @@ async function submitBusinessAuth() {
     const btn = document.querySelector('#page-business-auth .submit-btn');
     if(btn) { btn.textContent = "국세청 Live DB 조회 중..."; btn.disabled = true; }
 
-    // ⚠️ 알려진 보안 이슈: 사업자 인증 결과를 클라이언트에서 auth.updateUser로 직접 메타데이터 설정.
-    //     공격자가 /api/verify-business를 우회하고 직접 updateUser 호출 가능.
-    //     2차 작업에서 서버측 처리(Vercel Function + service_role)로 전환 예정.
     try {
+        // ✅ 현재 세션 토큰을 Authorization 헤더로 전송 →
+        //    서버가 JWT 검증 후 service_role로 app_metadata 업데이트.
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) {
+            alert('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
+            return;
+        }
+
         const res = await fetch('/api/verify-business', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
             body: JSON.stringify({ b_no: val, biz_name: nameVal })
         });
         const result = await res.json();
-        if(result.error) { alert("조회 실패: " + result.error); return; }
-        if(result.status === "01") {
-            if(!result.nameMatch) { alert(`입력하신 업체명("${nameVal}")이 국세청에 등록된 업체명("${result.companyName}")과 일치하지 않습니다.\n업체명을 정확히 입력해주세요.`); return; }
-            const { data, error } = await supabaseClient.auth.updateUser({ data: { is_business: true, biz_number: val, biz_name: result.companyName } });
-            if(error) throw new Error("서버 프로필 업데이트 에러");
-            currentUser = data.user;
+
+        if (result.success) {
+            // ✅ 새 app_metadata 반영을 위해 세션 갱신 → currentUser 동기화
+            const { data: refreshed, error: refreshErr } = await supabaseClient.auth.refreshSession();
+            if (refreshErr || !refreshed?.user) {
+                alert('인증은 완료되었지만 세션 갱신에 실패했습니다. 페이지를 새로고침해주세요.');
+                return;
+            }
+            currentUser = refreshed.user;
+
+            // UI 업데이트
             const formEl = document.getElementById('biz-auth-form');
             const verifiedEl = document.getElementById('biz-auth-verified');
             if(formEl) formEl.style.display = 'none';
@@ -476,10 +476,11 @@ async function submitBusinessAuth() {
             updateProfileUI();
             if(nameEl)  nameEl.value  = "";
             if(inputEl) inputEl.value = "";
-        } else if(result.status === "02" || result.status === "03") {
-            alert(`해당 사업자번호는 현재 ${result.status === "02" ? "휴업" : "폐업"} 상태입니다. 계속사업자만 인증이 가능합니다.`);
+        } else if (result.error) {
+            // 서버가 명시적 에러 반환 (이름 불일치, 휴업/폐업, 미등록, 인증 실패 등)
+            alert("인증 실패: " + result.error);
         } else {
-            alert("국세청 DB에서 해당 사업자번호를 찾을 수 없습니다. 번호를 다시 확인해주세요.");
+            alert("인증 처리 중 알 수 없는 오류가 발생했습니다.");
         }
     } catch(err) {
         console.error(err); alert("인증 중 오류가 발생했습니다: " + err.message);
@@ -494,7 +495,6 @@ async function toggleLike(productId) {
     if(!btn) return;
     btn.style.transform = 'scale(0.8)';
     setTimeout(() => btn.style.transform = 'scale(1)', 100);
-    // ✅ .single() → .maybeSingle()
     const { data: existing } = await supabaseClient
         .from('haema_likes').select('*')
         .eq('product_id', productId).eq('user_id', currentUser.id).maybeSingle();
@@ -509,7 +509,6 @@ async function toggleLike(productId) {
 
 async function checkLikeStatus(productId) {
     if(!currentUser || String(productId).startsWith('p')) return;
-    // ✅ .single() → .maybeSingle()
     const { data } = await supabaseClient
         .from('haema_likes').select('id')
         .eq('product_id', productId).eq('user_id', currentUser.id).maybeSingle();
@@ -545,7 +544,6 @@ async function loadLikedProducts() {
     const container = document.getElementById('mylist-grid');
     container.innerHTML = '';
     sortedProducts.forEach(p => {
-        // ✅ 모든 사용자 입력 escape
         const safeTitle = escapeHtml(p.title);
         const safePrice = escapeHtml(p.price);
         const productImageHtml = (typeof getProductImageHtml === 'function')
@@ -576,15 +574,11 @@ window.completeTransaction = async function(productId, roomId) {
     const p = products.find(x => x.id === productId);
     if(!p) return;
 
-    // ⚠️ 알려진 보안 이슈: 판매자 권한 체크 없음 (클라이언트만).
-    //     2차 작업에서 RLS 또는 RPC로 강화 예정.
-    //     임시로 클라이언트 단 체크라도 추가:
     if (currentUser && p.seller_id && p.seller_id !== currentUser.id && p.user_id !== currentUser.id) {
         alert('판매자만 거래 완료를 처리할 수 있습니다.');
         return;
     }
 
-    // ✅ .single() → .maybeSingle()
     const { data: roomData } = await supabaseClient
         .from('haema_chat_rooms').select('buyer_id').eq('id', roomId).maybeSingle();
     if(!roomData) return;
@@ -610,7 +604,6 @@ window.submitReview = async function(score) {
     const content = document.getElementById('review-content')
         ? document.getElementById('review-content').value.trim() : '';
 
-    // ✅ 후기 길이 검증
     if (content.length > 1000) { alert("후기는 1,000자 이하로 입력해주세요."); return; }
 
     const { error } = await supabaseClient.from('haema_reviews').insert({
