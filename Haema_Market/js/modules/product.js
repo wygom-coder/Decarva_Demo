@@ -37,8 +37,6 @@ function createProductCardHTML(p) {
     const safeSub = escapeHtml(p.sub);
 
     // ✅ p.svg 직접 사용 → getProductImageHtml로 안전하게 조립
-    //    (레거시 데이터에 HTML이 들어있을 수 있으나, 새로 등록되는 데이터는
-    //     image_url만 저장되므로 점진적으로 안전한 형태로 전환됨)
     const productImageHtml = (typeof getProductImageHtml === 'function')
         ? getProductImageHtml(p)
         : (p.svg || '');
@@ -246,9 +244,8 @@ async function submitBid(id) {
     const btn = document.querySelector('.auction-bid-btn');
     if(btn) btn.textContent = '입찰 처리중...';
     
-    // ⚠️ 알려진 race condition: 두 사용자가 동시에 입찰 시 나중 update가 무조건 이김.
-    //     2차 작업에서 RPC 또는 optimistic lock으로 해결 예정.
-    //     임시로 .lt('current_bid', newBid) 조건 추가하여 약하게 보호.
+    // ✅ .lt('current_bid', newBid) 조건이 DB 단 원자적 optimistic lock 역할.
+    //    동시 입찰 시 더 낮은 bid는 0행 반환으로 거부됨.
     const { data: updateRows, error } = await supabaseClient.from('haema_products')
         .update({ 
             current_bid: newBid, 
@@ -277,8 +274,6 @@ async function submitBid(id) {
     
     alert('성공적으로 입찰되었습니다!');
     closeProductModal();
-    // ✅ initTopCategory() 호출 제거 — 이벤트 리스너 중복 바인딩 방지
-    //    fetchProducts만으로 충분 (재렌더링은 fetchProducts 내부에서 처리)
     await fetchProducts();
 }
 
@@ -305,7 +300,6 @@ async function closeAuction(p) {
         
     if(!error) {
         p.is_closed = true;
-        // ✅ p.title escape (alert에 들어가지만 일관성)
         const safeTitle = String(p.title || '');
         if (currentUser && currentUser.id === p.highest_bidder_id) {
             alert(`축하합니다! [${safeTitle}] 경매에 최종 낙찰되셨습니다!\n(낙찰가: ₩ ${p.current_bid ? p.current_bid.toLocaleString() : '확인 불가'})`);
@@ -313,7 +307,6 @@ async function closeAuction(p) {
         else if (currentUser && currentUser.id === p.seller_id) {
             alert(`등록하신 [${safeTitle}] 경매가 마감되었습니다.\n(최종 입찰자: ${String(p.highest_bidder_name || '없음')})`);
         }
-        // ✅ initTopCategory() 호출 제거
         await fetchProducts();
         closeProductModal();
     }
@@ -337,10 +330,22 @@ setInterval(() => {
 // ✅ 매물 등록 / 수정 분기 처리
 // ============================================================================
 // editingProductId가 null이면 등록 모드(INSERT), 값이 있으면 수정 모드(UPDATE)
-// editMyProduct(id) 호출 시 폼 prefill + 모드 전환
+// 진입 경로:
+//   - 등록 모드: window.goToRegisterCreateMode() 호출 (FAB, +등록 버튼, 빈 판매목록)
+//   - 수정 모드: window.editMyProduct(id) 호출 (마이페이지 판매목록 카드 클릭)
+//
+// ⚠️ P0-A 수정 (2026-04-17):
+//   기존 hashchange 리스너 기반 자동 reset 방식은 동작하지 않았음.
+//   showPage()는 history.pushState()를 사용하는데 pushState는 hashchange 이벤트를
+//   발생시키지 않음. 이로 인해 편집 모드에서 +등록 클릭 시 editingProductId가
+//   리셋되지 않아 의도치 않은 UPDATE가 발생, 본인 매물이 덮어써질 위험이 있었음.
+//
+//   해결: 진입 경로를 두 개의 명시적 함수(goToRegisterCreateMode / editMyProduct)로
+//   분리. hashchange 리스너 + _enteredViaEdit 플래그는 모두 제거.
+// ============================================================================
 let editingProductId = null;
 
-// 등록 페이지 진입 시 모드 초기화 (외부에서 register 페이지로 보낼 때 호출)
+// 등록 페이지 진입 시 모드 초기화
 function resetRegisterFormToCreateMode() {
     editingProductId = null;
 
@@ -400,6 +405,26 @@ function resetRegisterFormToCreateMode() {
 }
 
 // ============================================================================
+// ✅ NEW (P0-A 수정): 등록 모드 진입 — 명시적 함수
+// ============================================================================
+// HTML의 +등록 버튼, FAB, 빈 판매목록의 "첫 판매글 작성하기" 버튼 모두
+// 이 함수를 호출함. requireAuthAndShow('register')의 대체 함수.
+//
+// 등록 모드 보장:
+//   1) 로그인 체크
+//   2) resetRegisterFormToCreateMode() 호출 → editingProductId = null
+//   3) showPage('register')
+window.goToRegisterCreateMode = function() {
+    if (!currentUser) {
+        alert('회원가입 및 로그인이 필요한 기능입니다.');
+        showPage('login');
+        return;
+    }
+    resetRegisterFormToCreateMode();
+    showPage('register');
+};
+
+// ============================================================================
 // ✅ 본인 매물 편집 진입
 // ============================================================================
 window.editMyProduct = function(productId) {
@@ -429,8 +454,7 @@ window.editMyProduct = function(productId) {
     }
 
     // 등록 페이지로 이동
-    // ✅ hashchange 리스너에서 자동 reset이 일어나지 않도록 플래그 세팅
-    window._enteredViaEdit = true;
+    // ⚠️ P0-A 수정: _enteredViaEdit 플래그 제거 (hashchange 리스너 사라짐)
     showPage('register');
 
     // 모드 전환
@@ -503,7 +527,7 @@ window.editMyProduct = function(productId) {
     const mainBox = document.getElementById('photo-box-main');
     if (mainBox) {
         if (p.image_url) {
-            // 기존 사진을 미리보기로 표시 + ✕ 삭제 버튼 (이번 세션에서 새로 변경하면 교체됨)
+            // 기존 사진을 미리보기로 표시 + ✕ 삭제 버튼
             const safeUrl = escapeHtml(p.image_url);
             mainBox.style.backgroundImage = `url(${safeUrl})`;
             mainBox.style.backgroundSize = 'cover';
@@ -798,11 +822,20 @@ async function registerProduct() {
 }
 
 // [URL Parameter 처리: 더미 상품 페이지 연동]
+//
+// ⚠️ P0-A 수정 (2026-04-17):
+//   기존 hashchange 리스너 + _enteredViaEdit 플래그 기반 모드 자동 동기화 코드는
+//   동작하지 않아서 통째로 제거함. showPage()의 pushState는 hashchange를
+//   발생시키지 않기 때문.
+//
+//   대체: window.goToRegisterCreateMode() (등록 모드 명시적 진입)
+//         window.editMyProduct(id)        (수정 모드 명시적 진입)
+//   진입 경로를 두 함수로만 한정. HTML의 onclick은 모두 위 두 함수만 호출.
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const pid = urlParams.get('product_id');
     if (pid && pid.startsWith('p')) {
-        // ✅ 더미 데이터는 시스템 정의 — XSS 위험 없음, 다만 일관성 위해 그대로 유지
+        // ✅ 더미 데이터는 시스템 정의 — XSS 위험 없음
         const dummies = {
             p1: { title: "대형 선박용 고출력 디젤 엔진 (상태 A급)", price: "협의 요망", location: "부산 감천항", seller_name: "엔진마스터", type: "standard", content: "22년 정비 완료된 완벽한 상태의 엔진입니다." },
             p2: { title: "특수 합금 청동 프로펠러 세트", price: "52,000,000", location: "울산 앞바다", seller_name: "선체부속", type: "standard", content: "미사용 신품급 특수 합금 프로펠러입니다." },
@@ -810,19 +843,15 @@ document.addEventListener('DOMContentLoaded', () => {
             p4: { title: "선박용 평형수 처리 장치(BWTS)", price: "28,000,000", location: "목포 신항", seller_name: "에코환경", type: "standard", content: "설치 및 시운전 지원 가능한 폐수 처리 장치입니다." },
         };
         if(dummies[pid]) {
-            // ✅ 더미 데이터에는 svg 필드 미설정 → getProductImageHtml이 카테고리 fallback 처리
-            //    (image_url도 없으므로 placeholder SVG가 표시됨)
-            // products 배열에 임시로 추가하여 openProductModal이 찾을 수 있게 함
             const dummyProduct = { 
                 id: pid, 
                 ...dummies[pid], 
-                category: '기부속',  // 카테고리 폴백 SVG용
+                category: '기부속',
                 user_id: 'dummy_user',
                 tradeType: dummies[pid].type === 'auction' ? '경매' : '직거래',
                 condition: '양호',
                 auction: dummies[pid].type === 'auction'
             };
-            // products가 아직 비어있을 수 있으므로 임시 push
             if (typeof products !== 'undefined') {
                 products.push(dummyProduct);
             }
@@ -831,27 +860,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 600);
         }
     }
-
-    // ============================================================================
-    // ✅ 등록/수정 모드 자동 감지 — register 페이지 진입 시 모드 동기화
-    // ============================================================================
-    // editMyProduct()는 자체 처리 후 _enteredViaEdit = true 플래그를 세움.
-    // 그 외 진입(+등록, FAB 등)은 무조건 등록 모드로 초기화.
-    let _wasOnRegisterPage = (window.location.hash === '#register');
-    window.addEventListener('hashchange', () => {
-        const isOnRegisterNow = (window.location.hash === '#register');
-
-        // register 페이지로 새로 진입했을 때만 처리
-        if (isOnRegisterNow && !_wasOnRegisterPage) {
-            if (window._enteredViaEdit === true) {
-                // editMyProduct에서 이미 prefill 했음 — 플래그만 끄고 유지
-                window._enteredViaEdit = false;
-            } else {
-                // 직접 진입 (+등록/FAB) — 등록 모드로 초기화
-                resetRegisterFormToCreateMode();
-            }
-        }
-
-        _wasOnRegisterPage = isOnRegisterNow;
-    });
 });
