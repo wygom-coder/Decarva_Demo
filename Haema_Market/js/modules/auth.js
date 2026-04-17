@@ -12,6 +12,14 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 
     if (event === 'SIGNED_OUT') _mannerTempLoaded = false;
 
+    // ✅ NEW: 글로벌 채팅 알림 구독 관리
+    if (currentUser && typeof subscribeToGlobalMessages === 'function') {
+        subscribeToGlobalMessages();
+    }
+    if (event === 'SIGNED_OUT' && typeof unsubscribeFromGlobalMessages === 'function') {
+        unsubscribeFromGlobalMessages();
+    }
+
         // ✅ NEW: 글로벌 채팅 알림 구독 관리
         if (currentUser && typeof subscribeToGlobalMessages === 'function') {
                         subscribeToGlobalMessages();
