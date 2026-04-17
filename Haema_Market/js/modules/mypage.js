@@ -103,7 +103,17 @@ function showMyList() {
         card.className = 'product-card';
         card.style.cursor = 'pointer';
         card.style.position = 'relative';  // ✕ 버튼 절대위치용
-        card.onclick = () => openProductModal(p.id);
+        // ✅ 마이페이지 판매목록의 카드 클릭 = 편집 진입 (상세 모달 X)
+        //    홈에서는 여전히 openProductModal 사용. 마이페이지만 다른 동작.
+        //    editMyProduct가 정의 안 됐을 때를 위한 폴백 포함.
+        card.onclick = () => {
+            if (typeof editMyProduct === 'function') {
+                editMyProduct(p.id);
+            } else {
+                console.warn('editMyProduct 함수 미정의 - product.js 업데이트 필요');
+                openProductModal(p.id);
+            }
+        };
 
         // ✅ 본인 매물 삭제 버튼 (우상단 ✕)
         //    - p.id를 escape (UUID 외 임의값 방어)
