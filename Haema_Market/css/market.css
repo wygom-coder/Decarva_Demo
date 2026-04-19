@@ -35,7 +35,7 @@ body { font-family: 'Inter', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR'
 .cat-item:hover { color: var(--blue-800); }
 .horizontal-scroll-list { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
 .horizontal-scroll-list::-webkit-scrollbar { display: none; }
-.horizontal-scroll-list .product-card { min-width: 150px; max-width: 150px; flex-shrink: 0; margin-bottom: 4px; }
+.horizontal-scroll-list .product-card { min-width: 170px; max-width: 170px; flex-shrink: 0; margin-bottom: 4px; }
 .filter-bar { background: #fff; border-bottom: none; padding: 10px 20px; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
 .filter-bar::-webkit-scrollbar { display: none; }
 .filter-label { font-size: 12px; color: var(--text-muted); margin-right: 2px; }
