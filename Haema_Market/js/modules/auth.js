@@ -1,10 +1,20 @@
+// ============================================================================
+// auth.js — 로그인/회원가입/세션 관리
+// ============================================================================
+// ⚠️ P1 수정 (2026-04-19):
+//   onAuthStateChange 내부에 subscribeToGlobalMessages 호출 블록이
+//   완전 중복(복붙)으로 2회 반복되어 있었음. 매 상태 변경 시 Supabase
+//   Realtime 채널이 불필요하게 2배로 재생성되어 비용·지연 발생.
+//   → 단일 블록으로 정리.
+// ============================================================================
+
 let currentUser = null;
 let authMode = 'signin';
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     currentUser = session ? session.user : null;
 
-    // ✅ 이메일 인증 완료 후 리다이렉트 감지 → 환영 메시지
+    // 이메일 인증 완료 후 리다이렉트 감지 → 환영 메시지
     if (event === 'SIGNED_IN' && window.location.hash.includes('type=signup')) {
         alert('🎉 이메일 인증이 완료되었습니다! 해마 마켓에 오신 것을 환영합니다.');
         window.history.replaceState(null, '', window.location.pathname);
@@ -12,7 +22,9 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 
     if (event === 'SIGNED_OUT') _mannerTempLoaded = false;
 
-    // ✅ NEW: 글로벌 채팅 알림 구독 관리
+    // 글로벌 채팅 알림 구독 관리 (단일 블록 — 중복 금지)
+    //   - 로그인 시: 전역 메시지 구독 시작
+    //   - 로그아웃 시: 구독 해제 + 뱃지/캐시 초기화
     if (currentUser && typeof subscribeToGlobalMessages === 'function') {
         subscribeToGlobalMessages();
     }
@@ -20,20 +32,12 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         unsubscribeFromGlobalMessages();
     }
 
-        // ✅ NEW: 글로벌 채팅 알림 구독 관리
-        if (currentUser && typeof subscribeToGlobalMessages === 'function') {
-                        subscribeToGlobalMessages();
-        }
-        if (event === 'SIGNED_OUT' && typeof unsubscribeFromGlobalMessages === 'function') {
-                        unsubscribeFromGlobalMessages();
-        }
-
     setTimeout(() => {
         if (typeof updateProfileUI === 'function') {
             updateProfileUI();
         }
         if (currentUser) {
-            // ✅ 카카오 닉네임 우선 표기 (full_name > display_name > 이메일)
+            // 카카오 닉네임 우선 표기 (full_name > display_name > 이메일)
             const displayName =
                 currentUser.user_metadata?.full_name ||
                 currentUser.user_metadata?.display_name ||
@@ -94,7 +98,7 @@ async function submitAuth() {
         return;
     }
 
-    // ✅ 클라이언트 단 비밀번호 길이 검사
+    // 클라이언트 단 비밀번호 길이 검사
     if (pw.length < 6) {
         errObj.textContent = '비밀번호는 6자 이상이어야 합니다.';
         return;
@@ -116,7 +120,7 @@ async function submitAuth() {
             email: email,
             password: pw,
             options: {
-                // ✅ 로컬/배포 환경 모두 대응 (동적 처리)
+                // 로컬/배포 환경 모두 대응 (동적 처리)
                 emailRedirectTo: window.location.origin + window.location.pathname
             }
         });
@@ -124,7 +128,7 @@ async function submitAuth() {
         if (error) {
             errObj.textContent = error.message;
         } else if (data.user && data.user.identities && data.user.identities.length === 0) {
-            // ✅ 중복 이메일 오탐 방지
+            // 중복 이메일 오탐 방지
             errObj.textContent = '이미 가입된 이메일입니다. 로그인을 시도해주세요.';
         } else {
             alert('📧 인증 이메일을 발송했습니다!\n받은 메일함을 확인하고 링크를 클릭하면 로그인됩니다.');
@@ -140,7 +144,7 @@ async function submitAuth() {
         });
 
         if (error) {
-            // ✅ 이메일 미인증 상태 구분 안내
+            // 이메일 미인증 상태 구분 안내
             if (error.message === 'Email not confirmed') {
                 errObj.textContent = '이메일 인증이 완료되지 않았습니다. 받은 메일함을 확인하고 링크를 클릭해주세요.';
             } else {
@@ -179,4 +183,3 @@ window.loginWithKakao = async function() {
         alert('카카오 로그인 중 오류가 발생했습니다: ' + error.message);
     }
 };
-
