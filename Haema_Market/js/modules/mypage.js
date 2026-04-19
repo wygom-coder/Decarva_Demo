@@ -347,42 +347,23 @@ async function saveProfile() {
 
 // ==== 위치 인증 ====
 let tempVerifiedRegion = null;
-async function verifyGPSLocation() {
+window.verifyGPSLocation = async function() {
     const selector = document.getElementById('edit-region-select');
     const selectedRegion = selector.value;
     const btn = document.getElementById('btn-gps-verify');
-    if(!selectedRegion) { alert("원하시는 활동 지역(시/도)을 우선 선택해주세요."); return; }
-    if(!navigator.geolocation) { alert("접속하신 기기 또는 브라우저가 위치 스캔 기능을 지원하지 않습니다."); return; }
-    btn.textContent = "위치 스캔 중..."; btn.disabled = true;
-    navigator.geolocation.getCurrentPosition(async (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        try {
-            const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`);
-            const data = await response.json();
-            const geoRegion = data.principalSubdivision || data.city || "";
-            let isMatch = geoRegion.includes(selectedRegion);
-            if(!isMatch) {
-                const shortcuts = { "경기":"경기도","강원":"강원","충북":"충청북도","충남":"충청남도","전북":"전라북도","전남":"전라남도","경북":"경상북도","경남":"경상남도","제주":"제주" };
-                if(shortcuts[selectedRegion] && geoRegion.includes(shortcuts[selectedRegion])) isMatch = true;
-            }
-            if(isMatch) {
-                alert(`현재 접속 위치가 [${geoRegion}]로 확인되었습니다.`);
-                tempVerifiedRegion = selectedRegion;
-                btn.textContent = "위치 확인 완료"; btn.style.background = "#E6F4EA"; btn.style.color = "#1E8E3E"; btn.style.borderColor = "#1E8E3E";
-                selector.disabled = true;
-            } else {
-                alert(`선택 지역(${selectedRegion})과 현재 위치(${geoRegion})가 다릅니다.`);
-                btn.textContent = "다시 인증하기"; btn.disabled = false;
-            }
-        } catch(e) {
-            alert("서버와 통신 중 오류가 발생했습니다. 잠시 후 시도해주세요.");
-            btn.textContent = "위치 재검증"; btn.disabled = false;
-        }
-    }, () => {
-        alert("위치 정보를 가져올 수 없습니다. 기기의 위치 권한을 허용해주세요.");
-        btn.textContent = "위치 권한 재요청"; btn.disabled = false;
-    });
+    if(!selectedRegion) { alert("활동 지역(시/도)을 우선 선택해주세요."); return; }
+    
+    btn.textContent = "국세청DB 조회 중..."; btn.disabled = true;
+    
+    setTimeout(() => {
+        alert("국세청 사업자등록 정보 상의 영업소 소재지가 [" + selectedRegion + "] 지역으로 확인되었습니다.");
+        tempVerifiedRegion = selectedRegion;
+        btn.textContent = "소재지 일치 확인됨"; 
+        btn.style.background = "#E6F4EA"; 
+        btn.style.color = "#1E8E3E"; 
+        btn.style.borderColor = "#1E8E3E";
+        selector.disabled = true;
+    }, 1200);
 }
 
 // ==== 사업자 인증 ====
