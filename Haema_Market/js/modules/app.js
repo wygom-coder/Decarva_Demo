@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const isAuction = chip.textContent.trim() === '경매';
             document.getElementById('auction-date-row').style.display = isAuction ? 'block' : 'none';
-            document.getElementById('price-label').innerHTML = isAuction ? '경매 시작가<span>*</span>' : '파매 펄막가<span>*</span>';
+            document.getElementById('price-label').innerHTML = isAuction ? '경매 시작가<span>*</span>' : '판매 희망가<span>*</span>';
         });
     });
 
