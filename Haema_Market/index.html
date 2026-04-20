@@ -439,6 +439,17 @@
       <div class="setting-item"><span class="setting-label">이용약관</span><span class="setting-arrow">›</span></div>
       <div class="setting-item"><span class="setting-label">개인정보처리방침</span><span class="setting-arrow">›</span></div>
       <div class="setting-item"><span class="setting-label">고객센터</span><span class="setting-arrow">›</span></div>
+      <!-- ✅ 회원 탈퇴 (가장 마지막 setting-item 다음에 배치) -->
+      <!--    admin 계정에는 mypage.js의 deleteAccount 가드가 작동하여 클릭 시 별도 안내 -->
+      <div class="setting-item" id="setting-delete-account" onclick="deleteAccount()" style="cursor:pointer; border-top: 8px solid #F4F6F8; margin-top: 16px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding: 16px 20px;">
+              <div>
+                  <div style="font-size: 15px; font-weight: 600; color: #E53E3E;">회원 탈퇴</div>
+                  <div style="font-size: 12px; color: #7A93B0; margin-top: 4px;">계정 및 서비스 이용 종료</div>
+              </div>
+              <span style="color: #E53E3E; font-size: 18px;">›</span>
+          </div>
+      </div>
     </div>
     <button class="logout-btn">로그아웃</button>
     <button class="withdraw-btn">회원탈퇴</button>

@@ -602,3 +602,80 @@ window.submitReview = async function(score) {
     }
     document.getElementById('review-modal').style.display = 'none';
 };
+
+// ============================================================================
+// 회원 탈퇴 신청 (Phase 2 — Mock 아닌 실제 신청 기록 방식)
+// ============================================================================
+// 동작:
+//   1) admin 계정은 탈퇴 차단 (본인 권한 회복 수단 상실 방지)
+//   2) 사용자에게 1차 confirm
+//   3) 탈퇴 사유 prompt (선택)
+//   4) haema_account_deletion_requests 테이블에 INSERT
+//   5) 안내 메시지 + 자동 로그아웃
+//
+// ⚠️ 실제 auth.users 행 삭제는 어드민이 수동으로 처리하거나,
+//     Phase 3에서 Edge Function으로 자동화 예정.
+// ============================================================================
+window.deleteAccount = async function() {
+    // 1) 로그인 확인
+    if (!currentUser) {
+        alert('로그인이 필요합니다.');
+        showPage('login');
+        return;
+    }
+
+    // 2) admin 계정 가드 — 본인 탈퇴 시 권한 회복 불가능
+    const role = currentUser.app_metadata && currentUser.app_metadata.role;
+    if (role === 'admin') {
+        alert('관리자 계정은 본 화면에서 탈퇴할 수 없습니다.\n별도 절차로 진행해주세요.');
+        return;
+    }
+
+    // 3) 1차 확인
+    if (!confirm('정말 탈퇴하시겠습니까?\n\n• 신청 즉시 로그아웃됩니다.\n• 운영팀 검토 후 영업일 기준 5일 이내 계정과 데이터가 완전히 삭제됩니다.\n• 한 번 처리되면 복구할 수 없습니다.')) {
+        return;
+    }
+
+    // 4) 탈퇴 사유 (선택)
+    const reason = prompt('탈퇴 사유를 알려주시면 서비스 개선에 큰 도움이 됩니다. (선택)\n\n* 비워두셔도 신청은 정상 접수됩니다.', '');
+    // prompt 취소(null) 시 신청 자체를 취소 (실수 방지)
+    if (reason === null) {
+        alert('탈퇴 신청이 취소되었습니다.');
+        return;
+    }
+
+    // 5) Supabase INSERT
+    try {
+        const fullName =
+            currentUser.user_metadata?.full_name_ko ||
+            currentUser.user_metadata?.full_name ||
+            currentUser.user_metadata?.display_name ||
+            null;
+
+        const { error } = await supabaseClient
+            .from('haema_account_deletion_requests')
+            .insert([{
+                user_id: currentUser.id,
+                user_email: currentUser.email,
+                user_full_name: fullName,
+                reason: reason ? reason.trim().slice(0, 1000) : null
+                // status, requested_at은 DB DEFAULT 사용
+            }]);
+
+        if (error) {
+            // 중복 신청 등의 에러 안내
+            console.error('탈퇴 신청 INSERT 오류:', error);
+            alert('탈퇴 신청 중 오류가 발생했습니다.\n\n잠시 후 다시 시도하시거나, 문제가 지속되면 고객센터로 연락 주세요.\n\n오류 코드: ' + (error.message || '알 수 없음'));
+            return;
+        }
+
+        // 6) 성공 안내 + 자동 로그아웃
+        alert('탈퇴 신청이 정상 접수되었습니다.\n\n운영팀 검토 후 영업일 기준 5일 이내 계정이 완전 삭제됩니다.\n잠시 후 자동으로 로그아웃됩니다.');
+
+        await supabaseClient.auth.signOut();
+        window.location.href = 'index.html';
+    } catch (err) {
+        console.error('deleteAccount 예외:', err);
+        alert('탈퇴 신청 처리 중 예기치 않은 오류가 발생했습니다.\n\n' + (err.message || err));
+    }
+};

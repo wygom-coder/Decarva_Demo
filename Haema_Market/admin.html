@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>해마 마켓 - 어드민 백오피스</title>
+
+    <!-- Supabase JS v2 (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 공유 모듈 (config.js의 supabaseClient를 그대로 사용) -->
+    <script src="./js/modules/config.js" defer></script>
+    <script src="./js/admin.js" defer></script>
+
+    <!-- 스타일 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" href="./css/admin.css">
+</head>
+<body>
+
+<!-- 좌측 사이드바 -->
+<aside class="admin-sidebar">
+    <div class="admin-brand">
+        <div class="admin-brand-logo">H</div>
+        <div class="admin-brand-text">
+            <div class="admin-brand-title">해마 마켓</div>
+            <div class="admin-brand-sub">Admin Console</div>
+        </div>
+    </div>
+
+    <nav class="admin-nav">
+        <button class="admin-nav-item active" data-view="dashboard">
+            <span class="admin-nav-icon">▣</span>
+            <span>대시보드</span>
+        </button>
+        <button class="admin-nav-item" data-view="products">
+            <span class="admin-nav-icon">◧</span>
+            <span>매물 관리</span>
+        </button>
+        <button class="admin-nav-item" data-view="community">
+            <span class="admin-nav-icon">◨</span>
+            <span>커뮤니티 관리</span>
+        </button>
+        <button class="admin-nav-item" data-view="deletions">
+            <span class="admin-nav-icon">◆</span>
+            <span>탈퇴 요청 관리</span>
+            <span class="admin-nav-badge" id="deletion-badge" style="display:none;">0</span>
+        </button>
+    </nav>
+
+    <div class="admin-bottom">
+        <div class="admin-user-info" id="admin-user-info">로딩 중...</div>
+        <button class="admin-logout-btn" id="admin-logout-btn">로그아웃</button>
+    </div>
+</aside>
+
+<!-- 우측 메인 -->
+<main class="admin-main">
+
+    <!-- 1) 대시보드 뷰 -->
+    <section class="admin-view active" id="view-dashboard">
+        <header class="admin-view-header">
+            <h1>대시보드</h1>
+            <p>플랫폼 운영 현황 요약</p>
+        </header>
+
+        <div class="admin-stat-grid">
+            <div class="admin-stat-card">
+                <div class="admin-stat-label">오늘 등록 매물</div>
+                <div class="admin-stat-value" id="stat-today-products">-</div>
+                <div class="admin-stat-sub">최근 24시간 기준</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="admin-stat-label">총 매물</div>
+                <div class="admin-stat-value" id="stat-total-products">-</div>
+                <div class="admin-stat-sub">누적 등록 수</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="admin-stat-label">총 커뮤니티 글</div>
+                <div class="admin-stat-value" id="stat-total-posts">-</div>
+                <div class="admin-stat-sub">누적 작성 수</div>
+            </div>
+            <div class="admin-stat-card admin-stat-card-warn">
+                <div class="admin-stat-label">대기중 탈퇴 요청</div>
+                <div class="admin-stat-value" id="stat-pending-deletions">-</div>
+                <div class="admin-stat-sub">처리 대기</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2) 매물 관리 뷰 -->
+    <section class="admin-view" id="view-products">
+        <header class="admin-view-header">
+            <h1>매물 관리</h1>
+            <p>최신순 50건 노출 · 강제 삭제 가능</p>
+        </header>
+
+        <div class="admin-table-toolbar">
+            <button class="admin-btn admin-btn-secondary" id="btn-refresh-products">새로고침</button>
+            <span class="admin-table-meta" id="products-meta"></span>
+        </div>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px;">ID</th>
+                        <th>매물명</th>
+                        <th style="width:110px;">카테고리</th>
+                        <th style="width:120px;">가격</th>
+                        <th style="width:90px;">거래</th>
+                        <th style="width:80px;">지역</th>
+                        <th style="width:160px;">등록일</th>
+                        <th style="width:90px;">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="products-tbody">
+                    <tr><td colspan="8" class="admin-empty">불러오는 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 3) 커뮤니티 관리 뷰 -->
+    <section class="admin-view" id="view-community">
+        <header class="admin-view-header">
+            <h1>커뮤니티 관리</h1>
+            <p>최신순 50건 노출 · 강제 삭제 가능</p>
+        </header>
+
+        <div class="admin-table-toolbar">
+            <button class="admin-btn admin-btn-secondary" id="btn-refresh-posts">새로고침</button>
+            <span class="admin-table-meta" id="posts-meta"></span>
+        </div>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px;">ID</th>
+                        <th style="width:100px;">태그</th>
+                        <th>제목</th>
+                        <th style="width:140px;">작성자</th>
+                        <th style="width:60px;">조회</th>
+                        <th style="width:60px;">댓글</th>
+                        <th style="width:160px;">작성일</th>
+                        <th style="width:90px;">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="posts-tbody">
+                    <tr><td colspan="8" class="admin-empty">불러오는 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 4) 탈퇴 요청 관리 뷰 -->
+    <section class="admin-view" id="view-deletions">
+        <header class="admin-view-header">
+            <h1>탈퇴 요청 관리</h1>
+            <p>회원이 신청한 탈퇴 요청 목록 · 수동 처리 후 상태 변경</p>
+        </header>
+
+        <div class="admin-table-toolbar">
+            <button class="admin-btn admin-btn-secondary" id="btn-refresh-deletions">새로고침</button>
+            <span class="admin-table-meta" id="deletions-meta"></span>
+        </div>
+
+        <div class="admin-info-box">
+            ⚠️ 이 화면은 신청 기록만 보여줍니다. 실제 계정 삭제는 Supabase 대시보드에서 수동으로 진행한 뒤,
+            여기서 [완료 처리] 버튼을 눌러 상태를 갱신해주세요.
+        </div>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px;">ID</th>
+                        <th style="width:200px;">이메일</th>
+                        <th style="width:120px;">국문 성명</th>
+                        <th>탈퇴 사유</th>
+                        <th style="width:90px;">상태</th>
+                        <th style="width:160px;">신청일</th>
+                        <th style="width:120px;">처리</th>
+                    </tr>
+                </thead>
+                <tbody id="deletions-tbody">
+                    <tr><td colspan="7" class="admin-empty">불러오는 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+</body>
+</html>
