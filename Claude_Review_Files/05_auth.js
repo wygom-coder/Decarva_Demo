@@ -102,6 +102,10 @@ function switchAuthMode(mode) {
     // 6필드 추가 영역 토글
     const extraBox = document.getElementById('auth-signup-extra');
     if (extraBox) extraBox.style.display = mode === 'signup' ? 'block' : 'none';
+    
+    // 약관 동의 체크박스 토글
+    const termsBox = document.getElementById('auth-terms-container');
+    if (termsBox) termsBox.style.display = mode === 'signup' ? 'block' : 'none';
 
     document.getElementById('btn-auth-submit').textContent = mode === 'signup' ? '해마 시작하기' : '로그인';
     document.getElementById('auth-error').textContent = '';
@@ -131,6 +135,14 @@ async function submitAuth() {
         const pwConfirm = document.getElementById('auth-pw-confirm').value;
         if (pw !== pwConfirm) {
             errObj.textContent = '비밀번호가 일치하지 않습니다.';
+            btn.disabled = false;
+            switchAuthMode('signup');
+            return;
+        }
+
+        // ✅ 약관 동의 검증
+        if (!document.getElementById('auth-agree-terms').checked || !document.getElementById('auth-agree-privacy').checked) {
+            errObj.textContent = '이용약관 및 개인정보처리방침 열람 후 동의가 필수입니다.';
             btn.disabled = false;
             switchAuthMode('signup');
             return;
