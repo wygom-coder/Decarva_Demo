@@ -187,7 +187,7 @@ window.submitPost = async function() {
 
     const newPost = {
         author_id: currentUser.id,
-        author_name: currentUser.user_metadata?.full_name || '익명선장',
+        author_name: currentUser.user_metadata?.nickname || currentUser.user_metadata?.full_name_ko || currentUser.user_metadata?.full_name || '익명선장',
         author_role: currentUser.user_metadata?.role || '일반 회원',
         tag: tag,
         tag_bg: tagBg,
@@ -336,7 +336,7 @@ window.submitComment = async function() {
     const newComment = {
         post_id: currentPostId,
         author_id: currentUser.id,
-        author_name: currentUser.user_metadata?.full_name || '익명선장',
+        author_name: currentUser.user_metadata?.nickname || currentUser.user_metadata?.full_name_ko || currentUser.user_metadata?.full_name || '익명선장',
         author_role: currentUser.user_metadata?.role || '일반 회원',
         content: content
     };
