@@ -428,6 +428,15 @@ function resetRegisterFormToCreateMode() {
     const titleInput = document.getElementById('title-input');
     if (titleInput) { titleInput.value = ''; titleInput.disabled = false; }
 
+    const majorSelect = document.getElementById('cat-major-select');
+    if (majorSelect) majorSelect.value = '';
+
+    const minorSelect = document.getElementById('cat-minor-select');
+    if (minorSelect) {
+        minorSelect.innerHTML = '<option value="">대분류를 먼저 선택해주세요</option>';
+        minorSelect.value = '';
+    }
+
     const manufacturerInput = document.getElementById('manufacturer-input');
     if (manufacturerInput) manufacturerInput.value = '';
 
@@ -456,9 +465,7 @@ function resetRegisterFormToCreateMode() {
         mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
     }
 
-    // 카테고리 선택 초기화
-    const catSelect = document.querySelector('#page-register .form-select');
-    if (catSelect) catSelect.value = '카테고리 선택';
+    // ✅ 카테고리 로직 변경으로 인한 구 카테고리 초기화 코드 제거
 
     // 거래방식 칩 (직거래로)
     document.querySelectorAll('#page-register .trade-chip').forEach(c => {
@@ -497,6 +504,29 @@ window.goToRegisterCreateMode = function() {
     }
     resetRegisterFormToCreateMode();
     showPage('register');
+};
+
+// ============================================================================
+// 대분류/소분류 카테고리 연동
+// ============================================================================
+window.onChangeMajorCategory = function() {
+    const majorSelect = document.getElementById('cat-major-select');
+    const minorSelect = document.getElementById('cat-minor-select');
+    if (!majorSelect || !minorSelect) return;
+
+    const majorVal = majorSelect.value;
+    minorSelect.innerHTML = '<option value="">소분류 선택</option>';
+
+    if (majorVal && KATEGORY_MAP[majorVal]) {
+        KATEGORY_MAP[majorVal].forEach(ci => {
+            const opt = document.createElement('option');
+            opt.value = ci.name;
+            opt.textContent = ci.name;
+            minorSelect.appendChild(opt);
+        });
+    } else {
+        minorSelect.innerHTML = '<option value="">대분류를 먼저 선택해주세요</option>';
+    }
 };
 
 // ============================================================================
@@ -560,12 +590,24 @@ window.editMyProduct = function(productId) {
         priceInput.value = numericPrice;
     }
 
-    // 카테고리 select
-    const catSelect = document.querySelector('#page-register .form-select');
-    if (catSelect && p.category) {
-        catSelect.value = p.category;
-        // option에 없는 카테고리면 "카테고리 선택"으로
-        if (catSelect.value !== p.category) catSelect.value = '카테고리 선택';
+    // 대분류/소분류 select 초기화
+    const majorSelect = document.getElementById('cat-major-select');
+    const minorSelect = document.getElementById('cat-minor-select');
+    if (majorSelect && minorSelect) {
+        if (p.category) {
+            const topCat = CAT_TO_TOP_MAP[p.category];
+            if (topCat) {
+                majorSelect.value = topCat;
+                window.onChangeMajorCategory(); // 소분류 목록 렌더링
+                minorSelect.value = p.category;
+            } else {
+                majorSelect.value = '';
+                window.onChangeMajorCategory();
+            }
+        } else {
+            majorSelect.value = '';
+            window.onChangeMajorCategory();
+        }
     }
 
     // 거래방식 칩
@@ -670,7 +712,11 @@ window.editMyProduct = function(productId) {
 async function registerProduct() {
   const isEditMode = (editingProductId !== null);
 
-  const cat = document.querySelector('#page-register .form-select').value;
+  // 대분류/소분류 값 추출
+  const minorSelect = document.getElementById('cat-minor-select');
+  const cat = minorSelect ? minorSelect.value : '';
+
+  // 제목 및 기타 텍스트
   const title = document.getElementById('title-input').value;
   let tradeType = '직거래';
   document.querySelectorAll('#page-register .trade-chip').forEach(c => {
@@ -692,7 +738,7 @@ async function registerProduct() {
     const descInputEl = document.getElementById('desc-input');
     const descVal = descInputEl ? descInputEl.value.trim() : '';
 
-  if (!title || cat === '카테고리 선택') { alert('상품명과 카테고리는 필수입니다.'); return; }
+  if (!title || !cat) { alert('상품명과 소분류 카테고리는 필수입니다.'); return; }
 
   // ✅ 추가 입력 검증
   if (title.length > 200) { alert('상품명은 200자 이하로 입력해주세요.'); return; }
