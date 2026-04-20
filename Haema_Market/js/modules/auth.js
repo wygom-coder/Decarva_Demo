@@ -1,11 +1,11 @@
 // ============================================================================
 // auth.js — 로그인/회원가입/세션 관리
 // ============================================================================
-// ⚠️ P1 수정 (2026-04-19):
-//   onAuthStateChange 내부에 subscribeToGlobalMessages 호출 블록이
-//   완전 중복(복붙)으로 2회 반복되어 있었음. 매 상태 변경 시 Supabase
-//   Realtime 채널이 불필요하게 2배로 재생성되어 비용·지연 발생.
-//   → 단일 블록으로 정리.
+// 변경 이력:
+//  - P1 (2026-04-19): onAuthStateChange 내 글로벌 채팅 구독 블록 중복 제거
+//  - P1 (2026-04-19): 회원가입 6필드 추가 (국문/영문 성명, 연락처,
+//                     소속 기업, 부서, 직함) — user_metadata로 저장
+//                     기존 코드 호환을 위해 full_name 키도 함께 기록
 // ============================================================================
 
 let currentUser = null;
@@ -14,7 +14,7 @@ let authMode = 'signin';
 supabaseClient.auth.onAuthStateChange((event, session) => {
     currentUser = session ? session.user : null;
 
-    // 이메일 인증 완료 후 리다이렉트 감지 → 환영 메시지
+    // 이메일 인증 완료 후 리다이렉트 감지
     if (event === 'SIGNED_IN' && window.location.hash.includes('type=signup')) {
         alert('🎉 이메일 인증이 완료되었습니다! 해마 마켓에 오신 것을 환영합니다.');
         window.history.replaceState(null, '', window.location.pathname);
@@ -22,9 +22,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 
     if (event === 'SIGNED_OUT') _mannerTempLoaded = false;
 
-    // 글로벌 채팅 알림 구독 관리 (단일 블록 — 중복 금지)
-    //   - 로그인 시: 전역 메시지 구독 시작
-    //   - 로그아웃 시: 구독 해제 + 뱃지/캐시 초기화
+    // 글로벌 채팅 알림 구독 (단일 블록 — 중복 금지)
     if (currentUser && typeof subscribeToGlobalMessages === 'function') {
         subscribeToGlobalMessages();
     }
@@ -37,7 +35,6 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
             updateProfileUI();
         }
         if (currentUser) {
-            // 카카오 닉네임 우선 표기 (full_name > display_name > 이메일)
             const displayName =
                 currentUser.user_metadata?.full_name ||
                 currentUser.user_metadata?.display_name ||
@@ -82,6 +79,11 @@ function switchAuthMode(mode) {
     document.getElementById('tab-signin').classList.toggle('active', mode === 'signin');
     document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
     document.getElementById('auth-pw-confirm-row').style.display = mode === 'signup' ? 'block' : 'none';
+
+    // 6필드 추가 영역 토글
+    const extraBox = document.getElementById('auth-signup-extra');
+    if (extraBox) extraBox.style.display = mode === 'signup' ? 'block' : 'none';
+
     document.getElementById('btn-auth-submit').textContent = mode === 'signup' ? '해마 시작하기' : '로그인';
     document.getElementById('auth-error').textContent = '';
 }
@@ -98,7 +100,6 @@ async function submitAuth() {
         return;
     }
 
-    // 클라이언트 단 비밀번호 길이 검사
     if (pw.length < 6) {
         errObj.textContent = '비밀번호는 6자 이상이어야 합니다.';
         return;
@@ -116,26 +117,66 @@ async function submitAuth() {
             return;
         }
 
+        // ✅ 회원가입 6필드 읽기 + 검증
+        const fullNameKo = document.getElementById('auth-full-name-ko').value.trim();
+        const fullNameEn = document.getElementById('auth-full-name-en').value.trim();
+        const phoneRaw = document.getElementById('auth-phone-number').value.trim();
+        const companyName = document.getElementById('auth-company-name').value.trim();
+        const department = document.getElementById('auth-department').value.trim();
+        const jobTitle = document.getElementById('auth-job-title').value.trim();
+
+        if (!fullNameKo || !fullNameEn || !phoneRaw || !companyName || !department || !jobTitle) {
+            errObj.textContent = '회원가입에 필요한 모든 정보를 입력해주세요.';
+            btn.disabled = false;
+            switchAuthMode('signup');
+            return;
+        }
+
+        // 휴대폰 번호 정규화 + 형식 검증 (010/011/016/017/018/019)
+        const phoneDigits = phoneRaw.replace(/\D/g, '');
+        if (!/^01[016789]\d{7,8}$/.test(phoneDigits)) {
+            errObj.textContent = '휴대폰 번호 형식이 올바르지 않습니다. (예: 010-1234-5678)';
+            btn.disabled = false;
+            switchAuthMode('signup');
+            return;
+        }
+
         const { data, error } = await supabaseClient.auth.signUp({
             email: email,
             password: pw,
             options: {
-                // 로컬/배포 환경 모두 대응 (동적 처리)
-                emailRedirectTo: window.location.origin + window.location.pathname
+                emailRedirectTo: window.location.origin + window.location.pathname,
+                data: {
+                    full_name_ko: fullNameKo,
+                    full_name_en: fullNameEn,
+                    phone_number: phoneDigits,
+                    company_name: companyName,
+                    department: department,
+                    job_title: jobTitle,
+                    // ⚠️ 기존 코드(채팅/마이페이지/커뮤니티)가 user_metadata.full_name을
+                    //     참조하므로 호환성 유지를 위해 국문 성명을 같이 기록
+                    full_name: fullNameKo
+                }
             }
         });
 
         if (error) {
             errObj.textContent = error.message;
         } else if (data.user && data.user.identities && data.user.identities.length === 0) {
-            // 중복 이메일 오탐 방지
             errObj.textContent = '이미 가입된 이메일입니다. 로그인을 시도해주세요.';
         } else {
             alert('📧 인증 이메일을 발송했습니다!\n받은 메일함을 확인하고 링크를 클릭하면 로그인됩니다.');
             showPage('home');
+            // 모든 입력 필드 초기화
             document.getElementById('auth-email').value = '';
             document.getElementById('auth-pw').value = '';
             document.getElementById('auth-pw-confirm').value = '';
+            document.getElementById('auth-full-name-ko').value = '';
+            document.getElementById('auth-full-name-en').value = '';
+            document.getElementById('auth-phone-number').value = '';
+            document.getElementById('auth-company-name').value = '';
+            document.getElementById('auth-department').value = '';
+            document.getElementById('auth-job-title').value = '';
         }
     } else {
         const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -144,7 +185,6 @@ async function submitAuth() {
         });
 
         if (error) {
-            // 이메일 미인증 상태 구분 안내
             if (error.message === 'Email not confirmed') {
                 errObj.textContent = '이메일 인증이 완료되지 않았습니다. 받은 메일함을 확인하고 링크를 클릭해주세요.';
             } else {

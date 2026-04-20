@@ -6,7 +6,15 @@
   <meta name="description" content="해마 마켓(Haema Market) - 조선/해양 B2B 조선기자재 중고 직거래 및 경매장 플랫폼. 선박 엔진, 레이더, 갑판 장비 등 인증받은 기업 간의 신뢰도 높은 해양 부품 거래처를 확보하세요.">
   <link rel="icon" href="images/seahorse_logo.png">
   <title>해마 마켓 - 중고 선박 기자재 거래 플랫폼</title>
- 
+
+  <!-- Open Graph (디카바 포털 등 외부 링크 미리보기용 — openProductModal에서 동적 갱신됨) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="해마 마켓">
+  <meta property="og:title" content="해마 마켓 - 중고 선박 기자재 거래 플랫폼">
+  <meta property="og:description" content="조선·해양 B2B 조선기자재 중고 직거래 및 경매 플랫폼">
+  <meta property="og:image" content="">
+  <meta property="og:url" content="">
+
   <!-- Supabase & Custom Script -->
   <!-- ⚠️ 중요: defer 속성을 쓸 때, 스크립트는 HTML에 적힌 순서대로 실행됨.
        utils.js는 escapeHtml/getProductImageHtml를 정의하므로 다른 모듈보다
@@ -136,7 +144,7 @@
       <span class="banner-tag" id="banner-tag">NEW</span>
       <span class="banner-text" id="banner-text">경매 기능 오픈! 희귀 기자재를 경쟁 입찰로 만나보세요</span>
     </div>
-    <button class="banner-btn">자세히 보기</button>
+    <button class="banner-btn" onclick="triggerBottomNav('auction')">자세히 보기</button>
   </div>
  
   <div class="main">
@@ -150,12 +158,12 @@
  
     <!-- Recommendations Area for Bunjang-style curation -->
     <div id="home-recommendation-area" style="display: none; margin-bottom: 24px;">
-      <div class="section-header"><span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>오늘의 추천 특가</span><span class="section-more">더보기 →</span></div>
+      <div class="section-header"><span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>오늘의 추천 특가</span><span class="section-more" onclick="triggerBottomNav('home')" style="cursor:pointer;">더보기 →</span></div>
       <div class="horizontal-scroll-list" id="recommendation-list">
         <!-- JS populated horizontal scroll products -->
       </div>
       
-      <div class="section-header" style="margin-top: 24px;"><span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>인기 카테고리 기획전</span><span class="section-more">더보기 →</span></div>
+      <div class="section-header" style="margin-top: 24px;"><span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>인기 카테고리 기획전</span><span class="section-more" onclick="triggerBottomNav('home')" style="cursor:pointer;">더보기 →</span></div>
       <div class="horizontal-scroll-list" id="curation-list">
         <!-- JS populated curation products -->
       </div>
@@ -518,6 +526,34 @@
         <label class="form-label">비밀번호 확인</label>
         <input class="form-input" type="password" id="auth-pw-confirm" placeholder="비밀번호를 한번 더 입력해주세요">
       </div>
+
+      <!-- ✅ 회원가입 모드 전용 추가 정보 (signin일 땐 display:none) -->
+      <div id="auth-signup-extra" style="display:none;">
+        <div class="form-row">
+          <label class="form-label">국문 성명<span style="color:#D32F2F; margin-left:2px;">*</span></label>
+          <input class="form-input" type="text" id="auth-full-name-ko" placeholder="홍길동" autocomplete="name" maxlength="50">
+        </div>
+        <div class="form-row">
+          <label class="form-label">영문 성명<span style="color:#D32F2F; margin-left:2px;">*</span></label>
+          <input class="form-input" type="text" id="auth-full-name-en" placeholder="Hong Gildong" autocomplete="off" maxlength="100">
+        </div>
+        <div class="form-row">
+          <label class="form-label">연락처<span style="color:#D32F2F; margin-left:2px;">*</span></label>
+          <input class="form-input" type="tel" id="auth-phone-number" placeholder="010-1234-5678" autocomplete="tel" maxlength="13">
+        </div>
+        <div class="form-row">
+          <label class="form-label">소속 기업<span style="color:#D32F2F; margin-left:2px;">*</span></label>
+          <input class="form-input" type="text" id="auth-company-name" placeholder="(주)해마 해운" autocomplete="organization" maxlength="100">
+        </div>
+        <div class="form-row">
+          <label class="form-label">부서<span style="color:#D32F2F; margin-left:2px;">*</span></label>
+          <input class="form-input" type="text" id="auth-department" placeholder="구매팀" autocomplete="off" maxlength="50">
+        </div>
+        <div class="form-row">
+          <label class="form-label">직함<span style="color:#D32F2F; margin-left:2px;">*</span></label>
+          <input class="form-input" type="text" id="auth-job-title" placeholder="과장" autocomplete="organization-title" maxlength="50">
+        </div>
+      </div>
       
       <div id="auth-error" class="auth-error"></div>
       
@@ -590,7 +626,7 @@
     <div class="tab-label">채팅</div>
   </button>
   
-  <button class="tab-item" onclick="triggerBottomNav('mypage')">
+  <button class="tab-item" onclick="if(!currentUser){alert('로그인이 필요한 기능입니다.');showPage('login');return;}triggerBottomNav('mypage')">
     <div class="tab-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
     <div class="tab-label">마이페이지</div>
   </button>
@@ -691,6 +727,12 @@
     </div>
   </div>
 </div>
- 
+
+<!-- ✅ 전역 로딩 스피너 (showLoading / hideLoading으로 제어) -->
+<div id="global-spinner" role="status" aria-live="polite" aria-hidden="true">
+  <div class="spinner-circle"></div>
+  <div class="spinner-msg">처리 중입니다...</div>
+</div>
+
 </body>
 </html>

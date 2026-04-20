@@ -1,5 +1,11 @@
 // ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
 // 모든 HTML 문자열 보간(`${...}`)에는 escapeHtml() 적용 필수
+// ============================================================================
+// 변경 이력:
+//  - P1 (2026-04-19): openProductModal 끝부분에 OG 메타 태그 동적 갱신 로직 추가
+//                     (디카바 포털 등 외부 링크 미리보기 대응)
+//  - P1 (2026-04-19): window.showLoading / window.hideLoading 전역 함수 추가
+// ============================================================================
 
 function showPage(id, pushHistory = true) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -66,8 +72,6 @@ function renderSubCategories(topCat) {
     if (fb) fb.style.display = 'flex';
     catBar.innerHTML = '';
 
-    // ✅ c.name과 c.bg는 KATEGORY_MAP의 시스템 데이터(사용자 입력 아님)이지만,
-    //    방어 차원에서 escape 처리. c.svg는 system-defined SVG라 그대로 둠.
     catGrid.innerHTML = subCats.map(c => {
         const isActive = filterState.category === c.name;
         const safeName = escapeHtml(c.name);
@@ -165,7 +169,6 @@ function openProductModal(id) {
     if (!KATEGORY_MAP[topCat]) topCat = '기부속';
     if (['쌀·곡물', '육류', '수산물', '청과류', '가공·음료', '주/부식'].includes(catTrimmed)) topCat = '주/부식';
 
-    // ✅ p.id를 onclick에 직접 삽입 — escape (UUID 외 임의 문자열 들어올 때 방어)
     const safeId = escapeHtml(p.id);
 
     if (topCat === '주/부식') {
@@ -188,14 +191,35 @@ function openProductModal(id) {
     }
 
     const safeContent = (p.content && p.content !== 'undefined') ? p.content : '상세 설명이 없습니다.';
-    // ✅ p.svg → getProductImageHtml(p) 로 교체. DB에 HTML이 저장되어 있을 수 있는
-    //    레거시 데이터를 위해 호환 코드 추가: p.svg가 문자열로 저장돼있으면 그대로 사용,
-    //    그렇지 않으면 getProductImageHtml로 안전하게 조립.
     const productImageHtml = (typeof getProductImageHtml === 'function')
         ? getProductImageHtml(p)
         : (p.svg || '');
 
     body.innerHTML = `<div style="width:100%;aspect-ratio:4/3;background:#f4f4f4;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:16px;position:relative;">${productImageHtml}<div id="modal-heart-btn" class="heart-btn" onclick="toggleLike('${safeId}')" style="position:absolute;bottom:12px;right:12px;width:40px;height:40px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div></div><div style="padding:0 20px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div style="background:#EAEDF2;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#7A93B0;">${escapeHtml(p.tradeType)}</div><div style="background:#E6F4EA;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#1E8E3E;">${escapeHtml(p.condition)}</div></div><h2 style="margin:0 0 4px 0;font-size:20px;color:#1A2B4A;">${escapeHtml(p.title)}</h2><div style="color:#7A93B0;font-size:13px;margin-bottom:16px;">${escapeHtml(p.sub)}</div><div style="font-size:24px;font-weight:800;color:#1A2B4A;margin-bottom:8px;">${escapeHtml(p.price)}</div><div style="padding:16px;background:#fff;border:1px solid rgba(0,0,0,0.05);border-radius:12px;display:flex;align-items:center;gap:12px;margin-top:20px;"><div style="width:40px;height:40px;border-radius:50%;background:#1A5FA0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">판</div><div><div style="font-size:13px;font-weight:700;color:#1A2B4A;">판매자 정보 (보호됨)</div><div style="font-size:11px;color:#7A93B0;">안전거래 사용 우수 판매자</div></div></div><div style="margin-top:20px;white-space:pre-wrap;font-size:14px;color:#1A2B4A;line-height:1.6;">${escapeHtml(safeContent)}</div>${actionArea}</div>`;
+
+    // ✅ OG 메타 태그 동적 갱신 (디카바 포털 등 외부 미리보기용)
+    //    ⚠️ 일반적인 HTTP 페치 기반 크롤러(카톡/페북 등)는 JS 실행을 안 하므로
+    //       이 갱신을 못 봅니다. JS 렌더링하는 크롤러(헤드리스 브라우저)에서만 효과 있음.
+    //       디카바가 JS 렌더링 크롤러를 쓴다는 전제로 구현.
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    const ogImage = document.querySelector('meta[property="og:image"]');
+    const ogUrl = document.querySelector('meta[property="og:url"]');
+    if (ogTitle) {
+        ogTitle.setAttribute('content', (p.title || '해마 마켓') + ' | 해마 마켓');
+    }
+    if (ogDesc) {
+        const descRaw = (p.content && p.content !== 'undefined') ? String(p.content) : '조선·해양 B2B 조선기자재 거래';
+        ogDesc.setAttribute('content', descRaw.length > 160 ? descRaw.slice(0, 157) + '...' : descRaw);
+    }
+    if (ogImage) {
+        const fallbackImg = window.location.origin + '/images/seahorse_logo.png';
+        ogImage.setAttribute('content', p.image_url || fallbackImg);
+    }
+    if (ogUrl) {
+        ogUrl.setAttribute('content', window.location.href);
+    }
+
     checkLikeStatus(p.id);
 }
 
@@ -209,4 +233,28 @@ window.scrollToTop = function () {
     if (activePage) {
         activePage.querySelectorAll('[id*="-content-area"]').forEach(a => a.scrollTo({ top: 0, behavior: 'smooth' }));
     }
+};
+
+// ============================================================================
+// 전역 로딩 스피너 (네트워크 지연 시 호출)
+//   사용 예:
+//     showLoading();              → "처리 중입니다..." 메시지로 노출
+//     showLoading('로그인 중...'); → 커스텀 메시지로 노출
+//     hideLoading();              → 닫기
+//   ⚠️ try/catch의 finally에서 hideLoading() 호출 권장 (에러 시에도 닫힘 보장)
+// ============================================================================
+window.showLoading = function(message) {
+    const el = document.getElementById('global-spinner');
+    if (!el) return;
+    const msgEl = el.querySelector('.spinner-msg');
+    if (msgEl) msgEl.textContent = message || '처리 중입니다...';
+    el.classList.add('is-active');
+    el.setAttribute('aria-hidden', 'false');
+};
+
+window.hideLoading = function() {
+    const el = document.getElementById('global-spinner');
+    if (!el) return;
+    el.classList.remove('is-active');
+    el.setAttribute('aria-hidden', 'true');
 };
