@@ -184,6 +184,7 @@ async function submitAuth() {
                     company_name: companyName,
                     department: department,
                     job_title: jobTitle,
+                    // ⚠️ 기존 코드(채팅/마이페이지/커뮤니티)가 user_metadata.full_name을
                     //     참조하므로 호환성 유지를 위해 국문 성명을 같이 기록
                     full_name: fullNameKo,
                     agreed_terms_at: new Date().toISOString(),
@@ -210,6 +211,9 @@ async function submitAuth() {
             document.getElementById('auth-company-name').value = '';
             document.getElementById('auth-department').value = '';
             document.getElementById('auth-job-title').value = '';
+            document.getElementById('auth-agree-terms').checked = false;
+            document.getElementById('auth-agree-privacy').checked = false;
+            document.getElementById('auth-agree-marketing').checked = false;
         }
     } else {
         const { data, error } = await supabaseClient.auth.signInWithPassword({

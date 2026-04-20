@@ -694,7 +694,8 @@ async function registerProduct() {
 
   // 🚨 [Phase 7 최우선 방어벽] 100만원 한도 시뮬레이션
   const MAX_PRICE_BETA = 1_000_000;
-  if (priceParsed > MAX_PRICE_BETA) {
+  const isEditingOldPrice = document.getElementById('price-input').disabled;
+  if (priceParsed > MAX_PRICE_BETA && !isEditingOldPrice) {
       alert('⚠️ 알파 테스트 기간 중에는 100만 원 이하의 매물만 등록 가능합니다.\n\n정식 출시 후 고가 거래(에스크로 및 계약 지원) 기능을 오픈할 예정입니다.');
       return;
   }
@@ -918,32 +919,5 @@ async function registerProduct() {
 //         window.editMyProduct(id)        (수정 모드 명시적 진입)
 //   진입 경로를 두 함수로만 한정. HTML의 onclick은 모두 위 두 함수만 호출.
 document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const pid = urlParams.get('product_id');
-    if (pid && pid.startsWith('p')) {
-        // ✅ 더미 데이터는 시스템 정의 — XSS 위험 없음
-        const dummies = {
-            p1: { title: "대형 선박용 고출력 디젤 엔진 (상태 A급)", price: "협의 요망", location: "부산 감천항", seller_name: "엔진마스터", type: "standard", content: "22년 정비 완료된 완벽한 상태의 엔진입니다." },
-            p2: { title: "특수 합금 청동 프로펠러 세트", price: "52,000,000", location: "울산 앞바다", seller_name: "선체부속", type: "standard", content: "미사용 신품급 특수 합금 프로펠러입니다." },
-            p3: { title: "X-Band 레이더 시스템 풀세트", price: "18,500,000", location: "인천 연안부두", seller_name: "통신전문기업", type: "auction", current_bid: 18500000, auction_end: new Date(Date.now() + 86400000).toISOString(), content: "모니터 포함된 레이더 시스템입니다." },
-            p4: { title: "선박용 평형수 처리 장치(BWTS)", price: "28,000,000", location: "목포 신항", seller_name: "에코환경", type: "standard", content: "설치 및 시운전 지원 가능한 폐수 처리 장치입니다." },
-        };
-        if(dummies[pid]) {
-            const dummyProduct = { 
-                id: pid, 
-                ...dummies[pid], 
-                category: '기부속',
-                user_id: 'dummy_user',
-                tradeType: dummies[pid].type === 'auction' ? '경매' : '직거래',
-                condition: '양호',
-                auction: dummies[pid].type === 'auction'
-            };
-            if (typeof products !== 'undefined') {
-                products.push(dummyProduct);
-            }
-            setTimeout(() => {
-                openProductModal(pid);
-            }, 600);
-        }
-    }
+    // 더미 데이터 진입점 제거됨 (Phase 7)
 });

@@ -1,6 +1,1738 @@
 # Haema Market Code Files for Review
 
-## 1. index.html
+## 1. product.js (최신 수정본)
+```javascript
+// ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
+// ⚠️ getProductImageHtml(p)도 utils.js에서 정의 — image_url 또는 카테고리 SVG 반환
+
+// 카테고리를 그리는 HTML 생성 유틸 함수
+// ✅ 모든 사용자 입력은 escapeHtml() 처리
+function createProductCardHTML(p) {
+    let tagsHTML = '';
+    if (p.auth) tagsHTML += '<span class="ptag ptag-b">인증</span>';
+    if (p.tradeType === '직거래' || p.tradeType === '모두') tagsHTML += '<span class="ptag ptag-y">직거래</span>';
+    if (p.offer) tagsHTML += '<span class="ptag ptag-r">가격제안</span>';
+    if (p.auction) {
+        if(p.is_closed) {
+            tagsHTML += `<span class="ptag ptag-b" style="background:#eee;color:#999;border:none;">낙찰 완료</span>`;
+        } else if(p.auction_end) {
+            // ✅ data-end 속성에 들어가는 값도 escape (date 문자열이라 보통 안전하지만 방어)
+            tagsHTML += `<span class="ptag ptag-b auction-timer-tag" data-end="${escapeHtml(p.auction_end)}">계산중...</span>`;
+        } else if (p.remain) {
+            tagsHTML += `<span class="ptag ptag-b">${escapeHtml(p.remain)}</span>`;
+        }
+    }
+
+    const safePrice = escapeHtml(p.price);
+    let priceHTML = `<div class="product-price">${safePrice}</div>`;
+    if (p.auction) {
+      if(p.is_closed) {
+          const finalPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : '유찰됨';
+          priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge" style="background:#7A93B0;">종료</span><span style="font-size:14px;font-weight:700;color:#7A93B0;text-decoration:line-through;">${escapeHtml(finalPrice)}</span></div>`;
+      } else {
+          const showPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : (p.price || '');
+          priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${escapeHtml(showPrice)}</span></div>`;
+      }
+    }
+
+    // ✅ p.id, p.title, p.sub 모두 escape
+    const safeId = escapeHtml(p.id);
+    const safeTitle = escapeHtml(p.title);
+    const safeSub = escapeHtml(p.sub);
+
+    // ✅ p.svg 직접 사용 → getProductImageHtml로 안전하게 조립
+    const productImageHtml = (typeof getProductImageHtml === 'function')
+        ? getProductImageHtml(p)
+        : (p.svg || '');
+
+    return `
+      <div class="product-card" onclick="openProductModal('${safeId}')" style="cursor:pointer;">
+        <div class="product-img">${productImageHtml}</div>
+        <div class="product-body">
+          <div class="product-title">${safeTitle}</div>
+          <div class="product-sub">${safeSub}</div>
+          ${priceHTML}
+          <div class="product-tags" style="gap:4px;">${tagsHTML}</div>
+        </div>
+      </div>
+    `;
+}
+
+// 화면 렌더링 로직
+// 화면 렌더링 로직 (무한 스크롤 및 서버 필터링 호환)
+function renderProductsHeader() {
+  const catArea = document.getElementById('home-category-area');
+  const recArea = document.getElementById('home-recommendation-area');
+  const listTitle = document.getElementById('main-product-title-header');
+  
+  if (filterState.topCategory === '전체' && filterState.keyword === '') {
+      if(catArea) catArea.style.display = 'block';
+      if(recArea) recArea.style.display = 'block';
+      if(listTitle) listTitle.innerHTML = '<span class="section-title">최신 전체 매물</span><span class="section-more">더보기 →</span>';
+  } else if (filterState.category === '전체' && filterState.keyword === '') {
+      if(catArea) catArea.style.display = 'block';
+      if(recArea) recArea.style.display = 'block';
+      if(listTitle) listTitle.innerHTML = '<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>최신 매물</span><span class="section-more">더보기 →</span>';
+  } else {
+      if(catArea) catArea.style.display = 'block';
+      if(recArea) recArea.style.display = 'none';
+      if(listTitle) listTitle.innerHTML = `<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>${escapeHtml(filterState.category)} 결과</span>`;
+  }
+}
+
+function renderProductsEmpty() {
+    const grid = document.getElementById('main-product-grid');
+    if(grid) grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 100px 20px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); font-size: 14px;">선택한 조건에 맞는 매물이 없습니다.</div>';
+}
+
+function renderProductsAppend(newItems) {
+    const grid = document.getElementById('main-product-grid');
+    if (!grid) return;
+    
+    // 큐레이션 영역 채우기 (처음 로딩 시에만)
+    const recList = document.getElementById('recommendation-list');
+    const curList = document.getElementById('curation-list');
+    if (products.length <= Math.max(20, newItems.length) && recList && curList && filterState.keyword === '') {
+        recList.innerHTML = ''; curList.innerHTML = '';
+        const shuffled = [...products].sort(() => 0.5 - Math.random());
+        const recItems = shuffled.slice(0, 4);
+        const curItems = shuffled.slice(4, 8);
+        
+        if(recItems.length > 0) recItems.forEach(p => recList.innerHTML += createProductCardHTML(p));
+        else recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">매물이 없습니다.</div>';
+        
+        if(curItems.length > 0) curItems.forEach(p => curList.innerHTML += createProductCardHTML(p));
+        else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">매물이 없습니다.</div>';
+    }
+    
+    newItems.forEach(p => {
+        grid.innerHTML += createProductCardHTML(p);
+    });
+    
+    if (hasMoreProducts) setupInfiniteScroll();
+    setupAuctionTimers();
+}
+
+let scrollObserver = null;
+function setupInfiniteScroll() {
+    const grid = document.getElementById('main-product-grid');
+    if (!grid) return;
+    
+    if (scrollObserver) scrollObserver.disconnect();
+    
+    const target = document.createElement('div');
+    target.id = 'product-infinite-scroll-target';
+    target.style.height = '20px';
+    target.style.gridColumn = '1 / -1';
+    grid.appendChild(target);
+    
+    scrollObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            scrollObserver.disconnect();
+            if (target.parentNode) target.remove();
+            fetchProducts(false); // Load next page
+        }
+    }, { rootMargin: '200px' });
+    
+    scrollObserver.observe(target);
+}
+
+function setupAuctionTimers() {
+  if(typeof auctionInterval !== 'undefined' && auctionInterval) clearInterval(auctionInterval);
+  window.auctionInterval = setInterval(() => {
+    const timeNow = new Date().getTime();
+    document.querySelectorAll('.auction-timer-tag').forEach(tag => {
+       const end = new Date(tag.getAttribute('data-end')).getTime();
+       const diff = end - timeNow;
+       if(diff <= 0) {
+          tag.textContent = '경매 종료';
+          tag.style.background = '#eee';
+          tag.style.color = '#999';
+       } else {
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const secs = Math.floor((diff % (1000 * 60)) / 1000);
+          tag.textContent = `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')} 남음`;
+       }
+    });
+  }, 1000);
+}
+
+// 기존 renderProducts 호환용
+window.renderProducts = function() {
+    fetchProducts(true);
+}
+
+let currentQuoteProductId = null;
+function requestQuote(id) {
+    if(!currentUser) {
+        alert('견적서 요청은 로그인이 필요합니다.');
+        showPage('login');
+        return;
+    }
+    currentQuoteProductId = id;
+    document.getElementById('quote-modal').style.display = 'flex';
+}
+
+function submitQuoteRequest() {
+    alert('해마 벤더 시스템으로 견적 요청이 성공적으로 접수되었습니다.\n빠른 시일 내에 선박의 메일/시스템으로 견적서가 도착합니다!');
+    document.getElementById('quote-modal').style.display = 'none';
+}
+
+async function submitBid(id) {
+    if(!currentUser) {
+        alert("경매 입찰은 로그인이 필요합니다.");
+        showPage('login');
+        return;
+    }
+
+    const p = products.find(x => String(x.id) === String(id));
+    if(!p) return;
+    
+    if(p.is_closed) {
+        alert("이미 마감된 경매입니다.");
+        return;
+    }
+    
+    if(p.seller_id === currentUser.id) {
+        alert("당사자의 매물에는 입찰할 수 없습니다.");
+        return;
+    }
+    
+    const bidInput = document.getElementById('bid-amount');
+    const newBidStr = bidInput ? bidInput.value : null;
+    if(!newBidStr) {
+        alert("입찰 희망가를 입력해주세요.");
+        return;
+    }
+    
+    const newBid = parseInt(newBidStr, 10);
+    const curr = p.current_bid || parseInt((p.price || '').replace(/[^0-9]/g, '')) || 0;
+    
+    if(newBid <= curr) {
+        alert(`현재 최고가(₩${curr.toLocaleString()})보다 높은 금액을 입력하셔야 합니다.`);
+        return;
+    }
+
+    const count = p.bid_count || 0;
+    
+    const bidderName = currentUser.user_metadata?.biz_name || currentUser.user_metadata?.display_name || (currentUser.email ? currentUser.email.split('@')[0] : '익명');
+    
+    const btn = document.querySelector('.auction-bid-btn');
+    if(btn) btn.textContent = '입찰 처리중...';
+    
+    // ✅ .lt('current_bid', newBid) 조건이 DB 단 원자적 optimistic lock 역할.
+    //    동시 입찰 시 더 낮은 bid는 0행 반환으로 거부됨.
+    const { data: updateRows, error } = await supabaseClient.from('haema_products')
+        .update({ 
+            current_bid: newBid, 
+            bid_count: count + 1,
+            highest_bidder_id: currentUser.id,
+            highest_bidder_name: bidderName
+        })
+        .eq('id', id)
+        .lt('current_bid', newBid)
+        .select();
+        
+    if(error) {
+        console.error(error);
+        alert('입찰 중 오류가 발생했습니다: ' + error.message);
+        if(btn) btn.textContent = '입찰';
+        return;
+    }
+
+    // ✅ 0행 update = 다른 사람이 더 높은 가격으로 먼저 입찰함
+    if (!updateRows || updateRows.length === 0) {
+        alert('입찰 실패: 그 사이 다른 사용자가 더 높은 가격으로 입찰했습니다. 새로고침 후 다시 시도해주세요.');
+        if(btn) btn.textContent = '입찰';
+        await fetchProducts();
+        return;
+    }
+    
+    alert('성공적으로 입찰되었습니다!');
+    closeProductModal();
+    await fetchProducts();
+}
+
+
+let lastProductCreatedAt = null;
+let isFetchingProducts = false;
+let hasMoreProducts = true;
+
+// 서버에서 매물 불러오기 (무한 스크롤 cursor 지원)
+async function fetchProducts(reset = true) {
+    if (isFetchingProducts) return;
+    
+    const grid = document.getElementById('main-product-grid');
+    if (reset) {
+        lastProductCreatedAt = null;
+        hasMoreProducts = true;
+        products = [];
+        if (grid) grid.innerHTML = '';
+        renderProductsHeader();
+    }
+    
+    if (!hasMoreProducts) return;
+    isFetchingProducts = true;
+    
+    if (grid) {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'product-loading-indicator';
+        loadingDiv.style = 'grid-column: 1 / -1; padding: 20px; text-align: center; color: var(--text-muted); font-size:14px;';
+        loadingDiv.innerHTML = '매물 데이터를 불러오는 중입니다...';
+        grid.appendChild(loadingDiv);
+    }
+    
+    let query = supabaseClient.from('haema_products').select('*');
+    
+    // --- DB Pushdown 필터링 ---
+    if (filterState.category !== '전체') {
+        query = query.eq('category', filterState.category);
+    } else if (filterState.topCategory !== '전체') {
+        const subCats = Object.keys(CAT_TO_TOP_MAP || {}).filter(k => CAT_TO_TOP_MAP[k] === filterState.topCategory);
+        if (filterState.topCategory === '주/부식') subCats.push('쌀·곡물', '육류', '수산물', '청과류', '가공·음료', '주/부식');
+        if (subCats.length > 0) query = query.in('category', subCats);
+    }
+
+    if (filterState.region !== '전체') query = query.eq('region', filterState.region);
+    if (filterState.condition !== '전체') query = query.eq('condition', filterState.condition);
+    if (filterState.cert !== '전체') query = query.eq('cert', filterState.cert);
+
+    if (filterState.tradeType === '직거래') query = query.eq('tradeType', '직거래');
+    if (filterState.tradeType === '경매') query = query.eq('auction', true);
+    if (filterState.tradeType === '가격제안') query = query.eq('offer', true);
+
+    if (filterState.keyword) {
+        query = query.or(`title.ilike.%${filterState.keyword}%,category.ilike.%${filterState.keyword}%`);
+    }
+    if (filterState.supplier !== '전체') {
+        query = query.ilike('title', `%${filterState.supplier}%`);
+    }
+
+    // Cursor (무한스크롤 락 포인트)
+    if (lastProductCreatedAt) {
+        query = query.lt('created_at', lastProductCreatedAt);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(20);
+    
+    const indicator = document.getElementById('product-loading-indicator');
+    if (indicator) indicator.remove();
+    isFetchingProducts = false;
+
+    if (error) {
+        console.error('Supabase load error:', error);
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        hasMoreProducts = false;
+        if (reset) renderProductsEmpty();
+        return;
+    }
+
+    // Price는 문자열이라 DB 푸시다운이 완벽하지 않으므로 Client에서 후처리
+    let finalData = data;
+    if (filterState.minPrice !== null || filterState.maxPrice !== null) {
+        finalData = finalData.filter(p => {
+            const valObj = (p.price || '').replace(/[^0-9]/g, '');
+            if (!valObj) return true;
+            const val = parseInt(valObj, 10);
+            if (filterState.minPrice !== null && val < filterState.minPrice) return false;
+            if (filterState.maxPrice !== null && val > filterState.maxPrice) return false;
+            return true;
+        });
+    }
+
+    products = [...products, ...finalData];
+    lastProductCreatedAt = data[data.length - 1].created_at;
+    if (data.length < 20) {
+        hasMoreProducts = false;
+    }
+
+    if(finalData.length > 0) {
+        renderProductsAppend(finalData);
+    } else {
+        // 필터링되어 0개가 되었고 아직 더 가져올게 남았다면 재귀 호출
+        if(hasMoreProducts) fetchProducts(false);
+        else if (reset) renderProductsEmpty();
+    }
+}
+
+async function closeAuction(p) {
+    if(p.is_closed) return;
+    
+    const { error } = await supabaseClient.from('haema_products')
+        .update({ is_closed: true })
+        .eq('id', p.id)
+        .eq('is_closed', false);
+        
+    if(!error) {
+        p.is_closed = true;
+        const safeTitle = String(p.title || '');
+        if (currentUser && currentUser.id === p.highest_bidder_id) {
+            alert(`축하합니다! [${safeTitle}] 경매에 최종 낙찰되셨습니다!\n(낙찰가: ₩ ${p.current_bid ? p.current_bid.toLocaleString() : '확인 불가'})`);
+        }
+        else if (currentUser && currentUser.id === p.seller_id) {
+            alert(`등록하신 [${safeTitle}] 경매가 마감되었습니다.\n(최종 입찰자: ${String(p.highest_bidder_name || '없음')})`);
+        }
+        await fetchProducts();
+        closeProductModal();
+    }
+}
+
+// 5초 주기 경매 마감 감시자
+setInterval(() => {
+    const now = new Date().getTime();
+    products.forEach(p => {
+        if(p.auction && !p.is_closed && p.auction_end) {
+            const end = new Date(p.auction_end).getTime();
+            if(now >= end) {
+                closeAuction(p);
+            }
+        }
+    });
+}, 5000);
+
+
+// ============================================================================
+// ✅ 매물 등록 / 수정 분기 처리
+// ============================================================================
+// editingProductId가 null이면 등록 모드(INSERT), 값이 있으면 수정 모드(UPDATE)
+// 진입 경로:
+//   - 등록 모드: window.goToRegisterCreateMode() 호출 (FAB, +등록 버튼, 빈 판매목록)
+//   - 수정 모드: window.editMyProduct(id) 호출 (마이페이지 판매목록 카드 클릭)
+//
+// ⚠️ P0-A 수정 (2026-04-17):
+//   기존 hashchange 리스너 기반 자동 reset 방식은 동작하지 않았음.
+//   showPage()는 history.pushState()를 사용하는데 pushState는 hashchange 이벤트를
+//   발생시키지 않음. 이로 인해 편집 모드에서 +등록 클릭 시 editingProductId가
+//   리셋되지 않아 의도치 않은 UPDATE가 발생, 본인 매물이 덮어써질 위험이 있었음.
+//
+//   해결: 진입 경로를 두 개의 명시적 함수(goToRegisterCreateMode / editMyProduct)로
+//   분리. hashchange 리스너 + _enteredViaEdit 플래그는 모두 제거.
+// ============================================================================
+let editingProductId = null;
+
+// 등록 페이지 진입 시 모드 초기화
+function resetRegisterFormToCreateMode() {
+    editingProductId = null;
+
+    // 헤더 텍스트 / 버튼 텍스트 복원
+    const headerTitle = document.querySelector('#page-register .sub-header .sub-title');
+    if (headerTitle) headerTitle.textContent = '매물 등록';
+
+    const submitBtn = document.querySelector('#page-register .submit-btn');
+    if (submitBtn) {
+        submitBtn.textContent = '등록하기';
+        submitBtn.disabled = false;
+    }
+
+    // 폼 필드 초기화
+    const titleInput = document.getElementById('title-input');
+    if (titleInput) { titleInput.value = ''; titleInput.disabled = false; }
+
+    const priceInput = document.getElementById('price-input');
+    if (priceInput) { priceInput.value = ''; priceInput.disabled = false; }
+
+    const auctionEndInput = document.getElementById('auction-end-input');
+    if (auctionEndInput) { auctionEndInput.value = ''; auctionEndInput.disabled = false; }
+
+    const photoInput = document.getElementById('photo-upload-input');
+    if (photoInput) photoInput.value = '';
+
+    // P0-#2: desc reset
+    const descInput = document.getElementById('desc-input');
+    if (descInput) descInput.value = '';
+
+    if (typeof uploadedBase64 !== 'undefined') uploadedBase64 = null;
+    if (typeof uploadedBlob !== 'undefined') uploadedBlob = null;
+
+    const mainBox = document.getElementById('photo-box-main');
+    if (mainBox) {
+        mainBox.style.backgroundImage = 'none';
+        mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
+    }
+
+    // 카테고리 선택 초기화
+    const catSelect = document.querySelector('#page-register .form-select');
+    if (catSelect) catSelect.value = '카테고리 선택';
+
+    // 거래방식 칩 (직거래로)
+    document.querySelectorAll('#page-register .trade-chip').forEach(c => {
+        c.classList.toggle('on', c.textContent.trim() === '직거래');
+    });
+
+    // 상태 칩 (최상으로)
+    document.querySelectorAll('#page-register .cond-chip').forEach(c => {
+        c.classList.toggle('on', c.textContent.trim() === '최상');
+    });
+
+    // 경매 마감일 행 숨김
+    const auctionDateRow = document.getElementById('auction-date-row');
+    if (auctionDateRow) auctionDateRow.style.display = 'none';
+
+    // 안내문구 제거
+    const editLockNotice = document.getElementById('edit-lock-notice');
+    if (editLockNotice) editLockNotice.remove();
+}
+
+// ============================================================================
+// ✅ NEW (P0-A 수정): 등록 모드 진입 — 명시적 함수
+// ============================================================================
+// HTML의 +등록 버튼, FAB, 빈 판매목록의 "첫 판매글 작성하기" 버튼 모두
+// 이 함수를 호출함. requireAuthAndShow('register')의 대체 함수.
+//
+// 등록 모드 보장:
+//   1) 로그인 체크
+//   2) resetRegisterFormToCreateMode() 호출 → editingProductId = null
+//   3) showPage('register')
+window.goToRegisterCreateMode = function() {
+    if (!currentUser) {
+        alert('회원가입 및 로그인이 필요한 기능입니다.');
+        showPage('login');
+        return;
+    }
+    resetRegisterFormToCreateMode();
+    showPage('register');
+};
+
+// ============================================================================
+// ✅ 본인 매물 편집 진입
+// ============================================================================
+window.editMyProduct = function(productId) {
+    if (!currentUser) {
+        alert('로그인이 필요합니다.');
+        return;
+    }
+
+    const p = products.find(x => String(x.id) === String(productId));
+    if (!p) {
+        alert('매물을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
+        return;
+    }
+
+    // 본인 매물 권한 체크 (1차 방어 — RLS가 진짜 방어선)
+    const isOwner = (p.seller_id && p.seller_id === currentUser.id)
+                 || (p.user_id && p.user_id === currentUser.id);
+    if (!isOwner) {
+        alert('본인이 등록한 매물만 수정할 수 있습니다.');
+        return;
+    }
+
+    // 거래완료 매물은 수정 불가
+    if (p.is_closed) {
+        alert('이미 거래가 완료된 매물은 수정할 수 없습니다.');
+        return;
+    }
+
+    // 등록 페이지로 이동
+    // ⚠️ P0-A 수정: _enteredViaEdit 플래그 제거 (hashchange 리스너 사라짐)
+    showPage('register');
+
+    // 모드 전환
+    editingProductId = productId;
+
+    // 헤더 / 버튼 텍스트 변경
+    const headerTitle = document.querySelector('#page-register .sub-header .sub-title');
+    if (headerTitle) headerTitle.textContent = '매물 수정';
+
+    const submitBtn = document.querySelector('#page-register .submit-btn');
+    if (submitBtn) {
+        submitBtn.textContent = '수정하기';
+        submitBtn.disabled = false;
+    }
+
+    // 폼 필드 prefill
+    const titleInput = document.getElementById('title-input');
+    if (titleInput) titleInput.value = p.title || '';
+
+    // P0-#2: desc prefill
+    const descInput = document.getElementById('desc-input');
+    if (descInput) descInput.value = p.content || '';
+
+    // 가격: "₩ 1,000,000" 형식에서 숫자만 추출
+    const priceInput = document.getElementById('price-input');
+    if (priceInput) {
+        const numericPrice = (p.price || '').replace(/[^0-9]/g, '');
+        priceInput.value = numericPrice;
+    }
+
+    // 카테고리 select
+    const catSelect = document.querySelector('#page-register .form-select');
+    if (catSelect && p.category) {
+        catSelect.value = p.category;
+        // option에 없는 카테고리면 "카테고리 선택"으로
+        if (catSelect.value !== p.category) catSelect.value = '카테고리 선택';
+    }
+
+    // 거래방식 칩
+    const tradeType = p.tradeType || (p.auction ? '경매' : '직거래');
+    document.querySelectorAll('#page-register .trade-chip').forEach(c => {
+        c.classList.toggle('on', c.textContent.trim() === tradeType);
+    });
+
+    // 상태 칩
+    const condition = p.condition || '최상';
+    document.querySelectorAll('#page-register .cond-chip').forEach(c => {
+        c.classList.toggle('on', c.textContent.trim() === condition);
+    });
+
+    // 경매 마감일 행 (경매면 보이고 + 값 채움)
+    const auctionDateRow = document.getElementById('auction-date-row');
+    const auctionEndInput = document.getElementById('auction-end-input');
+    if (p.auction && p.auction_end) {
+        if (auctionDateRow) auctionDateRow.style.display = 'block';
+        if (auctionEndInput) {
+            // ISO → datetime-local 형식 변환 (YYYY-MM-DDTHH:MM)
+            const d = new Date(p.auction_end);
+            if (!isNaN(d.getTime())) {
+                const pad = n => String(n).padStart(2, '0');
+                auctionEndInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            }
+        }
+    } else {
+        if (auctionDateRow) auctionDateRow.style.display = 'none';
+        if (auctionEndInput) auctionEndInput.value = '';
+    }
+
+    // 지역
+    const regionInput = document.getElementById('region-input');
+    if (regionInput && p.region) regionInput.value = p.region;
+
+    // 사진 prefill (image_url 있으면 사진 박스에 미리보기)
+    const mainBox = document.getElementById('photo-box-main');
+    if (mainBox) {
+        if (p.image_url) {
+            // 기존 사진을 미리보기로 표시 + ✕ 삭제 버튼
+            const safeUrl = escapeHtml(p.image_url);
+            mainBox.style.backgroundImage = `url(${safeUrl})`;
+            mainBox.style.backgroundSize = 'cover';
+            mainBox.style.backgroundPosition = 'center';
+            mainBox.style.position = 'relative';
+            mainBox.innerHTML = '<button type="button" id="photo-delete-btn" title="사진 삭제" style="position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0; box-shadow:0 2px 4px rgba(0,0,0,0.2); z-index:10;">✕</button>';
+            // 사진 삭제 버튼 핸들러 (수정 시 사진 비우기)
+            const delBtn = document.getElementById('photo-delete-btn');
+            if (delBtn) {
+                delBtn.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    if (typeof uploadedBase64 !== 'undefined') uploadedBase64 = null;
+                    if (typeof uploadedBlob !== 'undefined') uploadedBlob = null;
+                    const fileInput = document.getElementById('photo-upload-input');
+                    if (fileInput) fileInput.value = '';
+                    mainBox.style.backgroundImage = 'none';
+                    mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
+                    // 수정 모드에서 사진 삭제 시 → 사진을 NULL로 업데이트하도록 마킹
+                    window.__editPhotoCleared = true;
+                });
+            }
+            // 새로 업로드 안 하면 기존 image_url 유지
+            window.__editPhotoCleared = false;
+        } else {
+            mainBox.style.backgroundImage = 'none';
+            mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
+            window.__editPhotoCleared = false;
+        }
+    }
+
+    // 입찰자 있는 경매면 가격/마감일 잠금
+    const bidCount = parseInt(p.bid_count) || 0;
+    const isLocked = p.auction && bidCount > 0;
+    if (isLocked) {
+        if (priceInput) {
+            priceInput.disabled = true;
+            priceInput.style.background = '#f4f4f4';
+            priceInput.style.color = '#999';
+        }
+        if (auctionEndInput) {
+            auctionEndInput.disabled = true;
+            auctionEndInput.style.background = '#f4f4f4';
+            auctionEndInput.style.color = '#999';
+        }
+        // 안내 문구 추가 (이미 있으면 스킵)
+        if (!document.getElementById('edit-lock-notice')) {
+            const notice = document.createElement('div');
+            notice.id = 'edit-lock-notice';
+            notice.style.cssText = 'background:#FFF3E0; border:1px solid #F57C00; border-radius:8px; padding:12px; margin:12px 16px; font-size:13px; color:#D84315; line-height:1.5;';
+            notice.innerHTML = `⚠️ 이 경매는 입찰자(${bidCount}회)가 있어 <b>가격과 마감일은 수정할 수 없습니다.</b><br>제목·설명·사진·카테고리는 수정 가능합니다.`;
+            const subBody = document.querySelector('#page-register .sub-body');
+            if (subBody) subBody.insertBefore(notice, subBody.firstChild);
+        }
+    }
+};
+
+// ============================================================================
+// 판매자 실 DB 매물 등록 (편집 모드 분기 포함)
+// ============================================================================
+async function registerProduct() {
+  const isEditMode = (editingProductId !== null);
+
+  const cat = document.querySelector('#page-register .form-select').value;
+  const title = document.getElementById('title-input').value;
+  let tradeType = '직거래';
+  document.querySelectorAll('#page-register .trade-chip').forEach(c => {
+      if(c.classList.contains('on')) tradeType = c.textContent.trim();
+  });
+
+  let conditionStr = '최상';
+  document.querySelectorAll('#page-register .cond-chip').forEach(c => {
+      if(c.classList.contains('on')) conditionStr = c.textContent.trim();
+  });
+
+  const priceInput = document.getElementById('price-input').value || '';
+  const priceParsed = parseInt(priceInput.replace(/[^0-9]/g, '')) || 0;
+
+  const regionInput = document.getElementById('region-input');
+  const regionVal = regionInput ? regionInput.value : '부산';
+
+    // P0-#2: read desc
+    const descInputEl = document.getElementById('desc-input');
+    const descVal = descInputEl ? descInputEl.value.trim() : '';
+
+  if (!title || cat === '카테고리 선택') { alert('상품명과 카테고리는 필수입니다.'); return; }
+
+  // ✅ 추가 입력 검증
+  if (title.length > 200) { alert('상품명은 200자 이하로 입력해주세요.'); return; }
+  if (priceParsed < 0 || priceParsed > 99999999999) { alert('가격을 올바르게 입력해주세요.'); return; }
+
+  // 🚨 [Phase 7 최우선 방어벽] 100만원 한도 시뮬레이션
+  const MAX_PRICE_BETA = 1_000_000;
+  const isEditingOldPrice = document.getElementById('price-input').disabled;
+  if (priceParsed > MAX_PRICE_BETA && !isEditingOldPrice) {
+      alert('⚠️ 알파 테스트 기간 중에는 100만 원 이하의 매물만 등록 가능합니다.\n\n정식 출시 후 고가 거래(에스크로 및 계약 지원) 기능을 오픈할 예정입니다.');
+      return;
+  }
+
+  const isAuction = tradeType === '경매';
+  const endInput = document.getElementById('auction-end-input').value;
+  if(isAuction && !endInput) { alert('경매 마감일시를 설정해주세요.'); return; }
+  if(isAuction) {
+      const endTime = new Date(endInput).getTime();
+      // 수정 모드에서 마감일 비활성화된 경우는 검증 건너뜀 (기존 값 유지)
+      const auctionEndDisabled = document.getElementById('auction-end-input').disabled;
+      if (!auctionEndDisabled && endTime <= Date.now()) {
+          alert('경매 마감일시는 현재 시각 이후로 설정해주세요.'); return;
+      }
+  }
+
+  const submitBtn = document.querySelector('#page-register .submit-btn');
+  const originalBtnText = isEditMode ? '수정하기' : '등록하기';
+  const inProgressText = isEditMode ? '수정 중...' : '매물 등록 중...';
+  submitBtn.textContent = inProgressText;
+  submitBtn.disabled = true;
+
+  let finalImageUrl = null;
+
+  // 사진 업로드 처리
+  if (uploadedBlob) {
+      // 새 사진 업로드 (등록 모드든 수정 모드든 동일)
+      submitBtn.textContent = inProgressText;
+      const fileName = `public/product_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+
+      const { data: uploadData, error: uploadError } = await supabaseClient.storage
+          .from('market_images')
+          .upload(fileName, uploadedBlob, {
+              contentType: 'image/jpeg'
+          });
+
+      if (uploadError) {
+          const proceed = confirm(
+              '사진 업로드에 실패했습니다.\n\n' +
+              (isEditMode ? '사진 없이 다른 정보만 수정하시겠습니까?\n' : '사진 없이 매물 정보만 등록하시겠습니까?\n') +
+              '(취소하시면 다시 시도하실 수 있습니다)\n\n' +
+              '오류 코드: ' + (uploadError.message || '알 수 없음')
+          );
+          if (!proceed) {
+              submitBtn.textContent = originalBtnText;
+              submitBtn.disabled = false;
+              return;
+          }
+      } else {
+          const { data: publicData } = supabaseClient.storage.from('market_images').getPublicUrl(fileName);
+          finalImageUrl = publicData.publicUrl;
+      }
+  }
+
+  // ✅ 분기 1) 등록 모드 → INSERT
+  if (!isEditMode) {
+      let newProd = {
+        title: title,
+        sub: '방금 전 등록',
+        price: priceInput ? ('₩ ' + priceInput.replace('₩','').trim()) : '₩ 협의 가능',
+        category: cat,
+        "tradeType": tradeType,
+        region: regionVal,
+        seller_id: currentUser ? currentUser.id : null,
+        condition: conditionStr,
+        cert: '없음',
+        auth: true,
+        auction: isAuction,
+        offer: false,
+        image_url: finalImageUrl,
+        content: descVal
+      };
+
+      if(isAuction) {
+          newProd.auction_end = new Date(endInput).toISOString();
+          newProd.current_bid = priceParsed;
+          newProd.bid_count = 0;
+      }
+
+      const { error } = await supabaseClient.from('haema_products').insert([newProd]);
+
+      submitBtn.textContent = originalBtnText;
+      submitBtn.disabled = false;
+
+      if (error) {
+         alert('등록 중 에러가 발생했습니다: ' + error.message);
+         return;
+      }
+
+      // 폼 초기화 + 등록 완료 알림 + 홈 이동
+      resetRegisterFormToCreateMode();
+
+      alert('매물이 성공적으로 등록되었습니다!\n(하단 경매 탭에서도 바로 확인하실 수 있습니다.)');
+
+      filterState.category = '전체';
+      renderSubCategories(filterState.topCategory);
+      resetFilters();
+      showPage('home');
+      window.scrollTo(0, 0);
+
+      await fetchProducts();
+      return;
+  }
+
+  // ✅ 분기 2) 수정 모드 → UPDATE
+  // 기존 매물 객체 가져오기 (사진 처리 분기에 필요)
+  const existingProduct = products.find(x => String(x.id) === String(editingProductId));
+  if (!existingProduct) {
+      alert('수정 대상 매물을 찾을 수 없습니다.');
+      submitBtn.textContent = originalBtnText;
+      submitBtn.disabled = false;
+      return;
+  }
+
+  // 입찰자 있는 경매면 가격/마감일 변경 차단 (UI 잠금 우회 방어)
+  const bidCount = parseInt(existingProduct.bid_count) || 0;
+  const isLocked = existingProduct.auction && bidCount > 0;
+
+  // 사진 결정 로직:
+  //   1) 새 사진 업로드 → finalImageUrl (방금 받은 새 URL)
+  //   2) 사용자가 ✕로 사진 지움 → null
+  //   3) 둘 다 아님 → 기존 image_url 유지
+  let imageUrlToSave;
+  if (finalImageUrl) {
+      imageUrlToSave = finalImageUrl;
+  } else if (window.__editPhotoCleared) {
+      imageUrlToSave = null;
+  } else {
+      imageUrlToSave = existingProduct.image_url || null;
+  }
+
+  // UPDATE 페이로드 (락 걸린 필드는 빼고)
+  let updatePayload = {
+      title: title,
+      category: cat,
+      "tradeType": tradeType,
+      region: regionVal,
+      condition: conditionStr,
+      auction: isAuction,
+      image_url: imageUrlToSave,
+      content: descVal
+  };
+
+  // 가격/마감일은 락 안 걸린 경우에만 변경 허용
+  if (!isLocked) {
+      updatePayload.price = priceInput ? ('₩ ' + priceInput.replace('₩','').trim()) : '₩ 협의 가능';
+      if (isAuction) {
+          updatePayload.auction_end = new Date(endInput).toISOString();
+          // current_bid는 입찰 없을 때만 시작가로 갱신 (이미 입찰 있으면 절대 건드리지 않음)
+          if (bidCount === 0) {
+              updatePayload.current_bid = priceParsed;
+          }
+      }
+  }
+
+  // ⚠️ seller_id 조건으로 본인 매물만 update (RLS가 진짜 방어)
+  const { error: updateErr } = await supabaseClient
+      .from('haema_products')
+      .update(updatePayload)
+      .eq('id', editingProductId)
+      .eq('seller_id', currentUser.id);
+
+  submitBtn.textContent = originalBtnText;
+  submitBtn.disabled = false;
+
+  if (updateErr) {
+      alert('수정 중 오류가 발생했습니다: ' + updateErr.message);
+      return;
+  }
+
+  // ✅ 새 사진을 업로드했으면 기존 사진 파일을 Storage에서 정리
+  //    (DB는 새 URL로 갱신됐으니 기존 파일은 고아 상태)
+  if (finalImageUrl && existingProduct.image_url
+      && existingProduct.image_url !== finalImageUrl) {
+      try {
+          const marker = '/market_images/';
+          const idx = existingProduct.image_url.indexOf(marker);
+          if (idx >= 0) {
+              const oldFilePath = existingProduct.image_url.substring(idx + marker.length);
+              await supabaseClient.storage.from('market_images').remove([oldFilePath]);
+          }
+      } catch (e) {
+          console.warn('기존 사진 정리 실패(무시):', e);
+      }
+  }
+
+  // ✅ 사용자가 사진을 지웠으면(__editPhotoCleared=true) 기존 파일도 Storage에서 삭제
+  if (window.__editPhotoCleared && existingProduct.image_url && !finalImageUrl) {
+      try {
+          const marker = '/market_images/';
+          const idx = existingProduct.image_url.indexOf(marker);
+          if (idx >= 0) {
+              const oldFilePath = existingProduct.image_url.substring(idx + marker.length);
+              await supabaseClient.storage.from('market_images').remove([oldFilePath]);
+          }
+      } catch (e) {
+          console.warn('지운 사진 정리 실패(무시):', e);
+      }
+  }
+
+  alert('매물 정보가 수정되었습니다.');
+
+  // 폼/모드 초기화 후 마이페이지 판매목록으로 복귀
+  resetRegisterFormToCreateMode();
+  await fetchProducts();
+  if (typeof showMyList === 'function') {
+      showMyList();
+  } else {
+      showPage('mypage');
+  }
+}
+
+// [URL Parameter 처리: 더미 상품 페이지 연동]
+//
+// ⚠️ P0-A 수정 (2026-04-17):
+//   기존 hashchange 리스너 + _enteredViaEdit 플래그 기반 모드 자동 동기화 코드는
+//   동작하지 않아서 통째로 제거함. showPage()의 pushState는 hashchange를
+//   발생시키지 않기 때문.
+//
+//   대체: window.goToRegisterCreateMode() (등록 모드 명시적 진입)
+//         window.editMyProduct(id)        (수정 모드 명시적 진입)
+//   진입 경로를 두 함수로만 한정. HTML의 onclick은 모두 위 두 함수만 호출.
+document.addEventListener('DOMContentLoaded', () => {
+    // 더미 데이터 진입점 제거됨 (Phase 7)
+});
+```
+
+## 2. auth.js (최신 수정본)
+```javascript
+// ============================================================================
+// auth.js — 로그인/회원가입/세션 관리
+// ============================================================================
+// 변경 이력:
+//  - P1 (2026-04-19): onAuthStateChange 내 글로벌 채팅 구독 블록 중복 제거
+//  - P1 (2026-04-19): 회원가입 6필드 추가 (국문/영문 성명, 연락처,
+//                     소속 기업, 부서, 직함) — user_metadata로 저장
+//                     기존 코드 호환을 위해 full_name 키도 함께 기록
+// ============================================================================
+
+let currentUser = null;
+let authMode = 'signin';
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    currentUser = session ? session.user : null;
+
+    // 이메일 인증 완료 후 리다이렉트 감지
+    if (event === 'SIGNED_IN' && window.location.hash.includes('type=signup')) {
+        alert('🎉 이메일 인증이 완료되었습니다! 해마 마켓에 오신 것을 환영합니다.');
+        window.history.replaceState(null, '', window.location.pathname);
+    }
+
+    if (event === 'SIGNED_OUT') _mannerTempLoaded = false;
+
+    // 글로벌 채팅 알림 구독 (단일 블록 — 중복 금지)
+    if (currentUser && typeof subscribeToGlobalMessages === 'function') {
+        subscribeToGlobalMessages();
+    }
+    if (event === 'SIGNED_OUT' && typeof unsubscribeFromGlobalMessages === 'function') {
+        unsubscribeFromGlobalMessages();
+    }
+
+    setTimeout(() => {
+        if (typeof updateProfileUI === 'function') {
+            updateProfileUI();
+        }
+        if (currentUser) {
+            const displayName =
+                currentUser.user_metadata?.full_name ||
+                currentUser.user_metadata?.display_name ||
+                (currentUser.email ? currentUser.email.split('@')[0] : '유저');
+
+            const myNameEl = document.querySelector('.my-name');
+            const myEmailEl = document.querySelector('.my-sub');
+            if (myNameEl) myNameEl.textContent = displayName + '님';
+            if (myEmailEl) myEmailEl.textContent = (currentUser.email || '') + ' · 부산';
+
+            const loginPage = document.getElementById('page-login');
+            if (loginPage && loginPage.classList.contains('active')) {
+                showPage('home');
+            }
+
+            // 어드민 대시보드 버튼 토글 (위변조 방지를 위해 서버 2차 검증)
+            const adminBtn = document.getElementById('admin-route-btn');
+            if (adminBtn) {
+                adminBtn.style.display = 'none'; // 기본 숨김
+                (async () => {
+                    try {
+                        const { data: { user }, error } = await supabaseClient.auth.getUser();
+                        if (!error && user && user.app_metadata && user.app_metadata.role === 'admin') {
+                            adminBtn.style.display = 'flex';
+                        }
+                    } catch (e) {
+                        console.error('Admin role check failed:', e);
+                    }
+                })();
+            }
+        } else {
+            const myNameEl = document.querySelector('.my-name');
+            const myEmailEl = document.querySelector('.my-sub');
+            if (myNameEl) myNameEl.textContent = '로그인이 필요합니다';
+            if (myEmailEl) myEmailEl.textContent = '비회원';
+            
+            const adminBtn = document.getElementById('admin-route-btn');
+            if (adminBtn) adminBtn.style.display = 'none';
+        }
+    }, 0);
+
+    const topLoginBtn = document.getElementById('header-btn-login');
+    if (currentUser) {
+        if (topLoginBtn) topLoginBtn.style.display = 'none';
+    } else {
+        if (topLoginBtn) topLoginBtn.style.display = 'inline-block';
+    }
+});
+
+function requireAuthAndShow(id) {
+    if (!currentUser) {
+        alert('회원가입 및 로그인이 필요한 기능입니다.');
+        showPage('login');
+    } else {
+        showPage(id);
+    }
+}
+
+function switchAuthMode(mode) {
+    authMode = mode;
+    document.getElementById('tab-signin').classList.toggle('active', mode === 'signin');
+    document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
+    document.getElementById('auth-pw-confirm-row').style.display = mode === 'signup' ? 'block' : 'none';
+
+    // 6필드 추가 영역 토글
+    const extraBox = document.getElementById('auth-signup-extra');
+    if (extraBox) extraBox.style.display = mode === 'signup' ? 'block' : 'none';
+    
+    // 약관 동의 체크박스 토글
+    const termsBox = document.getElementById('auth-terms-container');
+    if (termsBox) termsBox.style.display = mode === 'signup' ? 'block' : 'none';
+
+    document.getElementById('btn-auth-submit').textContent = mode === 'signup' ? '해마 시작하기' : '로그인';
+    document.getElementById('auth-error').textContent = '';
+}
+
+async function submitAuth() {
+    const email = document.getElementById('auth-email').value;
+    const pw = document.getElementById('auth-pw').value;
+    const errObj = document.getElementById('auth-error');
+    const btn = document.getElementById('btn-auth-submit');
+    errObj.textContent = '';
+
+    if (!email || !pw) {
+        errObj.textContent = '이메일과 비밀번호를 모두 입력해주세요.';
+        return;
+    }
+
+    if (pw.length < 6) {
+        errObj.textContent = '비밀번호는 6자 이상이어야 합니다.';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '처리 중...';
+
+    if (authMode === 'signup') {
+        const pwConfirm = document.getElementById('auth-pw-confirm').value;
+        if (pw !== pwConfirm) {
+            errObj.textContent = '비밀번호가 일치하지 않습니다.';
+            btn.disabled = false;
+            switchAuthMode('signup');
+            return;
+        }
+
+        // ✅ 약관 동의 검증
+        if (!document.getElementById('auth-agree-terms').checked || !document.getElementById('auth-agree-privacy').checked) {
+            errObj.textContent = '이용약관 및 개인정보처리방침 열람 후 동의가 필수입니다.';
+            btn.disabled = false;
+            switchAuthMode('signup');
+            return;
+        }
+
+        // ✅ 회원가입 6필드 읽기 + 검증
+        const fullNameKo = document.getElementById('auth-full-name-ko').value.trim();
+        const fullNameEn = document.getElementById('auth-full-name-en').value.trim();
+        const phoneRaw = document.getElementById('auth-phone-number').value.trim();
+        const companyName = document.getElementById('auth-company-name').value.trim();
+        const department = document.getElementById('auth-department').value.trim();
+        const jobTitle = document.getElementById('auth-job-title').value.trim();
+
+        if (!fullNameKo || !fullNameEn || !phoneRaw || !companyName || !department || !jobTitle) {
+            errObj.textContent = '회원가입에 필요한 모든 정보를 입력해주세요.';
+            btn.disabled = false;
+            switchAuthMode('signup');
+            return;
+        }
+
+        // 휴대폰 번호 정규화 + 형식 검증 (010/011/016/017/018/019)
+        const phoneDigits = phoneRaw.replace(/\D/g, '');
+        if (!/^01[016789]\d{7,8}$/.test(phoneDigits)) {
+            errObj.textContent = '휴대폰 번호 형식이 올바르지 않습니다. (예: 010-1234-5678)';
+            btn.disabled = false;
+            switchAuthMode('signup');
+            return;
+        }
+
+        const { data, error } = await supabaseClient.auth.signUp({
+            email: email,
+            password: pw,
+            options: {
+                emailRedirectTo: window.location.origin + window.location.pathname,
+                data: {
+                    full_name_ko: fullNameKo,
+                    full_name_en: fullNameEn,
+                    phone_number: phoneDigits,
+                    company_name: companyName,
+                    department: department,
+                    job_title: jobTitle,
+                    //     참조하므로 호환성 유지를 위해 국문 성명을 같이 기록
+                    full_name: fullNameKo,
+                    agreed_terms_at: new Date().toISOString(),
+                    agreed_privacy_at: new Date().toISOString(),
+                    agreed_marketing: document.getElementById('auth-agree-marketing').checked
+                }
+            }
+        });
+
+        if (error) {
+            errObj.textContent = error.message;
+        } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+            errObj.textContent = '이미 가입된 이메일입니다. 로그인을 시도해주세요.';
+        } else {
+            alert('📧 인증 이메일을 발송했습니다!\n받은 메일함을 확인하고 링크를 클릭하면 로그인됩니다.');
+            showPage('home');
+            // 모든 입력 필드 초기화
+            document.getElementById('auth-email').value = '';
+            document.getElementById('auth-pw').value = '';
+            document.getElementById('auth-pw-confirm').value = '';
+            document.getElementById('auth-full-name-ko').value = '';
+            document.getElementById('auth-full-name-en').value = '';
+            document.getElementById('auth-phone-number').value = '';
+            document.getElementById('auth-company-name').value = '';
+            document.getElementById('auth-department').value = '';
+            document.getElementById('auth-job-title').value = '';
+        }
+    } else {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: pw
+        });
+
+        if (error) {
+            if (error.message === 'Email not confirmed') {
+                errObj.textContent = '이메일 인증이 완료되지 않았습니다. 받은 메일함을 확인하고 링크를 클릭해주세요.';
+            } else {
+                errObj.textContent = '로그인 실패: 이메일 또는 비밀번호를 확인해주세요.';
+            }
+        } else {
+            showPage('home');
+            document.getElementById('auth-email').value = '';
+            document.getElementById('auth-pw').value = '';
+        }
+    }
+
+    btn.disabled = false;
+    switchAuthMode(authMode);
+}
+
+// 전역 로그아웃 함수
+window.doLogout = async function() {
+    if (confirm("정말 로그아웃 하시겠습니까?")) {
+        await supabaseClient.auth.signOut();
+        alert('로그아웃 되었습니다.');
+        showPage('home');
+    }
+};
+
+// 카카오 소셜 로그인
+window.loginWithKakao = async function() {
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: {
+            redirectTo: window.location.origin + window.location.pathname
+        }
+    });
+    if (error) {
+        console.error('카카오 로그인 오류:', error.message);
+        alert('카카오 로그인 중 오류가 발생했습니다: ' + error.message);
+    }
+};
+```
+
+## 3. chat.js (최신 수정본)
+```javascript
+// [실시간 1:1 채팅 시스템 (Supabase Real-time)]
+// ----------------------------------------
+// ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
+
+let currentChatRoomId = null;
+let chatSubscription = null;       // 현재 열린 채팅방 구독
+let myChats = [];
+
+// ✅ NEW: 글로벌 알림용
+let globalChatSubscription = null; // 본인이 멤버인 모든 채팅방 구독
+let unreadChatCount = 0;           // 안읽은 메시지 카운트
+let _myChatRoomIdsCache = null;    // 본인이 멤버인 room id 캐시 (성능)
+
+// 🚨 [Phase 7 최우선 방어벽] 구매자/판매자 롤에 맞는 시스템 가이드 렌더링 함수
+window.renderSystemGuide = function(container, isBuyer) {
+    if (container.querySelector('.system-guide')) return; 
+    const guide = document.createElement('div');
+    guide.className = 'system-guide';
+    guide.style.cssText = 'background:#F0F9FF; border:1px dashed #38BDF8; padding:14px; border-radius:12px; margin-bottom:16px; font-size:12px; color:#075985; line-height:1.6;';
+    
+    const buyerGuide = `
+        <div style="font-weight:800; margin-bottom:6px; color:#0284C7;">📋 구매자 거래 체크리스트</div>
+        ① 거래상대방의 사업자등록번호 및 폐업 여부 확인 (홈택스)<br>
+        ② 통장 사본과 사업자명(대표자명) 일치 확인<br>
+        ③ 부품 실물 또는 동영상으로 상태 사전 검수<br>
+        ④ 고가 거래 시 분할 결제 권장 (선금 30% / 수령 후 70%)<br>
+        ⑤ 매입 결제 완료 시 반드시 합산 세금계산서 수령
+    `;
+    
+    const sellerGuide = `
+        <div style="font-weight:800; margin-bottom:6px; color:#0284C7;">📋 판매자 거래 체크리스트</div>
+        ① 구매자 사업자등록번호 및 담당자 재직 확인<br>
+        ② 대금 입금 확인 후 물품 출고 진행<br>
+        ③ 출고 즉시 배송정보(운송장 등) 투명하게 공유<br>
+        ④ 거래 대금 수취 후 세금계산서 즉시 발행 의무 준수
+    `;
+    
+    guide.innerHTML = isBuyer ? buyerGuide : sellerGuide;
+    container.insertBefore(guide, container.firstChild);
+};
+
+async function startChat(productId) {
+    if (window._startChatBusy) return;
+    window._startChatBusy = true;
+
+    try {
+        if(!currentUser) {
+            alert("채팅을 위해 로그인이 필요합니다.");
+            showPage('mypage');
+            closeProductModal();
+            return;
+        }
+    
+    // 상품 객체 찾기 (더미도 포함된 캐시나 products 배열 이용)
+    let p = products.find(x => String(x.id) === String(productId));
+    if (!p) {
+        if(String(productId).startsWith('p')) {
+            alert("데모 화면의 더미 데이터는 프론트엔드 목업으로 서버 통신을 생략합니다.");
+        } else {
+            alert("상품을 찾을 수 없습니다.");
+        }
+        return;
+    }
+    
+    if(!p.seller_id) {
+        alert("판매자 정보가 명확하지 않은 매물입니다.");
+        closeProductModal();
+        return;
+    }
+    
+    if(p.user_id === currentUser.id || p.seller_id === currentUser.id) {
+        alert("본인이 등록한 상품에는 채팅을 걸 수 없습니다.");
+        closeProductModal();
+        return;
+    }
+    
+    // ✅ 채팅방 존재 여부 확인 — .single() → .maybeSingle() (0행일 때 에러 안 던지게)
+    const { data: existingRoom, error: fetchErr } = await supabaseClient
+        .from('haema_chat_rooms')
+        .select('*')
+        .eq('product_id', p.id)
+        .eq('buyer_id', currentUser.id)
+        .limit(1)
+        .maybeSingle();
+
+    if (fetchErr) {
+        console.error('채팅방 조회 에러:', fetchErr);
+    }
+        
+    let roomId = null;
+    
+    if (existingRoom && existingRoom.id) {
+        roomId = existingRoom.id;
+    } else {
+        // 없다면 생성
+        const { data: newRoom, error: insertErr } = await supabaseClient
+            .from('haema_chat_rooms')
+            .insert({
+                product_id: p.id,
+                buyer_id: currentUser.id,
+                seller_id: p.seller_id
+            })
+            .select()
+            .single();
+            
+        if (insertErr) {
+            console.error("채팅방 생성 에러:", insertErr);
+            alert("채팅방 생성에 실패했습니다. (DB 테이블이 필요합니다)");
+            closeProductModal();
+            return;
+        }
+        roomId = newRoom.id;
+        // ✅ 새 방 만들었으니 캐시 무효화
+        _myChatRoomIdsCache = null;
+    }
+    
+    closeProductModal();
+    openChatRoom(roomId, p);
+    } finally {
+        window._startChatBusy = false;
+    }
+}
+
+// 하단 탭 '채팅' 눌렀을 때 목록 로드
+async function loadChats() {
+    triggerBottomNav('chat');
+
+    // ✅ NEW: 채팅 탭 진입 시 안읽은 카운트 클리어
+    clearChatBadge();
+
+    const container = document.getElementById('chat-list');
+    
+    if(!currentUser) {
+        container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999; font-size:14px;">로그인 후 이용 가능합니다.</div>';
+        return;
+    }
+    
+    container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999; font-size:14px;">채팅 목록 불러오는 중...</div>';
+    
+    // 구매자 혹은 판매자로 참여 중인 모든 방 로드
+    const { data: rooms, error } = await supabaseClient
+        .from('haema_chat_rooms')
+        .select('*')
+        .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
+        .order('last_updated_at', { ascending: false });
+        
+    if(error) {
+        console.error(error);
+        container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999; font-size:14px;">채팅 서버에 연결할 수 없거나 테이블이 없습니다.</div>';
+        return;
+    }
+    
+    if(!rooms || rooms.length === 0) {
+         container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999; font-size:14px;">참여 중인 대화가 없습니다.</div>';
+         _myChatRoomIdsCache = [];
+         return;
+    }
+
+    // ✅ NEW: room id 목록 캐싱 (글로벌 알림 필터링에 사용)
+    _myChatRoomIdsCache = rooms.map(r => r.id);
+    
+    // JS 릴레이션 (haema_products) 수동 연결
+    const pIds = rooms.map(r => r.product_id);
+    const { data: pData } = await supabaseClient.from('haema_products').select('*').in('id', pIds);
+    
+    myChats = rooms.map(r => ({
+        ...r,
+        haema_products: pData ? pData.find(x => String(x.id) === String(r.product_id)) : null
+    }));
+    
+    let html = '';
+    myChats.forEach(room => {
+        const pInfo = room.haema_products || {};
+        const pTitle = pInfo.title || "알 수 없는 상품";
+        const opName = room.buyer_id === currentUser.id ? "판매자" : "구매자";
+        const lastMsg = room.last_message || "대화를 시작해보세요.";
+        let timeStr = "";
+        if(room.last_updated_at) {
+            const d = new Date(room.last_updated_at);
+            timeStr = d.getHours() + ":" + String(d.getMinutes()).padStart(2, '0');
+        }
+
+        // ✅ 사용자 입력 가능한 모든 값에 escape 적용
+        const safeRoomId = escapeHtml(room.id);
+        const safePTitleShort = escapeHtml(pTitle.substring(0, 10)) + (pTitle.length > 10 ? '...' : '');
+        const safeOpName = escapeHtml(opName);
+        const safeLastMsg = escapeHtml(lastMsg);
+        const safeTime = escapeHtml(timeStr);
+        const safeOpInitial = escapeHtml(opName.charAt(0));
+
+        html += `
+        <div class="chat-item" onclick="openChatRoomByList('${safeRoomId}')">
+            <div class="chat-avatar">${safeOpInitial}</div>
+            <div class="chat-info">
+                <div class="chat-name-row">
+                    <span class="chat-name">${safeOpName} <span style="font-size:11px; font-weight:400; color:#999; margin-left:4px;">${safePTitleShort}</span></span>
+                    <span class="chat-time">${safeTime}</span>
+                </div>
+                <div class="chat-preview">${safeLastMsg}</div>
+            </div>
+        </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// 탭에서 클릭해서 들어올 경우 룸 데이터 찾기
+function openChatRoomByList(roomId) {
+    const room = myChats.find(r => r.id === roomId);
+    if(room) {
+        openChatRoom(roomId, room.haema_products);
+    }
+}
+
+// 실제 채팅방 접속 UI 띄우기 및 소켓 연결
+async function openChatRoom(roomId, pData) {
+    currentChatRoomId = roomId;
+    
+    // ✅ 수정 #2: 채팅 페이지 자체를 먼저 활성화해야 chatroom이 보임
+    //    기존: chatroomEl.style.display = 'flex' 만 했음 — 부모 page-chat이
+    //    숨겨져 있으면 자식인 chatroom을 보이게 해도 화면에 안 나타남.
+    showPage('chat');
+
+    // chat-list 숨기고 chatroom만 보이게
+    if (typeof showChatRoom === 'function') {
+        showChatRoom();
+    } else {
+        // 폴백
+        const chatListEl = document.getElementById('chat-list');
+        if (chatListEl) chatListEl.style.display = 'none';
+        const chatroomEl = document.getElementById('chatroom');
+        if (chatroomEl) chatroomEl.style.display = 'flex';
+        const fab = document.querySelector('.fab-container');
+        if (fab) fab.style.display = 'none';
+    }
+
+    // ✅ 채팅방 진입 시 안읽은 카운트 클리어
+    clearChatBadge();
+    
+    // ✅ textContent 사용 → 자동 escape (XSS 안전)
+    document.getElementById('chat-product-title').textContent = pData ? (pData.title || '상품 정보') : '상품 정보';
+    document.getElementById('chat-product-price').textContent = (pData && pData.price) ? pData.price : '-';
+
+    // ✅ 배너 렌더링 — DB의 svg 컬럼이 사용자 입력 HTML일 가능성이 있으므로
+    //    getProductImageHtml로 대체 (image_url 우선, 없으면 카테고리 SVG)
+    const imgEl = document.getElementById('chat-product-img');
+    if (pData) {
+        if (typeof getProductImageHtml === 'function') {
+            imgEl.innerHTML = getProductImageHtml(pData);
+        } else if (pData.image_url) {
+            const safeUrl = escapeHtml(pData.image_url);
+            imgEl.innerHTML = `<img src="${safeUrl}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+        } else {
+            imgEl.innerHTML = '<div style="width:100%;height:100%;background:#D4E8F8;"></div>';
+        }
+    } else {
+        imgEl.innerHTML = '<div style="width:100%;height:100%;background:#D4E8F8;"></div>';
+    }
+    
+    const msgContainer = document.getElementById('chat-messages-container');
+    msgContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:12px;">메시지 로딩중...</div>';
+    
+    // 거래완료 판단
+    const tradeBtn = document.getElementById('chat-trade-btn');
+    
+    let currentRoomBuyerId = null;
+    const { data: roomInfo, error: roomErr } = await supabaseClient.from('haema_chat_rooms').select('buyer_id').eq('id', roomId).maybeSingle();
+    if (roomErr) console.warn('roomInfo 조회 실패:', roomErr);
+    if (roomInfo) currentRoomBuyerId = roomInfo.buyer_id;
+
+    if (pData && tradeBtn) {
+        if (pData.is_closed) {
+            tradeBtn.textContent = '후기 남기기';
+            tradeBtn.style.background = '#EAEDF2';
+            tradeBtn.style.color = '#7A93B0';
+            tradeBtn.style.display = 'block';
+            tradeBtn.onclick = () => {
+                const revieweeId = pData.user_id === currentUser.id ? (pData.highest_bidder_id || currentRoomBuyerId) : pData.user_id;
+                openReviewModal(pData.id, revieweeId);
+            };
+        } else {
+            const isSeller = (pData.user_id === currentUser.id || pData.seller_id === currentUser.id);
+            if (isSeller) {
+                tradeBtn.textContent = '거래완료';
+                tradeBtn.style.background = '#f4f9ff';
+                tradeBtn.style.color = '#1a5fa0';
+                tradeBtn.style.display = 'block';
+                tradeBtn.onclick = () => completeTransaction(pData.id, roomId);
+            } else {
+                tradeBtn.style.display = 'none';
+            }
+        }
+    }
+    
+    // (Phase 7: renderSystemGuide 전역으로 이동됨)
+    
+    // 기존 메시지 로드
+    const { data: messages, error } = await supabaseClient
+        .from('haema_messages')
+        .select('*')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true });
+        
+    msgContainer.innerHTML = '';
+    
+    // 🚨 시스템 가이드 렌더링 호출
+    const isBuyer = roomInfo ? (currentUser.id === roomInfo.buyer_id) : false;
+    renderSystemGuide(msgContainer, isBuyer);
+
+    if(messages && messages.length > 0) {
+        messages.forEach(msg => {
+            renderMessage(msg);
+        });
+    } else {
+        const emptyGuide = document.createElement('div');
+        emptyGuide.id = 'empty-chat-state';
+        emptyGuide.style.cssText = 'text-align:center; padding:20px; color:#999; font-size:12px;';
+        emptyGuide.textContent = '첫 메시지를 보내 대화를 시작해보세요. (엔터 발송 가능)';
+        msgContainer.appendChild(emptyGuide);
+    }
+    
+    scrollChatToBottom();
+    
+    // 소켓 구독 시작 (현재 방 전용)
+    subscribeToMessages(roomId);
+}
+
+function renderMessage(msg) {
+    const msgContainer = document.getElementById('chat-messages-container');
+    if (!msgContainer) return;
+    const emptyState = document.getElementById('empty-chat-state');
+    if(emptyState) emptyState.style.display = 'none';
+
+    // ✅ currentUser null 체크 추가 (로그아웃 직후 메시지 도착 대응)
+    const isMine = currentUser ? (msg.sender_id === currentUser.id) : false;
+    const d = new Date(msg.created_at || Date.now());
+    const timeStr = d.getHours() + ":" + String(d.getMinutes()).padStart(2, '0');
+
+    // ✅ msg.content 항상 escape (utils.js의 escapeHtml은 단일 정의)
+    const safeContent = escapeHtml(msg.content);
+    const safeTime = escapeHtml(timeStr);
+    
+    let html = '';
+    if(isMine) {
+        // 내 메시지 (우측) 노란색
+        html = `
+        <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+            <div style="display:flex; align-items:flex-end; gap:6px;">
+                <span style="font-size:10px; color:#999;">${safeTime}</span>
+                <div style="background:var(--yellow-400); color:#333; padding:10px 14px; border-radius:16px; border-bottom-right-radius:4px; font-size:14px; font-weight:500; max-width:240px; word-break:break-word; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                    ${safeContent}
+                </div>
+            </div>
+        </div>
+        `;
+    } else {
+        // 상대방 메시지 (좌측) 백색
+        html = `
+        <div style="display:flex; justify-content:flex-start; margin-bottom:12px;">
+            <div style="display:flex; align-items:flex-end; gap:6px;">
+                <div style="background:#fff; border:1px solid #D4E8F8; color:#1A2B4A; padding:10px 14px; border-radius:16px; border-bottom-left-radius:4px; font-size:14px; font-weight:500; max-width:240px; word-break:break-word; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                    ${safeContent}
+                </div>
+                <span style="font-size:10px; color:#999;">${safeTime}</span>
+            </div>
+        </div>
+        `;
+    }
+    
+    msgContainer.insertAdjacentHTML('beforeend', html);
+}
+
+// ⚠️ 기존 chat.js에 있던 escapeHtml 정의는 삭제됨 (utils.js 사용)
+
+function scrollChatToBottom() {
+    const msgContainer = document.getElementById('chat-messages-container');
+    if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
+}
+
+async function sendChatMessage() {
+    const inputEl = document.getElementById('chat-input-text');
+    const content = inputEl.value.trim();
+    if(!content || !currentChatRoomId || !currentUser) return;
+    
+    inputEl.value = ''; // 입력창 즉각 비움
+    
+    const newMessage = {
+        room_id: currentChatRoomId,
+        sender_id: currentUser.id,
+        content: content
+    };
+    
+    const { error: msgErr } = await supabaseClient.from('haema_messages').insert(newMessage);
+    
+    if(msgErr) {
+         console.error("메시지 전송 실패", msgErr);
+         alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
+         inputEl.value = content;
+         return;
+    }
+    
+    // 채팅방 최신 상태 업데이트
+    await supabaseClient.from('haema_chat_rooms').update({
+        last_message: content,
+        last_updated_at: new Date().toISOString()
+    }).eq('id', currentChatRoomId);
+}
+
+// 실시간 변화 구독 함수 (현재 열린 방 전용)
+function subscribeToMessages(roomId) {
+    if(chatSubscription) {
+        supabaseClient.removeChannel(chatSubscription);
+    }
+    
+    chatSubscription = supabaseClient.channel(`chat-room-${roomId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'haema_messages', filter: `room_id=eq.${roomId}` },
+        (payload) => {
+          renderMessage(payload.new);
+          scrollChatToBottom();
+        }
+      )
+      .subscribe();
+}
+
+// 채팅방 닫기 (뒤로가기)
+window.hideChatRoom = function() {
+    if(chatSubscription) {
+        supabaseClient.removeChannel(chatSubscription);
+        chatSubscription = null;
+    }
+    currentChatRoomId = null;
+    document.getElementById('chatroom').style.display = 'none';
+    
+    // 리스트 다시 로드시켜 최신 메시지 반영
+    loadChats();
+};
+
+// ============================================================================
+// ✅ NEW: 글로벌 채팅 알림 시스템 (수정 #3)
+// ============================================================================
+// 목적: 사용자가 다른 페이지에 있을 때도 새 메시지 도착을 감지하여
+//       마이페이지 "채팅" 메뉴의 빨간 N 뱃지를 업데이트.
+//
+// 구현:
+//   - 본인이 멤버인 모든 chat_rooms의 INSERT 이벤트를 구독
+//   - 본인이 보낸 메시지, 현재 보고있는 방의 메시지는 카운트 안 함
+//   - loadChats() 진입 시 카운트 0으로 초기화
+//
+// 호출처:
+//   - subscribeToGlobalMessages(): auth.js의 onAuthStateChange (SIGNED_IN 시)
+//   - unsubscribeFromGlobalMessages(): auth.js의 onAuthStateChange (SIGNED_OUT 시)
+// ============================================================================
+
+window.subscribeToGlobalMessages = function() {
+    if (!currentUser) return;
+    
+    // 기존 구독 해제 (재로그인 등 대비)
+    if (globalChatSubscription) {
+        supabaseClient.removeChannel(globalChatSubscription);
+        globalChatSubscription = null;
+    }
+    
+    globalChatSubscription = supabaseClient
+        .channel(`global-chat-${currentUser.id}`)
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'haema_messages' },
+            async (payload) => {
+                const msg = payload.new;
+                if (!msg) return;
+
+                // 1) 본인이 보낸 메시지 → 무시
+                if (msg.sender_id === currentUser.id) return;
+
+                // 2) 현재 열려있는 방의 메시지 → 이미 chatSubscription이 처리함
+                if (currentChatRoomId && msg.room_id === currentChatRoomId) return;
+
+                // 3) 내가 멤버인 방인지 확인 (캐시 우선, 없으면 DB 조회)
+                let isMyRoom = false;
+                if (Array.isArray(_myChatRoomIdsCache)) {
+                    isMyRoom = _myChatRoomIdsCache.includes(msg.room_id);
+                }
+                if (!isMyRoom) {
+                    // 캐시에 없거나 신규 방일 수 있음 → 한번 더 DB 조회
+                    const { data: room } = await supabaseClient
+                        .from('haema_chat_rooms')
+                        .select('id, buyer_id, seller_id')
+                        .eq('id', msg.room_id)
+                        .maybeSingle();
+                    if (!room) return;
+                    if (room.buyer_id !== currentUser.id && room.seller_id !== currentUser.id) return;
+                    
+                    // 캐시 갱신
+                    if (Array.isArray(_myChatRoomIdsCache) && !_myChatRoomIdsCache.includes(room.id)) {
+                        _myChatRoomIdsCache.push(room.id);
+                    }
+                    isMyRoom = true;
+                }
+
+                if (!isMyRoom) return;
+
+                // 4) 카운트 증가 + 뱃지 갱신
+                unreadChatCount += 1;
+                updateChatBadge();
+            }
+        )
+        .subscribe();
+};
+
+window.unsubscribeFromGlobalMessages = function() {
+    if (globalChatSubscription) {
+        supabaseClient.removeChannel(globalChatSubscription);
+        globalChatSubscription = null;
+    }
+    unreadChatCount = 0;
+    _myChatRoomIdsCache = null;
+    updateChatBadge();
+};
+
+function updateChatBadge() {
+    // 마이페이지 메뉴의 채팅 뱃지
+    const badge = document.getElementById('chat-badge');
+    if (badge) {
+        if (unreadChatCount > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = unreadChatCount > 99 ? '99+' : String(unreadChatCount);
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+function clearChatBadge() {
+    unreadChatCount = 0;
+    updateChatBadge();
+}
+```
+
+## 4. index.html (최신 수정본)
 ```html
 <!DOCTYPE html>
 <html lang="ko">
@@ -832,2754 +2564,4 @@
 
 </body>
 </html>
-```
-
-## 2. product.js
-```javascript
-// ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
-// ⚠️ getProductImageHtml(p)도 utils.js에서 정의 — image_url 또는 카테고리 SVG 반환
-
-// 카테고리를 그리는 HTML 생성 유틸 함수
-// ✅ 모든 사용자 입력은 escapeHtml() 처리
-function createProductCardHTML(p) {
-    let tagsHTML = '';
-    if (p.auth) tagsHTML += '<span class="ptag ptag-b">인증</span>';
-    if (p.tradeType === '직거래' || p.tradeType === '모두') tagsHTML += '<span class="ptag ptag-y">직거래</span>';
-    if (p.offer) tagsHTML += '<span class="ptag ptag-r">가격제안</span>';
-    if (p.auction) {
-        if(p.is_closed) {
-            tagsHTML += `<span class="ptag ptag-b" style="background:#eee;color:#999;border:none;">낙찰 완료</span>`;
-        } else if(p.auction_end) {
-            // ✅ data-end 속성에 들어가는 값도 escape (date 문자열이라 보통 안전하지만 방어)
-            tagsHTML += `<span class="ptag ptag-b auction-timer-tag" data-end="${escapeHtml(p.auction_end)}">계산중...</span>`;
-        } else if (p.remain) {
-            tagsHTML += `<span class="ptag ptag-b">${escapeHtml(p.remain)}</span>`;
-        }
-    }
-
-    const safePrice = escapeHtml(p.price);
-    let priceHTML = `<div class="product-price">${safePrice}</div>`;
-    if (p.auction) {
-      if(p.is_closed) {
-          const finalPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : '유찰됨';
-          priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge" style="background:#7A93B0;">종료</span><span style="font-size:14px;font-weight:700;color:#7A93B0;text-decoration:line-through;">${escapeHtml(finalPrice)}</span></div>`;
-      } else {
-          const showPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : (p.price || '');
-          priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${escapeHtml(showPrice)}</span></div>`;
-      }
-    }
-
-    // ✅ p.id, p.title, p.sub 모두 escape
-    const safeId = escapeHtml(p.id);
-    const safeTitle = escapeHtml(p.title);
-    const safeSub = escapeHtml(p.sub);
-
-    // ✅ p.svg 직접 사용 → getProductImageHtml로 안전하게 조립
-    const productImageHtml = (typeof getProductImageHtml === 'function')
-        ? getProductImageHtml(p)
-        : (p.svg || '');
-
-    return `
-      <div class="product-card" onclick="openProductModal('${safeId}')" style="cursor:pointer;">
-        <div class="product-img">${productImageHtml}</div>
-        <div class="product-body">
-          <div class="product-title">${safeTitle}</div>
-          <div class="product-sub">${safeSub}</div>
-          ${priceHTML}
-          <div class="product-tags" style="gap:4px;">${tagsHTML}</div>
-        </div>
-      </div>
-    `;
-}
-
-// 화면 렌더링 로직
-// 화면 렌더링 로직 (무한 스크롤 및 서버 필터링 호환)
-function renderProductsHeader() {
-  const catArea = document.getElementById('home-category-area');
-  const recArea = document.getElementById('home-recommendation-area');
-  const listTitle = document.getElementById('main-product-title-header');
-  
-  if (filterState.topCategory === '전체' && filterState.keyword === '') {
-      if(catArea) catArea.style.display = 'block';
-      if(recArea) recArea.style.display = 'block';
-      if(listTitle) listTitle.innerHTML = '<span class="section-title">최신 전체 매물</span><span class="section-more">더보기 →</span>';
-  } else if (filterState.category === '전체' && filterState.keyword === '') {
-      if(catArea) catArea.style.display = 'block';
-      if(recArea) recArea.style.display = 'block';
-      if(listTitle) listTitle.innerHTML = '<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>최신 매물</span><span class="section-more">더보기 →</span>';
-  } else {
-      if(catArea) catArea.style.display = 'block';
-      if(recArea) recArea.style.display = 'none';
-      if(listTitle) listTitle.innerHTML = `<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>${escapeHtml(filterState.category)} 결과</span>`;
-  }
-}
-
-function renderProductsEmpty() {
-    const grid = document.getElementById('main-product-grid');
-    if(grid) grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 100px 20px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); font-size: 14px;">선택한 조건에 맞는 매물이 없습니다.</div>';
-}
-
-function renderProductsAppend(newItems) {
-    const grid = document.getElementById('main-product-grid');
-    if (!grid) return;
-    
-    // 큐레이션 영역 채우기 (처음 로딩 시에만)
-    const recList = document.getElementById('recommendation-list');
-    const curList = document.getElementById('curation-list');
-    if (products.length <= Math.max(20, newItems.length) && recList && curList && filterState.keyword === '') {
-        recList.innerHTML = ''; curList.innerHTML = '';
-        const shuffled = [...products].sort(() => 0.5 - Math.random());
-        const recItems = shuffled.slice(0, 4);
-        const curItems = shuffled.slice(4, 8);
-        
-        if(recItems.length > 0) recItems.forEach(p => recList.innerHTML += createProductCardHTML(p));
-        else recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">매물이 없습니다.</div>';
-        
-        if(curItems.length > 0) curItems.forEach(p => curList.innerHTML += createProductCardHTML(p));
-        else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">매물이 없습니다.</div>';
-    }
-    
-    newItems.forEach(p => {
-        grid.innerHTML += createProductCardHTML(p);
-    });
-    
-    if (hasMoreProducts) setupInfiniteScroll();
-    setupAuctionTimers();
-}
-
-let scrollObserver = null;
-function setupInfiniteScroll() {
-    const grid = document.getElementById('main-product-grid');
-    if (!grid) return;
-    
-    if (scrollObserver) scrollObserver.disconnect();
-    
-    const target = document.createElement('div');
-    target.id = 'product-infinite-scroll-target';
-    target.style.height = '20px';
-    target.style.gridColumn = '1 / -1';
-    grid.appendChild(target);
-    
-    scrollObserver = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-            scrollObserver.disconnect();
-            if (target.parentNode) target.remove();
-            fetchProducts(false); // Load next page
-        }
-    }, { rootMargin: '200px' });
-    
-    scrollObserver.observe(target);
-}
-
-function setupAuctionTimers() {
-  if(typeof auctionInterval !== 'undefined' && auctionInterval) clearInterval(auctionInterval);
-  window.auctionInterval = setInterval(() => {
-    const timeNow = new Date().getTime();
-    document.querySelectorAll('.auction-timer-tag').forEach(tag => {
-       const end = new Date(tag.getAttribute('data-end')).getTime();
-       const diff = end - timeNow;
-       if(diff <= 0) {
-          tag.textContent = '경매 종료';
-          tag.style.background = '#eee';
-          tag.style.color = '#999';
-       } else {
-          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          const secs = Math.floor((diff % (1000 * 60)) / 1000);
-          tag.textContent = `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')} 남음`;
-       }
-    });
-  }, 1000);
-}
-
-// 기존 renderProducts 호환용
-window.renderProducts = function() {
-    fetchProducts(true);
-}
-
-let currentQuoteProductId = null;
-function requestQuote(id) {
-    if(!currentUser) {
-        alert('견적서 요청은 로그인이 필요합니다.');
-        showPage('login');
-        return;
-    }
-    currentQuoteProductId = id;
-    document.getElementById('quote-modal').style.display = 'flex';
-}
-
-function submitQuoteRequest() {
-    alert('해마 벤더 시스템으로 견적 요청이 성공적으로 접수되었습니다.\n빠른 시일 내에 선박의 메일/시스템으로 견적서가 도착합니다!');
-    document.getElementById('quote-modal').style.display = 'none';
-}
-
-async function submitBid(id) {
-    if(!currentUser) {
-        alert("경매 입찰은 로그인이 필요합니다.");
-        showPage('login');
-        return;
-    }
-
-    const p = products.find(x => String(x.id) === String(id));
-    if(!p) return;
-    
-    if(p.is_closed) {
-        alert("이미 마감된 경매입니다.");
-        return;
-    }
-    
-    if(p.seller_id === currentUser.id) {
-        alert("당사자의 매물에는 입찰할 수 없습니다.");
-        return;
-    }
-    
-    const bidInput = document.getElementById('bid-amount');
-    const newBidStr = bidInput ? bidInput.value : null;
-    if(!newBidStr) {
-        alert("입찰 희망가를 입력해주세요.");
-        return;
-    }
-    
-    const newBid = parseInt(newBidStr, 10);
-    const curr = p.current_bid || parseInt((p.price || '').replace(/[^0-9]/g, '')) || 0;
-    
-    if(newBid <= curr) {
-        alert(`현재 최고가(₩${curr.toLocaleString()})보다 높은 금액을 입력하셔야 합니다.`);
-        return;
-    }
-
-    const count = p.bid_count || 0;
-    
-    const bidderName = currentUser.user_metadata?.biz_name || currentUser.user_metadata?.display_name || (currentUser.email ? currentUser.email.split('@')[0] : '익명');
-    
-    const btn = document.querySelector('.auction-bid-btn');
-    if(btn) btn.textContent = '입찰 처리중...';
-    
-    // ✅ .lt('current_bid', newBid) 조건이 DB 단 원자적 optimistic lock 역할.
-    //    동시 입찰 시 더 낮은 bid는 0행 반환으로 거부됨.
-    const { data: updateRows, error } = await supabaseClient.from('haema_products')
-        .update({ 
-            current_bid: newBid, 
-            bid_count: count + 1,
-            highest_bidder_id: currentUser.id,
-            highest_bidder_name: bidderName
-        })
-        .eq('id', id)
-        .lt('current_bid', newBid)
-        .select();
-        
-    if(error) {
-        console.error(error);
-        alert('입찰 중 오류가 발생했습니다: ' + error.message);
-        if(btn) btn.textContent = '입찰';
-        return;
-    }
-
-    // ✅ 0행 update = 다른 사람이 더 높은 가격으로 먼저 입찰함
-    if (!updateRows || updateRows.length === 0) {
-        alert('입찰 실패: 그 사이 다른 사용자가 더 높은 가격으로 입찰했습니다. 새로고침 후 다시 시도해주세요.');
-        if(btn) btn.textContent = '입찰';
-        await fetchProducts();
-        return;
-    }
-    
-    alert('성공적으로 입찰되었습니다!');
-    closeProductModal();
-    await fetchProducts();
-}
-
-
-let lastProductCreatedAt = null;
-let isFetchingProducts = false;
-let hasMoreProducts = true;
-
-// 서버에서 매물 불러오기 (무한 스크롤 cursor 지원)
-async function fetchProducts(reset = true) {
-    if (isFetchingProducts) return;
-    
-    const grid = document.getElementById('main-product-grid');
-    if (reset) {
-        lastProductCreatedAt = null;
-        hasMoreProducts = true;
-        products = [];
-        if (grid) grid.innerHTML = '';
-        renderProductsHeader();
-    }
-    
-    if (!hasMoreProducts) return;
-    isFetchingProducts = true;
-    
-    if (grid) {
-        const loadingDiv = document.createElement('div');
-        loadingDiv.id = 'product-loading-indicator';
-        loadingDiv.style = 'grid-column: 1 / -1; padding: 20px; text-align: center; color: var(--text-muted); font-size:14px;';
-        loadingDiv.innerHTML = '매물 데이터를 불러오는 중입니다...';
-        grid.appendChild(loadingDiv);
-    }
-    
-    let query = supabaseClient.from('haema_products').select('*');
-    
-    // --- DB Pushdown 필터링 ---
-    if (filterState.category !== '전체') {
-        query = query.eq('category', filterState.category);
-    } else if (filterState.topCategory !== '전체') {
-        const subCats = Object.keys(CAT_TO_TOP_MAP || {}).filter(k => CAT_TO_TOP_MAP[k] === filterState.topCategory);
-        if (filterState.topCategory === '주/부식') subCats.push('쌀·곡물', '육류', '수산물', '청과류', '가공·음료', '주/부식');
-        if (subCats.length > 0) query = query.in('category', subCats);
-    }
-
-    if (filterState.region !== '전체') query = query.eq('region', filterState.region);
-    if (filterState.condition !== '전체') query = query.eq('condition', filterState.condition);
-    if (filterState.cert !== '전체') query = query.eq('cert', filterState.cert);
-
-    if (filterState.tradeType === '직거래') query = query.eq('tradeType', '직거래');
-    if (filterState.tradeType === '경매') query = query.eq('auction', true);
-    if (filterState.tradeType === '가격제안') query = query.eq('offer', true);
-
-    if (filterState.keyword) {
-        query = query.or(`title.ilike.%${filterState.keyword}%,category.ilike.%${filterState.keyword}%`);
-    }
-    if (filterState.supplier !== '전체') {
-        query = query.ilike('title', `%${filterState.supplier}%`);
-    }
-
-    // Cursor (무한스크롤 락 포인트)
-    if (lastProductCreatedAt) {
-        query = query.lt('created_at', lastProductCreatedAt);
-    }
-
-    const { data, error } = await query.order('created_at', { ascending: false }).limit(20);
-    
-    const indicator = document.getElementById('product-loading-indicator');
-    if (indicator) indicator.remove();
-    isFetchingProducts = false;
-
-    if (error) {
-        console.error('Supabase load error:', error);
-        return;
-    }
-
-    if (!data || data.length === 0) {
-        hasMoreProducts = false;
-        if (reset) renderProductsEmpty();
-        return;
-    }
-
-    // Price는 문자열이라 DB 푸시다운이 완벽하지 않으므로 Client에서 후처리
-    let finalData = data;
-    if (filterState.minPrice !== null || filterState.maxPrice !== null) {
-        finalData = finalData.filter(p => {
-            const valObj = (p.price || '').replace(/[^0-9]/g, '');
-            if (!valObj) return true;
-            const val = parseInt(valObj, 10);
-            if (filterState.minPrice !== null && val < filterState.minPrice) return false;
-            if (filterState.maxPrice !== null && val > filterState.maxPrice) return false;
-            return true;
-        });
-    }
-
-    products = [...products, ...finalData];
-    lastProductCreatedAt = data[data.length - 1].created_at;
-    if (data.length < 20) {
-        hasMoreProducts = false;
-    }
-
-    if(finalData.length > 0) {
-        renderProductsAppend(finalData);
-    } else {
-        // 필터링되어 0개가 되었고 아직 더 가져올게 남았다면 재귀 호출
-        if(hasMoreProducts) fetchProducts(false);
-        else if (reset) renderProductsEmpty();
-    }
-}
-
-async function closeAuction(p) {
-    if(p.is_closed) return;
-    
-    const { error } = await supabaseClient.from('haema_products')
-        .update({ is_closed: true })
-        .eq('id', p.id)
-        .eq('is_closed', false);
-        
-    if(!error) {
-        p.is_closed = true;
-        const safeTitle = String(p.title || '');
-        if (currentUser && currentUser.id === p.highest_bidder_id) {
-            alert(`축하합니다! [${safeTitle}] 경매에 최종 낙찰되셨습니다!\n(낙찰가: ₩ ${p.current_bid ? p.current_bid.toLocaleString() : '확인 불가'})`);
-        }
-        else if (currentUser && currentUser.id === p.seller_id) {
-            alert(`등록하신 [${safeTitle}] 경매가 마감되었습니다.\n(최종 입찰자: ${String(p.highest_bidder_name || '없음')})`);
-        }
-        await fetchProducts();
-        closeProductModal();
-    }
-}
-
-// 5초 주기 경매 마감 감시자
-setInterval(() => {
-    const now = new Date().getTime();
-    products.forEach(p => {
-        if(p.auction && !p.is_closed && p.auction_end) {
-            const end = new Date(p.auction_end).getTime();
-            if(now >= end) {
-                closeAuction(p);
-            }
-        }
-    });
-}, 5000);
-
-
-// ============================================================================
-// ✅ 매물 등록 / 수정 분기 처리
-// ============================================================================
-// editingProductId가 null이면 등록 모드(INSERT), 값이 있으면 수정 모드(UPDATE)
-// 진입 경로:
-//   - 등록 모드: window.goToRegisterCreateMode() 호출 (FAB, +등록 버튼, 빈 판매목록)
-//   - 수정 모드: window.editMyProduct(id) 호출 (마이페이지 판매목록 카드 클릭)
-//
-// ⚠️ P0-A 수정 (2026-04-17):
-//   기존 hashchange 리스너 기반 자동 reset 방식은 동작하지 않았음.
-//   showPage()는 history.pushState()를 사용하는데 pushState는 hashchange 이벤트를
-//   발생시키지 않음. 이로 인해 편집 모드에서 +등록 클릭 시 editingProductId가
-//   리셋되지 않아 의도치 않은 UPDATE가 발생, 본인 매물이 덮어써질 위험이 있었음.
-//
-//   해결: 진입 경로를 두 개의 명시적 함수(goToRegisterCreateMode / editMyProduct)로
-//   분리. hashchange 리스너 + _enteredViaEdit 플래그는 모두 제거.
-// ============================================================================
-let editingProductId = null;
-
-// 등록 페이지 진입 시 모드 초기화
-function resetRegisterFormToCreateMode() {
-    editingProductId = null;
-
-    // 헤더 텍스트 / 버튼 텍스트 복원
-    const headerTitle = document.querySelector('#page-register .sub-header .sub-title');
-    if (headerTitle) headerTitle.textContent = '매물 등록';
-
-    const submitBtn = document.querySelector('#page-register .submit-btn');
-    if (submitBtn) {
-        submitBtn.textContent = '등록하기';
-        submitBtn.disabled = false;
-    }
-
-    // 폼 필드 초기화
-    const titleInput = document.getElementById('title-input');
-    if (titleInput) { titleInput.value = ''; titleInput.disabled = false; }
-
-    const priceInput = document.getElementById('price-input');
-    if (priceInput) { priceInput.value = ''; priceInput.disabled = false; }
-
-    const auctionEndInput = document.getElementById('auction-end-input');
-    if (auctionEndInput) { auctionEndInput.value = ''; auctionEndInput.disabled = false; }
-
-    const photoInput = document.getElementById('photo-upload-input');
-    if (photoInput) photoInput.value = '';
-
-    // P0-#2: desc reset
-    const descInput = document.getElementById('desc-input');
-    if (descInput) descInput.value = '';
-
-    if (typeof uploadedBase64 !== 'undefined') uploadedBase64 = null;
-    if (typeof uploadedBlob !== 'undefined') uploadedBlob = null;
-
-    const mainBox = document.getElementById('photo-box-main');
-    if (mainBox) {
-        mainBox.style.backgroundImage = 'none';
-        mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
-    }
-
-    // 카테고리 선택 초기화
-    const catSelect = document.querySelector('#page-register .form-select');
-    if (catSelect) catSelect.value = '카테고리 선택';
-
-    // 거래방식 칩 (직거래로)
-    document.querySelectorAll('#page-register .trade-chip').forEach(c => {
-        c.classList.toggle('on', c.textContent.trim() === '직거래');
-    });
-
-    // 상태 칩 (최상으로)
-    document.querySelectorAll('#page-register .cond-chip').forEach(c => {
-        c.classList.toggle('on', c.textContent.trim() === '최상');
-    });
-
-    // 경매 마감일 행 숨김
-    const auctionDateRow = document.getElementById('auction-date-row');
-    if (auctionDateRow) auctionDateRow.style.display = 'none';
-
-    // 안내문구 제거
-    const editLockNotice = document.getElementById('edit-lock-notice');
-    if (editLockNotice) editLockNotice.remove();
-}
-
-// ============================================================================
-// ✅ NEW (P0-A 수정): 등록 모드 진입 — 명시적 함수
-// ============================================================================
-// HTML의 +등록 버튼, FAB, 빈 판매목록의 "첫 판매글 작성하기" 버튼 모두
-// 이 함수를 호출함. requireAuthAndShow('register')의 대체 함수.
-//
-// 등록 모드 보장:
-//   1) 로그인 체크
-//   2) resetRegisterFormToCreateMode() 호출 → editingProductId = null
-//   3) showPage('register')
-window.goToRegisterCreateMode = function() {
-    if (!currentUser) {
-        alert('회원가입 및 로그인이 필요한 기능입니다.');
-        showPage('login');
-        return;
-    }
-    resetRegisterFormToCreateMode();
-    showPage('register');
-};
-
-// ============================================================================
-// ✅ 본인 매물 편집 진입
-// ============================================================================
-window.editMyProduct = function(productId) {
-    if (!currentUser) {
-        alert('로그인이 필요합니다.');
-        return;
-    }
-
-    const p = products.find(x => String(x.id) === String(productId));
-    if (!p) {
-        alert('매물을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
-        return;
-    }
-
-    // 본인 매물 권한 체크 (1차 방어 — RLS가 진짜 방어선)
-    const isOwner = (p.seller_id && p.seller_id === currentUser.id)
-                 || (p.user_id && p.user_id === currentUser.id);
-    if (!isOwner) {
-        alert('본인이 등록한 매물만 수정할 수 있습니다.');
-        return;
-    }
-
-    // 거래완료 매물은 수정 불가
-    if (p.is_closed) {
-        alert('이미 거래가 완료된 매물은 수정할 수 없습니다.');
-        return;
-    }
-
-    // 등록 페이지로 이동
-    // ⚠️ P0-A 수정: _enteredViaEdit 플래그 제거 (hashchange 리스너 사라짐)
-    showPage('register');
-
-    // 모드 전환
-    editingProductId = productId;
-
-    // 헤더 / 버튼 텍스트 변경
-    const headerTitle = document.querySelector('#page-register .sub-header .sub-title');
-    if (headerTitle) headerTitle.textContent = '매물 수정';
-
-    const submitBtn = document.querySelector('#page-register .submit-btn');
-    if (submitBtn) {
-        submitBtn.textContent = '수정하기';
-        submitBtn.disabled = false;
-    }
-
-    // 폼 필드 prefill
-    const titleInput = document.getElementById('title-input');
-    if (titleInput) titleInput.value = p.title || '';
-
-    // P0-#2: desc prefill
-    const descInput = document.getElementById('desc-input');
-    if (descInput) descInput.value = p.content || '';
-
-    // 가격: "₩ 1,000,000" 형식에서 숫자만 추출
-    const priceInput = document.getElementById('price-input');
-    if (priceInput) {
-        const numericPrice = (p.price || '').replace(/[^0-9]/g, '');
-        priceInput.value = numericPrice;
-    }
-
-    // 카테고리 select
-    const catSelect = document.querySelector('#page-register .form-select');
-    if (catSelect && p.category) {
-        catSelect.value = p.category;
-        // option에 없는 카테고리면 "카테고리 선택"으로
-        if (catSelect.value !== p.category) catSelect.value = '카테고리 선택';
-    }
-
-    // 거래방식 칩
-    const tradeType = p.tradeType || (p.auction ? '경매' : '직거래');
-    document.querySelectorAll('#page-register .trade-chip').forEach(c => {
-        c.classList.toggle('on', c.textContent.trim() === tradeType);
-    });
-
-    // 상태 칩
-    const condition = p.condition || '최상';
-    document.querySelectorAll('#page-register .cond-chip').forEach(c => {
-        c.classList.toggle('on', c.textContent.trim() === condition);
-    });
-
-    // 경매 마감일 행 (경매면 보이고 + 값 채움)
-    const auctionDateRow = document.getElementById('auction-date-row');
-    const auctionEndInput = document.getElementById('auction-end-input');
-    if (p.auction && p.auction_end) {
-        if (auctionDateRow) auctionDateRow.style.display = 'block';
-        if (auctionEndInput) {
-            // ISO → datetime-local 형식 변환 (YYYY-MM-DDTHH:MM)
-            const d = new Date(p.auction_end);
-            if (!isNaN(d.getTime())) {
-                const pad = n => String(n).padStart(2, '0');
-                auctionEndInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-            }
-        }
-    } else {
-        if (auctionDateRow) auctionDateRow.style.display = 'none';
-        if (auctionEndInput) auctionEndInput.value = '';
-    }
-
-    // 지역
-    const regionInput = document.getElementById('region-input');
-    if (regionInput && p.region) regionInput.value = p.region;
-
-    // 사진 prefill (image_url 있으면 사진 박스에 미리보기)
-    const mainBox = document.getElementById('photo-box-main');
-    if (mainBox) {
-        if (p.image_url) {
-            // 기존 사진을 미리보기로 표시 + ✕ 삭제 버튼
-            const safeUrl = escapeHtml(p.image_url);
-            mainBox.style.backgroundImage = `url(${safeUrl})`;
-            mainBox.style.backgroundSize = 'cover';
-            mainBox.style.backgroundPosition = 'center';
-            mainBox.style.position = 'relative';
-            mainBox.innerHTML = '<button type="button" id="photo-delete-btn" title="사진 삭제" style="position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0; box-shadow:0 2px 4px rgba(0,0,0,0.2); z-index:10;">✕</button>';
-            // 사진 삭제 버튼 핸들러 (수정 시 사진 비우기)
-            const delBtn = document.getElementById('photo-delete-btn');
-            if (delBtn) {
-                delBtn.addEventListener('click', function(ev) {
-                    ev.stopPropagation();
-                    ev.preventDefault();
-                    if (typeof uploadedBase64 !== 'undefined') uploadedBase64 = null;
-                    if (typeof uploadedBlob !== 'undefined') uploadedBlob = null;
-                    const fileInput = document.getElementById('photo-upload-input');
-                    if (fileInput) fileInput.value = '';
-                    mainBox.style.backgroundImage = 'none';
-                    mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
-                    // 수정 모드에서 사진 삭제 시 → 사진을 NULL로 업데이트하도록 마킹
-                    window.__editPhotoCleared = true;
-                });
-            }
-            // 새로 업로드 안 하면 기존 image_url 유지
-            window.__editPhotoCleared = false;
-        } else {
-            mainBox.style.backgroundImage = 'none';
-            mainBox.innerHTML = '<span class="photo-plus">+</span><span class="photo-main-label">대표사진</span>';
-            window.__editPhotoCleared = false;
-        }
-    }
-
-    // 입찰자 있는 경매면 가격/마감일 잠금
-    const bidCount = parseInt(p.bid_count) || 0;
-    const isLocked = p.auction && bidCount > 0;
-    if (isLocked) {
-        if (priceInput) {
-            priceInput.disabled = true;
-            priceInput.style.background = '#f4f4f4';
-            priceInput.style.color = '#999';
-        }
-        if (auctionEndInput) {
-            auctionEndInput.disabled = true;
-            auctionEndInput.style.background = '#f4f4f4';
-            auctionEndInput.style.color = '#999';
-        }
-        // 안내 문구 추가 (이미 있으면 스킵)
-        if (!document.getElementById('edit-lock-notice')) {
-            const notice = document.createElement('div');
-            notice.id = 'edit-lock-notice';
-            notice.style.cssText = 'background:#FFF3E0; border:1px solid #F57C00; border-radius:8px; padding:12px; margin:12px 16px; font-size:13px; color:#D84315; line-height:1.5;';
-            notice.innerHTML = `⚠️ 이 경매는 입찰자(${bidCount}회)가 있어 <b>가격과 마감일은 수정할 수 없습니다.</b><br>제목·설명·사진·카테고리는 수정 가능합니다.`;
-            const subBody = document.querySelector('#page-register .sub-body');
-            if (subBody) subBody.insertBefore(notice, subBody.firstChild);
-        }
-    }
-};
-
-// ============================================================================
-// 판매자 실 DB 매물 등록 (편집 모드 분기 포함)
-// ============================================================================
-async function registerProduct() {
-  const isEditMode = (editingProductId !== null);
-
-  const cat = document.querySelector('#page-register .form-select').value;
-  const title = document.getElementById('title-input').value;
-  let tradeType = '직거래';
-  document.querySelectorAll('#page-register .trade-chip').forEach(c => {
-      if(c.classList.contains('on')) tradeType = c.textContent.trim();
-  });
-
-  let conditionStr = '최상';
-  document.querySelectorAll('#page-register .cond-chip').forEach(c => {
-      if(c.classList.contains('on')) conditionStr = c.textContent.trim();
-  });
-
-  const priceInput = document.getElementById('price-input').value || '';
-  const priceParsed = parseInt(priceInput.replace(/[^0-9]/g, '')) || 0;
-
-  const regionInput = document.getElementById('region-input');
-  const regionVal = regionInput ? regionInput.value : '부산';
-
-    // P0-#2: read desc
-    const descInputEl = document.getElementById('desc-input');
-    const descVal = descInputEl ? descInputEl.value.trim() : '';
-
-  if (!title || cat === '카테고리 선택') { alert('상품명과 카테고리는 필수입니다.'); return; }
-
-  // ✅ 추가 입력 검증
-  if (title.length > 200) { alert('상품명은 200자 이하로 입력해주세요.'); return; }
-  if (priceParsed < 0 || priceParsed > 99999999999) { alert('가격을 올바르게 입력해주세요.'); return; }
-
-  // 🚨 [Phase 7 최우선 방어벽] 100만원 한도 시뮬레이션
-  const MAX_PRICE_BETA = 1_000_000;
-  if (priceParsed > MAX_PRICE_BETA) {
-      alert('⚠️ 알파 테스트 기간 중에는 100만 원 이하의 매물만 등록 가능합니다.\n\n정식 출시 후 고가 거래(에스크로 및 계약 지원) 기능을 오픈할 예정입니다.');
-      return;
-  }
-
-  const isAuction = tradeType === '경매';
-  const endInput = document.getElementById('auction-end-input').value;
-  if(isAuction && !endInput) { alert('경매 마감일시를 설정해주세요.'); return; }
-  if(isAuction) {
-      const endTime = new Date(endInput).getTime();
-      // 수정 모드에서 마감일 비활성화된 경우는 검증 건너뜀 (기존 값 유지)
-      const auctionEndDisabled = document.getElementById('auction-end-input').disabled;
-      if (!auctionEndDisabled && endTime <= Date.now()) {
-          alert('경매 마감일시는 현재 시각 이후로 설정해주세요.'); return;
-      }
-  }
-
-  const submitBtn = document.querySelector('#page-register .submit-btn');
-  const originalBtnText = isEditMode ? '수정하기' : '등록하기';
-  const inProgressText = isEditMode ? '수정 중...' : '매물 등록 중...';
-  submitBtn.textContent = inProgressText;
-  submitBtn.disabled = true;
-
-  let finalImageUrl = null;
-
-  // 사진 업로드 처리
-  if (uploadedBlob) {
-      // 새 사진 업로드 (등록 모드든 수정 모드든 동일)
-      submitBtn.textContent = inProgressText;
-      const fileName = `public/product_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-
-      const { data: uploadData, error: uploadError } = await supabaseClient.storage
-          .from('market_images')
-          .upload(fileName, uploadedBlob, {
-              contentType: 'image/jpeg'
-          });
-
-      if (uploadError) {
-          const proceed = confirm(
-              '사진 업로드에 실패했습니다.\n\n' +
-              (isEditMode ? '사진 없이 다른 정보만 수정하시겠습니까?\n' : '사진 없이 매물 정보만 등록하시겠습니까?\n') +
-              '(취소하시면 다시 시도하실 수 있습니다)\n\n' +
-              '오류 코드: ' + (uploadError.message || '알 수 없음')
-          );
-          if (!proceed) {
-              submitBtn.textContent = originalBtnText;
-              submitBtn.disabled = false;
-              return;
-          }
-      } else {
-          const { data: publicData } = supabaseClient.storage.from('market_images').getPublicUrl(fileName);
-          finalImageUrl = publicData.publicUrl;
-      }
-  }
-
-  // ✅ 분기 1) 등록 모드 → INSERT
-  if (!isEditMode) {
-      let newProd = {
-        title: title,
-        sub: '방금 전 등록',
-        price: priceInput ? ('₩ ' + priceInput.replace('₩','').trim()) : '₩ 협의 가능',
-        category: cat,
-        "tradeType": tradeType,
-        region: regionVal,
-        seller_id: currentUser ? currentUser.id : null,
-        condition: conditionStr,
-        cert: '없음',
-        auth: true,
-        auction: isAuction,
-        offer: false,
-        image_url: finalImageUrl,
-        content: descVal
-      };
-
-      if(isAuction) {
-          newProd.auction_end = new Date(endInput).toISOString();
-          newProd.current_bid = priceParsed;
-          newProd.bid_count = 0;
-      }
-
-      const { error } = await supabaseClient.from('haema_products').insert([newProd]);
-
-      submitBtn.textContent = originalBtnText;
-      submitBtn.disabled = false;
-
-      if (error) {
-         alert('등록 중 에러가 발생했습니다: ' + error.message);
-         return;
-      }
-
-      // 폼 초기화 + 등록 완료 알림 + 홈 이동
-      resetRegisterFormToCreateMode();
-
-      alert('매물이 성공적으로 등록되었습니다!\n(하단 경매 탭에서도 바로 확인하실 수 있습니다.)');
-
-      filterState.category = '전체';
-      renderSubCategories(filterState.topCategory);
-      resetFilters();
-      showPage('home');
-      window.scrollTo(0, 0);
-
-      await fetchProducts();
-      return;
-  }
-
-  // ✅ 분기 2) 수정 모드 → UPDATE
-  // 기존 매물 객체 가져오기 (사진 처리 분기에 필요)
-  const existingProduct = products.find(x => String(x.id) === String(editingProductId));
-  if (!existingProduct) {
-      alert('수정 대상 매물을 찾을 수 없습니다.');
-      submitBtn.textContent = originalBtnText;
-      submitBtn.disabled = false;
-      return;
-  }
-
-  // 입찰자 있는 경매면 가격/마감일 변경 차단 (UI 잠금 우회 방어)
-  const bidCount = parseInt(existingProduct.bid_count) || 0;
-  const isLocked = existingProduct.auction && bidCount > 0;
-
-  // 사진 결정 로직:
-  //   1) 새 사진 업로드 → finalImageUrl (방금 받은 새 URL)
-  //   2) 사용자가 ✕로 사진 지움 → null
-  //   3) 둘 다 아님 → 기존 image_url 유지
-  let imageUrlToSave;
-  if (finalImageUrl) {
-      imageUrlToSave = finalImageUrl;
-  } else if (window.__editPhotoCleared) {
-      imageUrlToSave = null;
-  } else {
-      imageUrlToSave = existingProduct.image_url || null;
-  }
-
-  // UPDATE 페이로드 (락 걸린 필드는 빼고)
-  let updatePayload = {
-      title: title,
-      category: cat,
-      "tradeType": tradeType,
-      region: regionVal,
-      condition: conditionStr,
-      auction: isAuction,
-      image_url: imageUrlToSave,
-      content: descVal
-  };
-
-  // 가격/마감일은 락 안 걸린 경우에만 변경 허용
-  if (!isLocked) {
-      updatePayload.price = priceInput ? ('₩ ' + priceInput.replace('₩','').trim()) : '₩ 협의 가능';
-      if (isAuction) {
-          updatePayload.auction_end = new Date(endInput).toISOString();
-          // current_bid는 입찰 없을 때만 시작가로 갱신 (이미 입찰 있으면 절대 건드리지 않음)
-          if (bidCount === 0) {
-              updatePayload.current_bid = priceParsed;
-          }
-      }
-  }
-
-  // ⚠️ seller_id 조건으로 본인 매물만 update (RLS가 진짜 방어)
-  const { error: updateErr } = await supabaseClient
-      .from('haema_products')
-      .update(updatePayload)
-      .eq('id', editingProductId)
-      .eq('seller_id', currentUser.id);
-
-  submitBtn.textContent = originalBtnText;
-  submitBtn.disabled = false;
-
-  if (updateErr) {
-      alert('수정 중 오류가 발생했습니다: ' + updateErr.message);
-      return;
-  }
-
-  // ✅ 새 사진을 업로드했으면 기존 사진 파일을 Storage에서 정리
-  //    (DB는 새 URL로 갱신됐으니 기존 파일은 고아 상태)
-  if (finalImageUrl && existingProduct.image_url
-      && existingProduct.image_url !== finalImageUrl) {
-      try {
-          const marker = '/market_images/';
-          const idx = existingProduct.image_url.indexOf(marker);
-          if (idx >= 0) {
-              const oldFilePath = existingProduct.image_url.substring(idx + marker.length);
-              await supabaseClient.storage.from('market_images').remove([oldFilePath]);
-          }
-      } catch (e) {
-          console.warn('기존 사진 정리 실패(무시):', e);
-      }
-  }
-
-  // ✅ 사용자가 사진을 지웠으면(__editPhotoCleared=true) 기존 파일도 Storage에서 삭제
-  if (window.__editPhotoCleared && existingProduct.image_url && !finalImageUrl) {
-      try {
-          const marker = '/market_images/';
-          const idx = existingProduct.image_url.indexOf(marker);
-          if (idx >= 0) {
-              const oldFilePath = existingProduct.image_url.substring(idx + marker.length);
-              await supabaseClient.storage.from('market_images').remove([oldFilePath]);
-          }
-      } catch (e) {
-          console.warn('지운 사진 정리 실패(무시):', e);
-      }
-  }
-
-  alert('매물 정보가 수정되었습니다.');
-
-  // 폼/모드 초기화 후 마이페이지 판매목록으로 복귀
-  resetRegisterFormToCreateMode();
-  await fetchProducts();
-  if (typeof showMyList === 'function') {
-      showMyList();
-  } else {
-      showPage('mypage');
-  }
-}
-
-// [URL Parameter 처리: 더미 상품 페이지 연동]
-//
-// ⚠️ P0-A 수정 (2026-04-17):
-//   기존 hashchange 리스너 + _enteredViaEdit 플래그 기반 모드 자동 동기화 코드는
-//   동작하지 않아서 통째로 제거함. showPage()의 pushState는 hashchange를
-//   발생시키지 않기 때문.
-//
-//   대체: window.goToRegisterCreateMode() (등록 모드 명시적 진입)
-//         window.editMyProduct(id)        (수정 모드 명시적 진입)
-//   진입 경로를 두 함수로만 한정. HTML의 onclick은 모두 위 두 함수만 호출.
-document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const pid = urlParams.get('product_id');
-    if (pid && pid.startsWith('p')) {
-        // ✅ 더미 데이터는 시스템 정의 — XSS 위험 없음
-        const dummies = {
-            p1: { title: "대형 선박용 고출력 디젤 엔진 (상태 A급)", price: "협의 요망", location: "부산 감천항", seller_name: "엔진마스터", type: "standard", content: "22년 정비 완료된 완벽한 상태의 엔진입니다." },
-            p2: { title: "특수 합금 청동 프로펠러 세트", price: "52,000,000", location: "울산 앞바다", seller_name: "선체부속", type: "standard", content: "미사용 신품급 특수 합금 프로펠러입니다." },
-            p3: { title: "X-Band 레이더 시스템 풀세트", price: "18,500,000", location: "인천 연안부두", seller_name: "통신전문기업", type: "auction", current_bid: 18500000, auction_end: new Date(Date.now() + 86400000).toISOString(), content: "모니터 포함된 레이더 시스템입니다." },
-            p4: { title: "선박용 평형수 처리 장치(BWTS)", price: "28,000,000", location: "목포 신항", seller_name: "에코환경", type: "standard", content: "설치 및 시운전 지원 가능한 폐수 처리 장치입니다." },
-        };
-        if(dummies[pid]) {
-            const dummyProduct = { 
-                id: pid, 
-                ...dummies[pid], 
-                category: '기부속',
-                user_id: 'dummy_user',
-                tradeType: dummies[pid].type === 'auction' ? '경매' : '직거래',
-                condition: '양호',
-                auction: dummies[pid].type === 'auction'
-            };
-            if (typeof products !== 'undefined') {
-                products.push(dummyProduct);
-            }
-            setTimeout(() => {
-                openProductModal(pid);
-            }, 600);
-        }
-    }
-});
-```
-
-## 3. auth.js
-```javascript
-// ============================================================================
-// auth.js — 로그인/회원가입/세션 관리
-// ============================================================================
-// 변경 이력:
-//  - P1 (2026-04-19): onAuthStateChange 내 글로벌 채팅 구독 블록 중복 제거
-//  - P1 (2026-04-19): 회원가입 6필드 추가 (국문/영문 성명, 연락처,
-//                     소속 기업, 부서, 직함) — user_metadata로 저장
-//                     기존 코드 호환을 위해 full_name 키도 함께 기록
-// ============================================================================
-
-let currentUser = null;
-let authMode = 'signin';
-
-supabaseClient.auth.onAuthStateChange((event, session) => {
-    currentUser = session ? session.user : null;
-
-    // 이메일 인증 완료 후 리다이렉트 감지
-    if (event === 'SIGNED_IN' && window.location.hash.includes('type=signup')) {
-        alert('🎉 이메일 인증이 완료되었습니다! 해마 마켓에 오신 것을 환영합니다.');
-        window.history.replaceState(null, '', window.location.pathname);
-    }
-
-    if (event === 'SIGNED_OUT') _mannerTempLoaded = false;
-
-    // 글로벌 채팅 알림 구독 (단일 블록 — 중복 금지)
-    if (currentUser && typeof subscribeToGlobalMessages === 'function') {
-        subscribeToGlobalMessages();
-    }
-    if (event === 'SIGNED_OUT' && typeof unsubscribeFromGlobalMessages === 'function') {
-        unsubscribeFromGlobalMessages();
-    }
-
-    setTimeout(() => {
-        if (typeof updateProfileUI === 'function') {
-            updateProfileUI();
-        }
-        if (currentUser) {
-            const displayName =
-                currentUser.user_metadata?.full_name ||
-                currentUser.user_metadata?.display_name ||
-                (currentUser.email ? currentUser.email.split('@')[0] : '유저');
-
-            const myNameEl = document.querySelector('.my-name');
-            const myEmailEl = document.querySelector('.my-sub');
-            if (myNameEl) myNameEl.textContent = displayName + '님';
-            if (myEmailEl) myEmailEl.textContent = (currentUser.email || '') + ' · 부산';
-
-            const loginPage = document.getElementById('page-login');
-            if (loginPage && loginPage.classList.contains('active')) {
-                showPage('home');
-            }
-
-            // 어드민 대시보드 버튼 토글 (위변조 방지를 위해 서버 2차 검증)
-            const adminBtn = document.getElementById('admin-route-btn');
-            if (adminBtn) {
-                adminBtn.style.display = 'none'; // 기본 숨김
-                (async () => {
-                    try {
-                        const { data: { user }, error } = await supabaseClient.auth.getUser();
-                        if (!error && user && user.app_metadata && user.app_metadata.role === 'admin') {
-                            adminBtn.style.display = 'flex';
-                        }
-                    } catch (e) {
-                        console.error('Admin role check failed:', e);
-                    }
-                })();
-            }
-        } else {
-            const myNameEl = document.querySelector('.my-name');
-            const myEmailEl = document.querySelector('.my-sub');
-            if (myNameEl) myNameEl.textContent = '로그인이 필요합니다';
-            if (myEmailEl) myEmailEl.textContent = '비회원';
-            
-            const adminBtn = document.getElementById('admin-route-btn');
-            if (adminBtn) adminBtn.style.display = 'none';
-        }
-    }, 0);
-
-    const topLoginBtn = document.getElementById('header-btn-login');
-    if (currentUser) {
-        if (topLoginBtn) topLoginBtn.style.display = 'none';
-    } else {
-        if (topLoginBtn) topLoginBtn.style.display = 'inline-block';
-    }
-});
-
-function requireAuthAndShow(id) {
-    if (!currentUser) {
-        alert('회원가입 및 로그인이 필요한 기능입니다.');
-        showPage('login');
-    } else {
-        showPage(id);
-    }
-}
-
-function switchAuthMode(mode) {
-    authMode = mode;
-    document.getElementById('tab-signin').classList.toggle('active', mode === 'signin');
-    document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
-    document.getElementById('auth-pw-confirm-row').style.display = mode === 'signup' ? 'block' : 'none';
-
-    // 6필드 추가 영역 토글
-    const extraBox = document.getElementById('auth-signup-extra');
-    if (extraBox) extraBox.style.display = mode === 'signup' ? 'block' : 'none';
-    
-    // 약관 동의 체크박스 토글
-    const termsBox = document.getElementById('auth-terms-container');
-    if (termsBox) termsBox.style.display = mode === 'signup' ? 'block' : 'none';
-
-    document.getElementById('btn-auth-submit').textContent = mode === 'signup' ? '해마 시작하기' : '로그인';
-    document.getElementById('auth-error').textContent = '';
-}
-
-async function submitAuth() {
-    const email = document.getElementById('auth-email').value;
-    const pw = document.getElementById('auth-pw').value;
-    const errObj = document.getElementById('auth-error');
-    const btn = document.getElementById('btn-auth-submit');
-    errObj.textContent = '';
-
-    if (!email || !pw) {
-        errObj.textContent = '이메일과 비밀번호를 모두 입력해주세요.';
-        return;
-    }
-
-    if (pw.length < 6) {
-        errObj.textContent = '비밀번호는 6자 이상이어야 합니다.';
-        return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = '처리 중...';
-
-    if (authMode === 'signup') {
-        const pwConfirm = document.getElementById('auth-pw-confirm').value;
-        if (pw !== pwConfirm) {
-            errObj.textContent = '비밀번호가 일치하지 않습니다.';
-            btn.disabled = false;
-            switchAuthMode('signup');
-            return;
-        }
-
-        // ✅ 약관 동의 검증
-        if (!document.getElementById('auth-agree-terms').checked || !document.getElementById('auth-agree-privacy').checked) {
-            errObj.textContent = '이용약관 및 개인정보처리방침 열람 후 동의가 필수입니다.';
-            btn.disabled = false;
-            switchAuthMode('signup');
-            return;
-        }
-
-        // ✅ 회원가입 6필드 읽기 + 검증
-        const fullNameKo = document.getElementById('auth-full-name-ko').value.trim();
-        const fullNameEn = document.getElementById('auth-full-name-en').value.trim();
-        const phoneRaw = document.getElementById('auth-phone-number').value.trim();
-        const companyName = document.getElementById('auth-company-name').value.trim();
-        const department = document.getElementById('auth-department').value.trim();
-        const jobTitle = document.getElementById('auth-job-title').value.trim();
-
-        if (!fullNameKo || !fullNameEn || !phoneRaw || !companyName || !department || !jobTitle) {
-            errObj.textContent = '회원가입에 필요한 모든 정보를 입력해주세요.';
-            btn.disabled = false;
-            switchAuthMode('signup');
-            return;
-        }
-
-        // 휴대폰 번호 정규화 + 형식 검증 (010/011/016/017/018/019)
-        const phoneDigits = phoneRaw.replace(/\D/g, '');
-        if (!/^01[016789]\d{7,8}$/.test(phoneDigits)) {
-            errObj.textContent = '휴대폰 번호 형식이 올바르지 않습니다. (예: 010-1234-5678)';
-            btn.disabled = false;
-            switchAuthMode('signup');
-            return;
-        }
-
-        const { data, error } = await supabaseClient.auth.signUp({
-            email: email,
-            password: pw,
-            options: {
-                emailRedirectTo: window.location.origin + window.location.pathname,
-                data: {
-                    full_name_ko: fullNameKo,
-                    full_name_en: fullNameEn,
-                    phone_number: phoneDigits,
-                    company_name: companyName,
-                    department: department,
-                    job_title: jobTitle,
-                    // ⚠️ 기존 코드(채팅/마이페이지/커뮤니티)가 user_metadata.full_name을
-                    //     참조하므로 호환성 유지를 위해 국문 성명을 같이 기록
-                    full_name: fullNameKo
-                }
-            }
-        });
-
-        if (error) {
-            errObj.textContent = error.message;
-        } else if (data.user && data.user.identities && data.user.identities.length === 0) {
-            errObj.textContent = '이미 가입된 이메일입니다. 로그인을 시도해주세요.';
-        } else {
-            alert('📧 인증 이메일을 발송했습니다!\n받은 메일함을 확인하고 링크를 클릭하면 로그인됩니다.');
-            showPage('home');
-            // 모든 입력 필드 초기화
-            document.getElementById('auth-email').value = '';
-            document.getElementById('auth-pw').value = '';
-            document.getElementById('auth-pw-confirm').value = '';
-            document.getElementById('auth-full-name-ko').value = '';
-            document.getElementById('auth-full-name-en').value = '';
-            document.getElementById('auth-phone-number').value = '';
-            document.getElementById('auth-company-name').value = '';
-            document.getElementById('auth-department').value = '';
-            document.getElementById('auth-job-title').value = '';
-        }
-    } else {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-            email: email,
-            password: pw
-        });
-
-        if (error) {
-            if (error.message === 'Email not confirmed') {
-                errObj.textContent = '이메일 인증이 완료되지 않았습니다. 받은 메일함을 확인하고 링크를 클릭해주세요.';
-            } else {
-                errObj.textContent = '로그인 실패: 이메일 또는 비밀번호를 확인해주세요.';
-            }
-        } else {
-            showPage('home');
-            document.getElementById('auth-email').value = '';
-            document.getElementById('auth-pw').value = '';
-        }
-    }
-
-    btn.disabled = false;
-    switchAuthMode(authMode);
-}
-
-// 전역 로그아웃 함수
-window.doLogout = async function() {
-    if (confirm("정말 로그아웃 하시겠습니까?")) {
-        await supabaseClient.auth.signOut();
-        alert('로그아웃 되었습니다.');
-        showPage('home');
-    }
-};
-
-// 카카오 소셜 로그인
-window.loginWithKakao = async function() {
-    const { error } = await supabaseClient.auth.signInWithOAuth({
-        provider: 'kakao',
-        options: {
-            redirectTo: window.location.origin + window.location.pathname
-        }
-    });
-    if (error) {
-        console.error('카카오 로그인 오류:', error.message);
-        alert('카카오 로그인 중 오류가 발생했습니다: ' + error.message);
-    }
-};
-```
-
-## 4. chat.js
-```javascript
-// [실시간 1:1 채팅 시스템 (Supabase Real-time)]
-// ----------------------------------------
-// ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
-
-let currentChatRoomId = null;
-let chatSubscription = null;       // 현재 열린 채팅방 구독
-let myChats = [];
-
-// ✅ NEW: 글로벌 알림용
-let globalChatSubscription = null; // 본인이 멤버인 모든 채팅방 구독
-let unreadChatCount = 0;           // 안읽은 메시지 카운트
-let _myChatRoomIdsCache = null;    // 본인이 멤버인 room id 캐시 (성능)
-
-async function startChat(productId) {
-    if (window._startChatBusy) return;
-    window._startChatBusy = true;
-
-    try {
-        if(!currentUser) {
-            alert("채팅을 위해 로그인이 필요합니다.");
-            showPage('mypage');
-            closeProductModal();
-            return;
-        }
-    
-    // 상품 객체 찾기 (더미도 포함된 캐시나 products 배열 이용)
-    let p = products.find(x => String(x.id) === String(productId));
-    if (!p) {
-        if(String(productId).startsWith('p')) {
-            alert("데모 화면의 더미 데이터는 프론트엔드 목업으로 서버 통신을 생략합니다.");
-        } else {
-            alert("상품을 찾을 수 없습니다.");
-        }
-        return;
-    }
-    
-    if(!p.seller_id) {
-        alert("판매자 정보가 명확하지 않은 매물입니다.");
-        closeProductModal();
-        return;
-    }
-    
-    if(p.user_id === currentUser.id || p.seller_id === currentUser.id) {
-        alert("본인이 등록한 상품에는 채팅을 걸 수 없습니다.");
-        closeProductModal();
-        return;
-    }
-    
-    // ✅ 채팅방 존재 여부 확인 — .single() → .maybeSingle() (0행일 때 에러 안 던지게)
-    const { data: existingRoom, error: fetchErr } = await supabaseClient
-        .from('haema_chat_rooms')
-        .select('*')
-        .eq('product_id', p.id)
-        .eq('buyer_id', currentUser.id)
-        .limit(1)
-        .maybeSingle();
-
-    if (fetchErr) {
-        console.error('채팅방 조회 에러:', fetchErr);
-    }
-        
-    let roomId = null;
-    
-    if (existingRoom && existingRoom.id) {
-        roomId = existingRoom.id;
-    } else {
-        // 없다면 생성
-        const { data: newRoom, error: insertErr } = await supabaseClient
-            .from('haema_chat_rooms')
-            .insert({
-                product_id: p.id,
-                buyer_id: currentUser.id,
-                seller_id: p.seller_id
-            })
-            .select()
-            .single();
-            
-        if (insertErr) {
-            console.error("채팅방 생성 에러:", insertErr);
-            alert("채팅방 생성에 실패했습니다. (DB 테이블이 필요합니다)");
-            closeProductModal();
-            return;
-        }
-        roomId = newRoom.id;
-        // ✅ 새 방 만들었으니 캐시 무효화
-        _myChatRoomIdsCache = null;
-    }
-    
-    closeProductModal();
-    openChatRoom(roomId, p);
-    } finally {
-        window._startChatBusy = false;
-    }
-}
-
-// 하단 탭 '채팅' 눌렀을 때 목록 로드
-async function loadChats() {
-    triggerBottomNav('chat');
-
-    // ✅ NEW: 채팅 탭 진입 시 안읽은 카운트 클리어
-    clearChatBadge();
-
-    const container = document.getElementById('chat-list');
-    
-    if(!currentUser) {
-        container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999; font-size:14px;">로그인 후 이용 가능합니다.</div>';
-        return;
-    }
-    
-    container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999; font-size:14px;">채팅 목록 불러오는 중...</div>';
-    
-    // 구매자 혹은 판매자로 참여 중인 모든 방 로드
-    const { data: rooms, error } = await supabaseClient
-        .from('haema_chat_rooms')
-        .select('*')
-        .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
-        .order('last_updated_at', { ascending: false });
-        
-    if(error) {
-        console.error(error);
-        container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999; font-size:14px;">채팅 서버에 연결할 수 없거나 테이블이 없습니다.</div>';
-        return;
-    }
-    
-    if(!rooms || rooms.length === 0) {
-         container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999; font-size:14px;">참여 중인 대화가 없습니다.</div>';
-         _myChatRoomIdsCache = [];
-         return;
-    }
-
-    // ✅ NEW: room id 목록 캐싱 (글로벌 알림 필터링에 사용)
-    _myChatRoomIdsCache = rooms.map(r => r.id);
-    
-    // JS 릴레이션 (haema_products) 수동 연결
-    const pIds = rooms.map(r => r.product_id);
-    const { data: pData } = await supabaseClient.from('haema_products').select('*').in('id', pIds);
-    
-    myChats = rooms.map(r => ({
-        ...r,
-        haema_products: pData ? pData.find(x => String(x.id) === String(r.product_id)) : null
-    }));
-    
-    let html = '';
-    myChats.forEach(room => {
-        const pInfo = room.haema_products || {};
-        const pTitle = pInfo.title || "알 수 없는 상품";
-        const opName = room.buyer_id === currentUser.id ? "판매자" : "구매자";
-        const lastMsg = room.last_message || "대화를 시작해보세요.";
-        let timeStr = "";
-        if(room.last_updated_at) {
-            const d = new Date(room.last_updated_at);
-            timeStr = d.getHours() + ":" + String(d.getMinutes()).padStart(2, '0');
-        }
-
-        // ✅ 사용자 입력 가능한 모든 값에 escape 적용
-        const safeRoomId = escapeHtml(room.id);
-        const safePTitleShort = escapeHtml(pTitle.substring(0, 10)) + (pTitle.length > 10 ? '...' : '');
-        const safeOpName = escapeHtml(opName);
-        const safeLastMsg = escapeHtml(lastMsg);
-        const safeTime = escapeHtml(timeStr);
-        const safeOpInitial = escapeHtml(opName.charAt(0));
-
-        html += `
-        <div class="chat-item" onclick="openChatRoomByList('${safeRoomId}')">
-            <div class="chat-avatar">${safeOpInitial}</div>
-            <div class="chat-info">
-                <div class="chat-name-row">
-                    <span class="chat-name">${safeOpName} <span style="font-size:11px; font-weight:400; color:#999; margin-left:4px;">${safePTitleShort}</span></span>
-                    <span class="chat-time">${safeTime}</span>
-                </div>
-                <div class="chat-preview">${safeLastMsg}</div>
-            </div>
-        </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-}
-
-// 탭에서 클릭해서 들어올 경우 룸 데이터 찾기
-function openChatRoomByList(roomId) {
-    const room = myChats.find(r => r.id === roomId);
-    if(room) {
-        openChatRoom(roomId, room.haema_products);
-    }
-}
-
-// 실제 채팅방 접속 UI 띄우기 및 소켓 연결
-async function openChatRoom(roomId, pData) {
-    currentChatRoomId = roomId;
-    
-    // ✅ 수정 #2: 채팅 페이지 자체를 먼저 활성화해야 chatroom이 보임
-    //    기존: chatroomEl.style.display = 'flex' 만 했음 — 부모 page-chat이
-    //    숨겨져 있으면 자식인 chatroom을 보이게 해도 화면에 안 나타남.
-    showPage('chat');
-
-    // chat-list 숨기고 chatroom만 보이게
-    if (typeof showChatRoom === 'function') {
-        showChatRoom();
-    } else {
-        // 폴백
-        const chatListEl = document.getElementById('chat-list');
-        if (chatListEl) chatListEl.style.display = 'none';
-        const chatroomEl = document.getElementById('chatroom');
-        if (chatroomEl) chatroomEl.style.display = 'flex';
-        const fab = document.querySelector('.fab-container');
-        if (fab) fab.style.display = 'none';
-    }
-
-    // ✅ 채팅방 진입 시 안읽은 카운트 클리어
-    clearChatBadge();
-    
-    // ✅ textContent 사용 → 자동 escape (XSS 안전)
-    document.getElementById('chat-product-title').textContent = pData ? (pData.title || '상품 정보') : '상품 정보';
-    document.getElementById('chat-product-price').textContent = (pData && pData.price) ? pData.price : '-';
-
-    // ✅ 배너 렌더링 — DB의 svg 컬럼이 사용자 입력 HTML일 가능성이 있으므로
-    //    getProductImageHtml로 대체 (image_url 우선, 없으면 카테고리 SVG)
-    const imgEl = document.getElementById('chat-product-img');
-    if (pData) {
-        if (typeof getProductImageHtml === 'function') {
-            imgEl.innerHTML = getProductImageHtml(pData);
-        } else if (pData.image_url) {
-            const safeUrl = escapeHtml(pData.image_url);
-            imgEl.innerHTML = `<img src="${safeUrl}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
-        } else {
-            imgEl.innerHTML = '<div style="width:100%;height:100%;background:#D4E8F8;"></div>';
-        }
-    } else {
-        imgEl.innerHTML = '<div style="width:100%;height:100%;background:#D4E8F8;"></div>';
-    }
-    
-    const msgContainer = document.getElementById('chat-messages-container');
-    msgContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:12px;">메시지 로딩중...</div>';
-    
-    // 거래완료 판단
-    const tradeBtn = document.getElementById('chat-trade-btn');
-    
-    let currentRoomBuyerId = null;
-    const { data: roomInfo } = await supabaseClient.from('haema_chat_rooms').select('buyer_id').eq('id', roomId).single();
-    if (roomInfo) currentRoomBuyerId = roomInfo.buyer_id;
-
-    if (pData && tradeBtn) {
-        if (pData.is_closed) {
-            tradeBtn.textContent = '후기 남기기';
-            tradeBtn.style.background = '#EAEDF2';
-            tradeBtn.style.color = '#7A93B0';
-            tradeBtn.style.display = 'block';
-            tradeBtn.onclick = () => {
-                const revieweeId = pData.user_id === currentUser.id ? (pData.highest_bidder_id || currentRoomBuyerId) : pData.user_id;
-                openReviewModal(pData.id, revieweeId);
-            };
-        } else {
-            const isSeller = (pData.user_id === currentUser.id || pData.seller_id === currentUser.id);
-            if (isSeller) {
-                tradeBtn.textContent = '거래완료';
-                tradeBtn.style.background = '#f4f9ff';
-                tradeBtn.style.color = '#1a5fa0';
-                tradeBtn.style.display = 'block';
-                tradeBtn.onclick = () => completeTransaction(pData.id, roomId);
-            } else {
-                tradeBtn.style.display = 'none';
-            }
-        }
-    }
-    
-    // 🚨 [Phase 7 최우선 방어벽] 구매자/판매자 롤에 맞는 시스템 가이드 렌더링 함수
-    window.renderSystemGuide = function(container, isBuyer) {
-        if (container.querySelector('.system-guide')) return; 
-        const guide = document.createElement('div');
-        guide.className = 'system-guide';
-        guide.style.cssText = 'background:#F0F9FF; border:1px dashed #38BDF8; padding:14px; border-radius:12px; margin-bottom:16px; font-size:12px; color:#075985; line-height:1.6;';
-        
-        const buyerGuide = `
-            <div style="font-weight:800; margin-bottom:6px; color:#0284C7;">📋 구매자 거래 체크리스트</div>
-            ① 거래상대방의 사업자등록번호 및 폐업 여부 확인 (홈택스)<br>
-            ② 통장 사본과 사업자명(대표자명) 일치 확인<br>
-            ③ 부품 실물 또는 동영상으로 상태 사전 검수<br>
-            ④ 고가 거래 시 분할 결제 권장 (선금 30% / 수령 후 70%)<br>
-            ⑤ 매입 결제 완료 시 반드시 합산 세금계산서 수령
-        `;
-        
-        const sellerGuide = `
-            <div style="font-weight:800; margin-bottom:6px; color:#0284C7;">📋 판매자 거래 체크리스트</div>
-            ① 구매자 사업자등록번호 및 담당자 재직 확인<br>
-            ② 대금 입금 확인 후 물품 출고 진행<br>
-            ③ 출고 즉시 배송정보(운송장 등) 투명하게 공유<br>
-            ④ 거래 대금 수취 후 세금계산서 즉시 발행 의무 준수
-        `;
-        
-        guide.innerHTML = isBuyer ? buyerGuide : sellerGuide;
-        container.insertBefore(guide, container.firstChild);
-    };
-    
-    // 기존 메시지 로드
-    const { data: messages, error } = await supabaseClient
-        .from('haema_messages')
-        .select('*')
-        .eq('room_id', roomId)
-        .order('created_at', { ascending: true });
-        
-    msgContainer.innerHTML = '';
-    
-    // 🚨 시스템 가이드 렌더링 호출
-    const isBuyer = roomInfo ? (currentUser.id === roomInfo.buyer_id) : false;
-    renderSystemGuide(msgContainer, isBuyer);
-
-    if(messages && messages.length > 0) {
-        messages.forEach(msg => {
-            renderMessage(msg);
-        });
-    } else {
-        const emptyGuide = document.createElement('div');
-        emptyGuide.id = 'empty-chat-state';
-        emptyGuide.style.cssText = 'text-align:center; padding:20px; color:#999; font-size:12px;';
-        emptyGuide.textContent = '첫 메시지를 보내 대화를 시작해보세요. (엔터 발송 가능)';
-        msgContainer.appendChild(emptyGuide);
-    }
-    
-    scrollChatToBottom();
-    
-    // 소켓 구독 시작 (현재 방 전용)
-    subscribeToMessages(roomId);
-}
-
-function renderMessage(msg) {
-    const msgContainer = document.getElementById('chat-messages-container');
-    if (!msgContainer) return;
-    const emptyState = document.getElementById('empty-chat-state');
-    if(emptyState) emptyState.style.display = 'none';
-
-    // ✅ currentUser null 체크 추가 (로그아웃 직후 메시지 도착 대응)
-    const isMine = currentUser ? (msg.sender_id === currentUser.id) : false;
-    const d = new Date(msg.created_at || Date.now());
-    const timeStr = d.getHours() + ":" + String(d.getMinutes()).padStart(2, '0');
-
-    // ✅ msg.content 항상 escape (utils.js의 escapeHtml은 단일 정의)
-    const safeContent = escapeHtml(msg.content);
-    const safeTime = escapeHtml(timeStr);
-    
-    let html = '';
-    if(isMine) {
-        // 내 메시지 (우측) 노란색
-        html = `
-        <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
-            <div style="display:flex; align-items:flex-end; gap:6px;">
-                <span style="font-size:10px; color:#999;">${safeTime}</span>
-                <div style="background:var(--yellow-400); color:#333; padding:10px 14px; border-radius:16px; border-bottom-right-radius:4px; font-size:14px; font-weight:500; max-width:240px; word-break:break-word; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                    ${safeContent}
-                </div>
-            </div>
-        </div>
-        `;
-    } else {
-        // 상대방 메시지 (좌측) 백색
-        html = `
-        <div style="display:flex; justify-content:flex-start; margin-bottom:12px;">
-            <div style="display:flex; align-items:flex-end; gap:6px;">
-                <div style="background:#fff; border:1px solid #D4E8F8; color:#1A2B4A; padding:10px 14px; border-radius:16px; border-bottom-left-radius:4px; font-size:14px; font-weight:500; max-width:240px; word-break:break-word; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                    ${safeContent}
-                </div>
-                <span style="font-size:10px; color:#999;">${safeTime}</span>
-            </div>
-        </div>
-        `;
-    }
-    
-    msgContainer.insertAdjacentHTML('beforeend', html);
-}
-
-// ⚠️ 기존 chat.js에 있던 escapeHtml 정의는 삭제됨 (utils.js 사용)
-
-function scrollChatToBottom() {
-    const msgContainer = document.getElementById('chat-messages-container');
-    if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
-}
-
-async function sendChatMessage() {
-    const inputEl = document.getElementById('chat-input-text');
-    const content = inputEl.value.trim();
-    if(!content || !currentChatRoomId || !currentUser) return;
-    
-    inputEl.value = ''; // 입력창 즉각 비움
-    
-    const newMessage = {
-        room_id: currentChatRoomId,
-        sender_id: currentUser.id,
-        content: content
-    };
-    
-    const { error: msgErr } = await supabaseClient.from('haema_messages').insert(newMessage);
-    
-    if(msgErr) {
-         console.error("메시지 전송 실패", msgErr);
-         alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
-         inputEl.value = content;
-         return;
-    }
-    
-    // 채팅방 최신 상태 업데이트
-    await supabaseClient.from('haema_chat_rooms').update({
-        last_message: content,
-        last_updated_at: new Date().toISOString()
-    }).eq('id', currentChatRoomId);
-}
-
-// 실시간 변화 구독 함수 (현재 열린 방 전용)
-function subscribeToMessages(roomId) {
-    if(chatSubscription) {
-        supabaseClient.removeChannel(chatSubscription);
-    }
-    
-    chatSubscription = supabaseClient.channel(`chat-room-${roomId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'haema_messages', filter: `room_id=eq.${roomId}` },
-        (payload) => {
-          renderMessage(payload.new);
-          scrollChatToBottom();
-        }
-      )
-      .subscribe();
-}
-
-// 채팅방 닫기 (뒤로가기)
-window.hideChatRoom = function() {
-    if(chatSubscription) {
-        supabaseClient.removeChannel(chatSubscription);
-        chatSubscription = null;
-    }
-    currentChatRoomId = null;
-    document.getElementById('chatroom').style.display = 'none';
-    
-    // 리스트 다시 로드시켜 최신 메시지 반영
-    loadChats();
-};
-
-// ============================================================================
-// ✅ NEW: 글로벌 채팅 알림 시스템 (수정 #3)
-// ============================================================================
-// 목적: 사용자가 다른 페이지에 있을 때도 새 메시지 도착을 감지하여
-//       마이페이지 "채팅" 메뉴의 빨간 N 뱃지를 업데이트.
-//
-// 구현:
-//   - 본인이 멤버인 모든 chat_rooms의 INSERT 이벤트를 구독
-//   - 본인이 보낸 메시지, 현재 보고있는 방의 메시지는 카운트 안 함
-//   - loadChats() 진입 시 카운트 0으로 초기화
-//
-// 호출처:
-//   - subscribeToGlobalMessages(): auth.js의 onAuthStateChange (SIGNED_IN 시)
-//   - unsubscribeFromGlobalMessages(): auth.js의 onAuthStateChange (SIGNED_OUT 시)
-// ============================================================================
-
-window.subscribeToGlobalMessages = function() {
-    if (!currentUser) return;
-    
-    // 기존 구독 해제 (재로그인 등 대비)
-    if (globalChatSubscription) {
-        supabaseClient.removeChannel(globalChatSubscription);
-        globalChatSubscription = null;
-    }
-    
-    globalChatSubscription = supabaseClient
-        .channel(`global-chat-${currentUser.id}`)
-        .on(
-            'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'haema_messages' },
-            async (payload) => {
-                const msg = payload.new;
-                if (!msg) return;
-
-                // 1) 본인이 보낸 메시지 → 무시
-                if (msg.sender_id === currentUser.id) return;
-
-                // 2) 현재 열려있는 방의 메시지 → 이미 chatSubscription이 처리함
-                if (currentChatRoomId && msg.room_id === currentChatRoomId) return;
-
-                // 3) 내가 멤버인 방인지 확인 (캐시 우선, 없으면 DB 조회)
-                let isMyRoom = false;
-                if (Array.isArray(_myChatRoomIdsCache)) {
-                    isMyRoom = _myChatRoomIdsCache.includes(msg.room_id);
-                }
-                if (!isMyRoom) {
-                    // 캐시에 없거나 신규 방일 수 있음 → 한번 더 DB 조회
-                    const { data: room } = await supabaseClient
-                        .from('haema_chat_rooms')
-                        .select('id, buyer_id, seller_id')
-                        .eq('id', msg.room_id)
-                        .maybeSingle();
-                    if (!room) return;
-                    if (room.buyer_id !== currentUser.id && room.seller_id !== currentUser.id) return;
-                    
-                    // 캐시 갱신
-                    if (Array.isArray(_myChatRoomIdsCache) && !_myChatRoomIdsCache.includes(room.id)) {
-                        _myChatRoomIdsCache.push(room.id);
-                    }
-                    isMyRoom = true;
-                }
-
-                if (!isMyRoom) return;
-
-                // 4) 카운트 증가 + 뱃지 갱신
-                unreadChatCount += 1;
-                updateChatBadge();
-            }
-        )
-        .subscribe();
-};
-
-window.unsubscribeFromGlobalMessages = function() {
-    if (globalChatSubscription) {
-        supabaseClient.removeChannel(globalChatSubscription);
-        globalChatSubscription = null;
-    }
-    unreadChatCount = 0;
-    _myChatRoomIdsCache = null;
-    updateChatBadge();
-};
-
-function updateChatBadge() {
-    // 마이페이지 메뉴의 채팅 뱃지
-    const badge = document.getElementById('chat-badge');
-    if (badge) {
-        if (unreadChatCount > 0) {
-            badge.style.display = 'inline-block';
-            badge.textContent = unreadChatCount > 99 ? '99+' : String(unreadChatCount);
-        } else {
-            badge.style.display = 'none';
-        }
-    }
-}
-
-function clearChatBadge() {
-    unreadChatCount = 0;
-    updateChatBadge();
-}
-```
-
-## 5. market.css
-```css
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-serif; background: #eef2f5; margin: 0; padding: 0; }
-:root {
-  --blue-50: #F0F9FF; --blue-100: #E0F2FE; --blue-200: #BAE6FD; --blue-400: #38BDF8;
-  --blue-600: #0284C7; --blue-800: #075985;
-  --yellow-50: #FFF7ED; --yellow-100: #FFEDD5; --yellow-300: #FDBA74;
-  --yellow-400: #FB923C; --yellow-600: #EA580C; --yellow-800: #9A3412;
-  --text-primary: #0F172A; --text-secondary: #475569; --text-muted: #64748B;
-  --border: #E2E8F0; --surface: #F8FAFC;
-}
-.wrap { max-width: 1024px; margin: 0 auto; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.04); min-height: 100vh; position: relative; overflow-x: hidden; }
-.header { background: #fff; border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; align-items: center; gap: 12px; height: 58px; }
-.logo-area { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
-.logo-seahorse { width: 44px; height: 44px; }
-.logo-text-wrap { display: flex; flex-direction: column; }
-.logo-name { font-size: 21px; font-weight: 700; color: var(--yellow-400); letter-spacing: -0.5px; line-height: 1.1; }
-.logo-sub { font-size: 9.5px; color: var(--blue-600); letter-spacing: 1.5px; line-height: 1.2; }
-.search-bar { flex: 1; display: flex; align-items: center; background: var(--blue-50); border: 1px solid var(--blue-200); border-radius: 10px; padding: 0 12px; height: 37px; gap: 8px; }
-.search-bar input { border: none; background: transparent; font-size: 13px; color: var(--text-primary); outline: none; flex: 1; font-family: inherit; }
-.search-bar input::placeholder { color: var(--text-muted); }
-.header-nav { display: flex; align-items: center; gap: 14px; }
-.header-nav a { font-size: 13px; color: var(--blue-800); text-decoration: none; white-space: nowrap; font-weight: 500; }
-.btn-login { background: #fff; border: 1.5px solid var(--blue-400); color: var(--blue-800); border-radius: 8px; padding: 0 12px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600; transition: background .15s; height: 37px; min-width: 84px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
-.btn-login:hover { background: var(--blue-50); }
-.btn-sell { background: var(--yellow-400); border: none; color: var(--yellow-800); border-radius: 8px; padding: 0 12px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .15s; height: 37px; min-width: 84px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
-.btn-sell:hover { background: var(--yellow-600); color: #fff; }
-.top-nav-tabs { display: flex; background: #fff; border-bottom: 1px solid var(--border); }
-.top-tab { flex: 1; text-align: center; padding: 14px 0; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; position: relative; transition: color .15s; }
-.top-tab.active { color: var(--text-primary); font-weight: 700; }
-.top-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 10%; width: 80%; height: 3px; background: var(--text-primary); border-radius: 3px 3px 0 0; }
-.cat-bar { background: var(--blue-50); border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; overflow-x: auto; }
-.cat-bar::-webkit-scrollbar { display: none; }
-.cat-item { padding: 10px 15px; font-size: 13px; color: var(--blue-600); white-space: nowrap; cursor: pointer; border-bottom: 2.5px solid transparent; font-weight: 500; transition: color .15s; }
-.cat-item.active { color: var(--text-primary); border-bottom-color: var(--yellow-400); font-weight: 700; }
-.cat-item:hover { color: var(--blue-800); }
-.horizontal-scroll-list { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
-.horizontal-scroll-list::-webkit-scrollbar { display: none; }
-.horizontal-scroll-list .product-card { min-width: 170px; max-width: 170px; flex-shrink: 0; margin-bottom: 4px; }
-.filter-bar { background: #fff; border-bottom: none; padding: 10px 20px; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
-.filter-bar::-webkit-scrollbar { display: none; }
-.filter-label { font-size: 12px; color: var(--text-muted); margin-right: 2px; }
-.filter-chip { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 4px 13px; font-size: 12px; color: var(--blue-600); cursor: pointer; font-family: inherit; font-weight: 500; transition: all .15s; }
-.filter-chip:hover { border-color: var(--blue-400); color: var(--blue-800); }
-.filter-chip.on { background: var(--blue-100); border-color: var(--blue-600); color: var(--blue-800); font-weight: 700; }
-.banner { background: var(--yellow-50); border-bottom: 1px solid var(--yellow-100); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
-.banner-left { display: flex; align-items: center; gap: 8px; }
-.banner-tag { background: var(--yellow-400); color: var(--yellow-800); font-size: 11px; border-radius: 5px; padding: 2px 8px; font-weight: 700; }
-.banner-text { font-size: 13px; color: var(--text-primary); font-weight: 500; }
-.banner-btn { font-size: 12px; color: var(--blue-800); border: 1px solid var(--blue-400); border-radius: 7px; padding: 4px 11px; cursor: pointer; background: #fff; font-family: inherit; font-weight: 500; transition: background .15s; }
-.banner-btn:hover { background: var(--blue-50); }
-.main { padding: 16px 20px; background: var(--surface); }
-.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.section-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
-.section-more { font-size: 12px; color: var(--blue-600); cursor: pointer; font-weight: 500; }
-.cat-grid { display: flex; width: 100%; gap: 6px; margin-bottom: 20px; padding-bottom: 5px; box-sizing: border-box; }
-.cat-icon-item { flex: 1; min-width: 0; background: #fff; border: 0.5px solid var(--border); border-radius: 12px; padding: 10px 2px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: border-color .15s; }
-.cat-icon-item:hover { border-color: var(--blue-400); }
-.cat-icon-box { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-.cat-icon-label { font-size: 10px; color: var(--blue-800); text-align: center; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
-
-/* ✅ [개선1] 카드 hover 애니메이션 — transform + shadow 추가 */
-.product-card { background: #fff; border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s; }
-.product-card:hover { border-color: var(--blue-400); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(79, 70, 229, 0.09); }
-
-/* ✅ [개선2] 이미지 배경 중립화 — var(--blue-50)=#F0FDF4(초록)에서 중립 슬레이트로 */
-.product-img { width: 100%; aspect-ratio: 1; background: #F1F5F9; display: flex; align-items: center; justify-content: center; }
-
-.product-body { padding: 12px; }
-.product-title { font-size: 14px; color: var(--text-primary); font-weight: 600; margin-bottom: 4px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* ✅ [개선3] 하드코딩 색상 제거 → CSS 변수 사용 */
-.product-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
-
-.product-price { font-size: 16px; font-weight: 800; color: #111; letter-spacing: -0.5px; }
-.product-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
-.ptag { font-size: 10px; border-radius: 5px; padding: 2px 7px; font-weight: 600; }
-.ptag-b { background: var(--blue-100); color: var(--blue-800); }
-.ptag-y { background: var(--yellow-100); color: var(--yellow-800); }
-.ptag-r { background: #FDECEA; color: #B71C1C; }
-.auction-badge { background: var(--blue-600); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 5px; font-weight: 700; }
-.tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
-.tab-icon { width: 20px; height: 20px; }
-.tab-label { font-size: 10px; color: var(--text-muted); font-weight: 500; }
-.tab-item.active .tab-label { color: var(--yellow-600); font-weight: 700; }
-.page-nav { display: flex; background: var(--blue-100); border-bottom: 1px solid var(--blue-200); padding: 10px 12px; gap: 6px; flex-wrap: wrap; }
-.page-nav button { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--blue-200); background: #fff; color: var(--blue-800); cursor: pointer; font-family: inherit; font-weight: 600; transition: all .15s; }
-.page-nav button:hover { background: var(--blue-200); border-color: var(--blue-400); }
-.page-nav button.on { background: var(--yellow-400); border-color: var(--yellow-600); color: var(--yellow-800); font-weight: 700; }
-.page { display: none; }
-.page.active { display: block; }
-.sub-header { background: #fff; border-bottom: 1px solid var(--border); padding: 0 16px; display: flex; align-items: center; gap: 10px; height: 52px; }
-.back-btn { font-size: 20px; color: var(--blue-600); cursor: pointer; }
-.sub-title { font-size: 16px; font-weight: 700; color: var(--text-primary); flex: 1; }
-.sub-action { font-size: 13px; color: var(--blue-600); font-weight: 600; cursor: pointer; }
-.sub-body { padding: 16px; background: var(--surface); min-height: 460px; }
-.form-section { background: #fff; border-radius: 12px; border: 0.5px solid var(--border); padding: 16px; margin-bottom: 12px; }
-.form-section-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.form-row { margin-bottom: 12px; }
-.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-.form-label { font-size: 12px; color: var(--blue-800); margin-bottom: 5px; display: block; font-weight: 600; }
-.form-label span { color: #e53935; margin-left: 2px; }
-.form-input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text-primary); background: #fff; outline: none; font-family: inherit; transition: border-color .15s; }
-.form-input:focus { border-color: var(--blue-400); }
-.form-input::placeholder { color: var(--text-muted); }
-.form-select { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text-primary); background: #fff; outline: none; font-family: inherit; }
-.form-textarea { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text-primary); background: #fff; outline: none; resize: none; min-height: 80px; font-family: inherit; }
-.photo-upload { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.photo-box { aspect-ratio: 1; border: 1.5px dashed var(--border); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; background: var(--surface); }
-.photo-box.main { border-color: var(--yellow-400); background: var(--yellow-50); }
-.photo-plus { font-size: 22px; color: var(--text-muted); line-height: 1; }
-.photo-label { font-size: 10px; color: var(--text-muted); }
-.photo-main-label { font-size: 10px; color: var(--yellow-600); font-weight: 700; }
-.condition-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.cond-chip { border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; color: var(--blue-600); cursor: pointer; background: #fff; font-family: inherit; font-weight: 600; transition: all .15s; }
-.cond-chip.on { background: var(--yellow-100); border-color: var(--yellow-400); color: var(--yellow-800); }
-.trade-row { display: flex; gap: 8px; }
-.trade-chip { border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 12px; color: var(--blue-600); cursor: pointer; background: #fff; flex: 1; text-align: center; font-family: inherit; font-weight: 600; transition: all .15s; }
-.trade-chip.on { background: var(--blue-100); border-color: var(--blue-600); color: var(--blue-800); }
-.submit-btn { width: 100%; background: var(--yellow-400); color: var(--yellow-800); border: none; border-radius: 10px; padding: 13px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .15s; }
-.submit-btn:hover { background: var(--yellow-600); color: #fff; }
-.chat-list { background: #fff; }
-.chat-item { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 0.5px solid var(--border); cursor: pointer; transition: background .15s; }
-.chat-item:hover { background: var(--blue-50); }
-.chat-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--blue-100); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--blue-800); flex-shrink: 0; }
-.chat-avatar.yellow { background: var(--yellow-100); color: var(--yellow-800); }
-.chat-info { flex: 1; min-width: 0; }
-.chat-name-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
-.chat-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
-.chat-time { font-size: 11px; color: var(--text-muted); }
-.chat-preview { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chat-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.chat-badge { background: var(--yellow-400); color: var(--yellow-800); font-size: 10px; border-radius: 10px; padding: 2px 7px; font-weight: 700; }
-.chat-thumb { width: 36px; height: 36px; border-radius: 7px; background: var(--blue-100); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.chatroom { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 1000; background: #fff; display: flex; flex-direction: column; }
-.chatroom-header { background: #fff; border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 10px; }
-.chatroom-product { background: var(--yellow-50); border-bottom: 1px solid var(--yellow-100); padding: 10px 16px; display: flex; align-items: center; gap: 10px; }
-.cp-img { width: 40px; height: 40px; border-radius: 7px; background: var(--blue-100); display: flex; align-items: center; justify-content: center; }
-.cp-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
-.cp-price { font-size: 12px; color: var(--blue-600); font-weight: 600; }
-.cp-btn { margin-left: auto; background: var(--yellow-400); color: var(--yellow-800); border: none; border-radius: 7px; padding: 5px 12px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 700; }
-.chat-messages { flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; background: var(--surface); overflow-y: auto; }
-.msg { display: flex; gap: 8px; align-items: flex-end; }
-.msg.mine { flex-direction: row-reverse; }
-.msg-bubble { max-width: 70%; padding: 9px 13px; border-radius: 14px; font-size: 13px; line-height: 1.5; }
-.msg-bubble.theirs { background: #fff; color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 2px 14px 14px 14px; }
-.msg-bubble.mine { background: var(--yellow-400); color: var(--yellow-800); border-radius: 14px 2px 14px 14px; font-weight: 700; }
-.msg-time { font-size: 10px; color: var(--text-muted); }
-.msg-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--blue-100); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--blue-800); font-weight: 700; flex-shrink: 0; }
-.chat-input-bar { background: #fff; border-top: 1px solid var(--border); padding: 10px 16px; display: flex; gap: 8px; align-items: center; }
-.chat-input-bar input { flex: 1; border: 1px solid var(--border); border-radius: 20px; padding: 8px 14px; font-size: 13px; color: var(--text-primary); outline: none; background: var(--surface); font-family: inherit; }
-.chat-input-bar input::placeholder { color: var(--text-muted); }
-.chat-send { background: var(--yellow-400); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-.my-profile { background: #fff; padding: 20px 16px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--border); }
-.my-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--yellow-100); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: var(--yellow-800); flex-shrink: 0; border: 2px solid var(--yellow-300); }
-.my-name { font-size: 17px; font-weight: 700; color: var(--text-primary); }
-.my-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-.my-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--blue-100); border-radius: 10px; padding: 2px 9px; font-size: 11px; color: var(--blue-800); margin-top: 4px; font-weight: 600; }
-.my-edit-btn { margin-left: auto; border: 1.5px solid var(--border); border-radius: 8px; padding: 5px 12px; font-size: 12px; color: var(--blue-800); background: #fff; cursor: pointer; font-family: inherit; font-weight: 600; }
-.my-stats { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--yellow-50); border-bottom: 1px solid var(--yellow-100); }
-.stat-item { padding: 14px 0; display: flex; flex-direction: column; align-items: center; gap: 3px; border-right: 0.5px solid var(--yellow-100); }
-.stat-item:last-child { border-right: none; }
-.stat-num { font-size: 20px; font-weight: 700; color: var(--text-primary); }
-.stat-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
-.my-menu-section { background: #fff; margin-bottom: 8px; }
-.my-menu-title { font-size: 11px; color: var(--text-muted); padding: 10px 16px 4px; letter-spacing: 0.5px; font-weight: 600; }
-.my-menu-item { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 0.5px solid var(--border); cursor: pointer; transition: background .15s; }
-.my-menu-item:last-child { border-bottom: none; }
-.my-menu-item:hover { background: var(--blue-50); }
-.menu-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.menu-text { flex: 1; font-size: 14px; color: var(--text-primary); font-weight: 500; }
-.menu-arrow { font-size: 16px; color: var(--text-muted); }
-.menu-badge-red { background: #FDECEA; color: #B71C1C; font-size: 10px; border-radius: 8px; padding: 1px 6px; font-weight: 700; }
-.setting-section { background: #fff; margin-bottom: 8px; }
-.setting-title { font-size: 11px; color: var(--text-muted); padding: 10px 16px 4px; letter-spacing: 0.5px; font-weight: 600; }
-.setting-item { display: flex; align-items: center; padding: 13px 16px; border-bottom: 0.5px solid var(--border); cursor: pointer; transition: background .15s; }
-.setting-item:last-child { border-bottom: none; }
-.setting-item:hover { background: var(--blue-50); }
-.setting-label { flex: 1; font-size: 14px; color: var(--text-primary); font-weight: 500; }
-.setting-value { font-size: 13px; color: var(--text-muted); margin-right: 6px; }
-.setting-arrow { font-size: 16px; color: var(--text-muted); }
-.toggle { width: 40px; height: 22px; background: var(--border); border-radius: 11px; position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0; }
-.toggle.on { background: var(--yellow-400); }
-.toggle-knob { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .2s; }
-.toggle.on .toggle-knob { left: 21px; }
-.logout-btn { width: calc(100% - 32px); margin: 8px 16px; background: #fff; border: 1px solid #FFCDD2; border-radius: 10px; padding: 12px; font-size: 14px; color: #C62828; cursor: pointer; text-align: center; font-family: inherit; font-weight: 600; }
-.withdraw-btn { width: calc(100% - 32px); margin: 0 16px 16px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 10px; font-size: 13px; color: var(--text-muted); cursor: pointer; text-align: center; font-family: inherit; }
-.filter-dropdown { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-family: inherit; font-weight: 600; display: flex; align-items: center; gap: 4px; transition: all .15s; }
-.filter-dropdown:hover { background: var(--surface); color: var(--blue-800); }
-.filter-dropdown.open { border-color: var(--blue-600); color: var(--blue-800); border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom-color: transparent; }
-.filter-dropdown.applied { background: var(--yellow-50); border-color: var(--yellow-600); color: var(--yellow-800); }
-.filter-reset { font-size: 11px; color: var(--text-muted); cursor: pointer; margin-left: auto; text-decoration: underline; padding-left: 10px; font-weight: 500; }
-.filter-panels { background: #fff; border-bottom: 1px solid var(--border); padding: 0; display: none; overflow: hidden; }
-.filter-panels.show { display: block; }
-.filter-panel { padding: 12px 20px; display: none; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--border); background: var(--surface); }
-.filter-panel.show { display: flex; }
-.f-sub-chip { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-weight: 500; transition: all .15s; }
-.f-sub-chip.on { background: var(--blue-100); border-color: var(--blue-600); color: var(--blue-800); font-weight: 700; }
-.loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 10px; }
-.loading-overlay.show { display: flex; }
-.loading-spinner { border: 4px solid var(--blue-100); border-top: 4px solid var(--blue-600); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-@media (max-width: 768px) {
-  body { background: #fff; }
-  .wrap { width: 100%; max-width: 100%; box-shadow: none; min-height: 100vh; }
-  .bottom-tab-bar { max-width: 100%; }
-}
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-.modal-box { background: #fff; width: 90%; max-width: 400px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: slideUp 0.3s ease; }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #eee; }
-.modal-title { font-size: 16px; font-weight: 700; color: #1A2B4A; }
-.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #7A93B0; }
-.modal-body { padding: 20px; }
-.auction-bid-btn { width: 100%; padding: 14px; background: #1A2B4A; color: #fff; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; transition: 0.2s; }
-.auction-bid-btn:active { background: #0A1730; transform: scale(0.98); }
-.auction-info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
-.auction-info-label { color: #7A93B0; }
-.auction-info-val { font-weight: 600; color: #1A2B4A; }
-.auction-current-price { font-size: 24px; font-weight: 800; color: #D4960A; text-align: center; padding: 16px 0; }
-.bottom-tab-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 1024px; height: 60px; background: white; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 999; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-body { padding-bottom: 70px; }
-.tab-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 6px 12px; transition: all 0.2s; }
-.tab-item svg { stroke: var(--text-muted); transition: all 0.2s; }
-.tab-item.active { color: var(--blue-600); }
-.tab-item.active svg { stroke: var(--blue-600); }
-.tab-label { font-size: 11px; font-weight: 600; font-family: inherit; }
-.fab-container { position: fixed; right: 16px; bottom: 76px; display: flex; flex-direction: column; gap: 12px; z-index: 998; }
-.fab-btn { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.fab-btn:hover { transform: scale(1.05); }
-.fab-btn:active { transform: scale(0.95); }
-.fab-top { background: white; border: 1px solid var(--border); width: 44px; height: 44px; align-self: flex-end; }
-.fab-register { background: var(--blue-600); color: white; }
-.login-container { padding: 20px 24px; flex: 1; }
-.login-logo { text-align: center; margin-bottom: 40px; margin-top: 20px; }
-.login-logo h2 { font-size: 20px; font-weight: 700; color: var(--blue-800); margin: 16px 0 6px; }
-.login-logo p { font-size: 13px; color: var(--text-muted); }
-.auth-tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 24px; }
-.auth-tab { flex: 1; text-align: center; padding: 12px 0; font-size: 15px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; position: relative; }
-.auth-tab.active { color: var(--blue-800); }
-.auth-tab.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background: var(--blue-800); }
-.auth-error { color: #E53E3E; font-size: 12px; font-weight: 600; margin-top: 10px; min-height: 20px; text-align: center; }
-
-/* ✅ [개선4] 하트 버튼 셀렉터 수정 — #modal-heart-btn 추가로 CSS 실제 적용 */
-.heart-btn, #modal-heart-btn { transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.heart-btn:active, #modal-heart-btn:active { transform: scale(0.7); }
-
-/* ✅ [개선5] 빈 화면 Empty State 공통 클래스 — mypage.js에서 class="empty-state" 로 사용 */
-.empty-state { padding: 64px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.empty-state-icon { width: 56px; height: 56px; background: var(--surface); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
-.empty-state-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-.empty-state-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; max-width: 220px; }
-.empty-state-btn { margin-top: 8px; background: var(--blue-800); color: #fff; border: none; border-radius: 10px; padding: 12px 24px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
-.empty-state-btn:hover { opacity: 0.85; }
-.empty-state-btn.secondary { background: #fff; color: var(--blue-800); border: 1.5px solid var(--blue-400); }
-
-/* B2B 신뢰 뱃지 강화 */
-.b2b-trust-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--blue-800); color: #fff; border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; }
-.vendor-certified { border: 1.5px solid var(--blue-400); border-radius: 8px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: var(--blue-800); background: var(--blue-100); display: inline-flex; align-items: center; gap: 4px; }
-/* ============================================================================
-   전역 로딩 스피너 (showLoading / hideLoading)
-   ============================================================================ */
-#global-spinner {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: rgba(255, 255, 255, 0.78);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 16px;
-}
-#global-spinner.is-active {
-    display: flex;
-}
-#global-spinner .spinner-circle {
-    width: 44px;
-    height: 44px;
-    border: 3px solid #EAEDF2;
-    border-top-color: #0A0A0A;
-    border-radius: 50%;
-    animation: hm-spin 0.8s linear infinite;
-}
-#global-spinner .spinner-msg {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1A2B4A;
-    letter-spacing: -0.2px;
-    margin: 0;
-}
-@keyframes hm-spin {
-    to { transform: rotate(360deg); }
-}
-```
-
-## 6. mypage.js
-```javascript
-// ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
-
-window.showMyQuotes = async function() {
-    if(!currentUser) { alert('로그인이 필요한 기능입니다.'); return showPage('login'); }
-    showPage('myquotes');
-    const area = document.getElementById('myquotes-content-area');
-    area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">목록을 불러오는 중입니다...</div>';
-    try {
-        const { data, error } = await supabaseClient
-            .from('haema_quotes').select('*')
-            .eq('buyer_id', currentUser.id)
-            .order('created_at', { ascending: false });
-        if(error) throw error;
-        if(!data || data.length === 0) {
-            area.innerHTML = `
-            <div style="padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
-                <div style="font-size:48px; margin-bottom:16px; color:#CBD5E1;"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
-                <div style="font-size:18px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">요청한 견적 내역이 없습니다</div>
-                <div style="font-size:14px; color:#7A93B0; line-height:1.5; margin-bottom:24px;">장바구니를 통해 여러 업체를 묶어서<br>편리하게 일괄 견적을 요청해 보세요.</div>
-                <button onclick="triggerBottomNav('home')" style="background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; border-radius:12px; padding:16px 32px; cursor:pointer; width:100%; max-width:240px; margin-bottom:12px;">매물 둘러보기</button>
-            </div>`;
-            return;
-        }
-        let html = '';
-        data.forEach(q => {
-            const dateObj = new Date(q.created_at);
-            const dateStr = dateObj.toLocaleDateString('ko-KR') + ' ' + dateObj.toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
-            let statusText = '결제/견적 대기중', statusColor = '#F57C00', statusBg = '#FFF3E0';
-            if(q.status === 'replied')  { statusText = '답변 완료 (승인)'; statusColor = '#1E8E3E'; statusBg = '#E8F5E9'; }
-            if(q.status === 'completed'){ statusText = '계약/결제 완료';  statusColor = '#1A5FA0'; statusBg = '#F4F9FF'; }
-
-            let itemSummary = '상품 내용 없음';
-            if(q.items && q.items.length > 0) {
-                const firstTitle = q.items[0].title;
-                const totalQty = q.items.reduce((acc, curr) => acc + (curr.qty || 1), 0);
-                itemSummary = q.items.length === 1 ? `${firstTitle} (${totalQty}개)` : `${firstTitle} 외 ${q.items.length - 1}건 (총 ${totalQty}개)`;
-            }
-
-            // ✅ 모든 동적 값 escape
-            const safeDateStr = escapeHtml(dateStr);
-            const safeVendorName = escapeHtml(q.vendor_name);
-            const safeStatusText = escapeHtml(statusText);
-            const safeItemSummary = escapeHtml(itemSummary);
-
-            html += `<div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #eaedf2; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
-                    <div>
-                        <div style="font-size:12px; color:#7A93B0; margin-bottom:4px;">${safeDateStr} 발주</div>
-                        <div style="font-size:15px; font-weight:800; color:#1A2B4A;">[${safeVendorName}]</div>
-                    </div>
-                    <div style="font-size:11px; font-weight:800; background:${statusBg}; color:${statusColor}; padding:4px 8px; border-radius:6px;">${safeStatusText}</div>
-                </div>
-                <div style="background:#f8f9fc; border-radius:8px; padding:12px; display:flex; align-items:center; justify-content:space-between;">
-                    <div style="font-size:13px; font-weight:600; color:#4A5568;">${safeItemSummary}</div>
-                    <button style="background:#fff; border:1px solid #eaedf2; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:700; color:#1A5FA0; cursor:pointer;" onclick="alert('품목 상세 내역 확인 기능은 추후 연동됩니다.')">상세보기</button>
-                </div>
-            </div>`;
-        });
-        area.innerHTML = html;
-    } catch(err) {
-        // ✅ err.message escape (서버 에러에 사용자 입력 echo될 가능성)
-        const safeErr = escapeHtml(err.message || '알 수 없는 오류');
-        area.innerHTML = `<div style="padding: 60px 20px; font-size:14px; color:#D32F2F; text-align:center;">오류가 발생했습니다:<br>${safeErr}</div>`;
-    }
-};
-
-function showMyList() {
-    if(!currentUser) { alert("로그인이 필요한 기능입니다."); showPage('login'); return; }
-    showPage('mylist');
-    const myProducts = products.filter(p => p.seller_id === currentUser.id);
-    const container = document.getElementById('mylist-grid');
-    if(!container) return;
-    container.innerHTML = '';
-    if(myProducts.length === 0) {
-        // ✅ P0-A 안전망: onclick을 goToRegisterCreateMode로 (혹시 이전 변경이 캐시였을 경우 재적용)
-        container.innerHTML = `
-        <div style="grid-column: span auto; padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
-            <div style="font-size:48px; margin-bottom:16px; color:#CBD5E1;"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></div>
-            <div style="font-size:18px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">등록하신 판매 매물이 없습니다</div>
-            <div style="font-size:14px; color:#7A93B0; line-height:1.5; margin-bottom:24px;">보유하신 잉여 자재나 중고 부품을 올려<br>전국의 수많은 바이어와 바로 거래하세요.</div>
-            <button onclick="goToRegisterCreateMode()" style="background:var(--blue-50); color:var(--blue-800); border:1px solid var(--blue-200); font-size:15px; font-weight:700; border-radius:12px; padding:16px 32px; cursor:pointer; width:100%; max-width:240px; margin-bottom:12px;">첫 판매글 작성하기</button>
-        </div>`;
-        return;
-    }
-    myProducts.forEach((p, idx) => {
-        let tagsHtml = '';
-        const bidCount = parseInt(p.bid_count) || 0;
-        if(p.auction) tagsHtml += `<span class="ptag ptag-y" style="background:#1A2B4A; color:#fff;">경매 ${bidCount}회</span> `;
-        if(p.offer)   tagsHtml += `<span class="ptag ptag-b">가격제안</span> `;
-        if(!p.auction && !p.offer) tagsHtml += `<span class="ptag" style="background:#EAEDF2; color:#7A93B0;">직거래</span> `;
-
-        // ✅ 모든 사용자 입력 필드 escape
-        const safeRegion = escapeHtml(p.region);
-        const safeCondition = escapeHtml(p.condition);
-        const safeTitle = escapeHtml(p.title);
-        const safePrice = escapeHtml(p.price);
-
-        // ✅ p.svg → getProductImageHtml(p)
-        const productImageHtml = (typeof getProductImageHtml === 'function')
-            ? getProductImageHtml(p)
-            : (p.svg || '');
-
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.style.cursor = 'pointer';
-        card.style.position = 'relative';  // ✕ 버튼 절대위치용
-        // ✅ 마이페이지 판매목록의 카드 클릭 = 편집 진입 (상세 모달 X)
-        card.onclick = () => {
-            if (typeof editMyProduct === 'function') {
-                editMyProduct(p.id);
-            } else {
-                console.warn('editMyProduct 함수 미정의 - product.js 업데이트 필요');
-                openProductModal(p.id);
-            }
-        };
-
-        // ✅ 본인 매물 삭제 버튼 (우상단 ✕)
-        const safePid = escapeHtml(p.id);
-        const deleteBtnHtml = `<button type="button" class="my-product-delete-btn" data-pid="${safePid}" title="이 매물 삭제" style="position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.65); color:#fff; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0; box-shadow:0 2px 4px rgba(0,0,0,0.25); z-index:10;">✕</button>`;
-
-        card.innerHTML = `<div class="product-img" style="position:relative;">${productImageHtml}${deleteBtnHtml}</div><div class="product-body"><div class="product-sub">${safeRegion} · ${safeCondition}</div><div class="product-title">${safeTitle}</div><div class="product-price">${safePrice}</div><div class="product-tags">${tagsHtml}</div></div>`;
-
-        // 삭제 버튼 클릭 핸들러 — 카드 클릭 이벤트와 분리
-        const delBtn = card.querySelector('.my-product-delete-btn');
-        if (delBtn) {
-            delBtn.addEventListener('click', function(ev) {
-                ev.stopPropagation();
-                ev.preventDefault();
-                deleteMyProduct(p.id);
-            });
-        }
-
-        container.appendChild(card);
-    });
-}
-
-// ============================================================================
-// ✅ 매물 삭제 함수 (본인 매물만)
-// ============================================================================
-window.deleteMyProduct = async function(productId) {
-    if (!currentUser) {
-        alert('로그인이 필요합니다.');
-        return;
-    }
-
-    const p = products.find(x => String(x.id) === String(productId));
-    if (!p) {
-        alert('매물을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
-        return;
-    }
-
-    const isOwner = (p.seller_id && p.seller_id === currentUser.id)
-                 || (p.user_id && p.user_id === currentUser.id);
-    if (!isOwner) {
-        alert('본인이 등록한 매물만 삭제할 수 있습니다.');
-        return;
-    }
-
-    if (p.is_closed) {
-        alert('이미 거래가 완료된 매물은 삭제할 수 없습니다.\n(거래 기록 보존을 위해)');
-        return;
-    }
-    const bidCount = parseInt(p.bid_count) || 0;
-    if (p.auction && bidCount > 0) {
-        alert(`입찰자가 있는 경매(${bidCount}회 입찰)는 삭제할 수 없습니다.\n경매 마감 후 처리해주세요.`);
-        return;
-    }
-
-    const titleForConfirm = (p.title || '').substring(0, 30);
-    const confirmed = confirm(
-        `정말 [${titleForConfirm}] 매물을 삭제하시겠습니까?\n\n` +
-        '⚠️ 이 작업은 되돌릴 수 없습니다.\n' +
-        '매물 정보와 첨부된 사진이 영구 삭제됩니다.'
-    );
-    if (!confirmed) return;
-
-    if (p.image_url && typeof p.image_url === 'string') {
-        try {
-            const marker = '/market_images/';
-            const idx = p.image_url.indexOf(marker);
-            if (idx >= 0) {
-                const filePath = p.image_url.substring(idx + marker.length);
-                const { error: storageErr } = await supabaseClient.storage
-                    .from('market_images').remove([filePath]);
-                if (storageErr) {
-                    console.warn('사진 파일 삭제 실패(무시하고 진행):', storageErr);
-                }
-            }
-        } catch (e) {
-            console.warn('사진 경로 파싱 실패(무시):', e);
-        }
-    }
-
-    const { error: deleteErr } = await supabaseClient
-        .from('haema_products')
-        .delete()
-        .eq('id', productId)
-        .eq('seller_id', currentUser.id);
-
-    if (deleteErr) {
-        console.error('매물 삭제 실패:', deleteErr);
-        alert('매물 삭제 중 오류가 발생했습니다.\n오류: ' + (deleteErr.message || '알 수 없음'));
-        return;
-    }
-
-    alert('매물이 삭제되었습니다.');
-
-    if (typeof fetchProducts === 'function') {
-        await fetchProducts();
-    }
-    showMyList();
-};
-
-// ==== 프로필 UI 자동 렌더링 ====
-function updateProfileUI() {
-    if(!currentUser) {
-        const pName = document.getElementById('profile-name');
-        if(pName) pName.textContent = "로그인 해주세요";
-        const pEmail = document.getElementById('profile-email');
-        if(pEmail) pEmail.textContent = "";
-        const rBadge = document.getElementById('profile-region-badge');
-        if(rBadge) rBadge.style.display = 'none';
-        return;
-    }
-    const email = currentUser.email || '';
-    const metaName = currentUser.user_metadata?.display_name;
-    const metaBio  = currentUser.user_metadata?.bio;
-    const metaRegion = currentUser.user_metadata?.region;
-    const isVerified = currentUser.user_metadata?.is_region_verified;
-    // ✅ 이메일 앞부분 노출 방지 (full_name도 display_name도 없을 때만 익명 ID 폴백)
-    const nameStr = metaName ? metaName : (
-        currentUser.user_metadata?.full_name 
-            ? currentUser.user_metadata.full_name 
-            : `해마유저_${currentUser.id ? currentUser.id.substring(0, 6) : '익명'}`
-    );
-    const firstChar = nameStr.charAt(0).toUpperCase();
-    // ✅ textContent 사용 → 자동 escape
-    const pName = document.getElementById('profile-name');   if(pName)  pName.textContent  = nameStr;
-    const pEmail = document.getElementById('profile-email'); if(pEmail) pEmail.textContent = metaBio ? metaBio : email;
-    const sEmail = document.getElementById('settings-email');if(sEmail) sEmail.textContent = email;
-    const pAv = document.getElementById('profile-avatar');   if(pAv)    pAv.textContent    = firstChar;
-    const rBadge = document.getElementById('profile-region-badge');
-    if(rBadge) {
-        rBadge.style.display = 'inline-flex';
-        if(metaRegion && isVerified)  { rBadge.textContent = metaRegion + " (인증됨)"; rBadge.style.background = "#E6F4EA"; rBadge.style.color = "#1E8E3E"; }
-        else if(metaRegion)           { rBadge.textContent = metaRegion + " (미인증)"; rBadge.style.background = "#FFFBEA"; rBadge.style.color = "#D4960A"; }
-        else                          { rBadge.textContent = "지역 미설정";             rBadge.style.background = "#EAEDF2"; rBadge.style.color = "#7A93B0"; }
-    }
-
-    // ✅ P0-#4 수정: 신뢰 가능한 app_metadata에서만 읽음 (user_metadata는 위조 가능)
-    const isBiz = !!currentUser.app_metadata?.is_business;
-    const bBadge = document.getElementById('profile-biz-badge');
-    const bStatus = document.getElementById('biz-auth-status');
-    if(bBadge) {
-        if(isBiz) {
-            bBadge.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="display:inline-block; margin-right:2px; vertical-align:-1px;"><path d="M20 6L9 17l-5-5"></path></svg>인증 기업`;
-            bBadge.style.background = "var(--blue-50)"; bBadge.style.color = "var(--blue-800)"; bBadge.style.border = "1px solid var(--blue-200)";
-            if(bStatus) bStatus.style.display = "inline-block";
-        } else {
-            bBadge.textContent = "일반 회원";
-            bBadge.style.background = "#EAEDF2"; bBadge.style.color = "#7A93B0";
-            if(bStatus) bStatus.style.display = "none";
-        }
-    }
-    fetchAndRenderMannerTemp();
-}
-
-let _mannerTempLoaded = false;
-async function fetchAndRenderMannerTemp() {
-    if(!currentUser || _mannerTempLoaded) return;
-    _mannerTempLoaded = true;
-    const { data, error } = await supabaseClient.from('haema_reviews').select('score').eq('reviewee_id', currentUser.id);
-    let baseScore = 5.0;
-    if(data && !error) { let sum = 0; data.forEach(r => sum += (r.score * 0.5)); baseScore += sum; }
-    if(baseScore < 0) baseScore = 0;
-    if(baseScore > 5.0) baseScore = 5.0;
-    const txt = document.getElementById('user-rating-text');
-    const starsContainer = document.getElementById('user-rating-stars');
-    if(txt) txt.textContent = baseScore.toFixed(1);
-    if(starsContainer) {
-        const starCount = Math.round(baseScore);
-        const svgPath = "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z";
-        let starsHtml = '';
-        for(let i=1; i<=5; i++) {
-            starsHtml += `<svg width="20" height="20" viewBox="0 0 24 24" fill="${i <= starCount ? '#F5C518' : '#EAEDF2'}"><path d="${svgPath}"/></svg>`;
-        }
-        starsContainer.innerHTML = starsHtml;
-    }
-}
-
-// ==== 프로필 편집 ====
-function openProfileEdit() {
-    if(!currentUser) { alert('로그인이 필요한 기능입니다.'); showPage('login'); return; }
-    showPage('profile-edit');
-    tempVerifiedRegion = null;
-    const btn = document.getElementById('btn-gps-verify');
-    btn.textContent = "내 위치 검증"; btn.style.background = "#F4F9FF"; btn.style.color = "#1A5FA0"; btn.style.borderColor = "#1A5FA0"; btn.disabled = false;
-    const metaName = currentUser.user_metadata?.display_name;
-    const metaBio  = currentUser.user_metadata?.bio || '';
-    const metaRegion = currentUser.user_metadata?.region || '';
-    const isVerified = currentUser.user_metadata?.is_region_verified || false;
-    const nameStr = metaName ? metaName : (
-        currentUser.user_metadata?.full_name 
-            ? currentUser.user_metadata.full_name 
-            : `해마유저_${currentUser.id ? currentUser.id.substring(0, 6) : '익명'}`
-    );
-    const nameInput = document.getElementById('edit-nickname-input');
-    const bioInput  = document.getElementById('edit-bio-input');
-    const regionSelector = document.getElementById('edit-region-select');
-    nameInput.value = nameStr;
-    if(bioInput) bioInput.value = metaBio;
-    if(regionSelector) {
-        regionSelector.value = metaRegion; regionSelector.disabled = false;
-        if(metaRegion && isVerified) {
-            tempVerifiedRegion = metaRegion; regionSelector.disabled = true;
-            btn.textContent = "✓ 기인증 지역"; btn.style.background = "#E6F4EA"; btn.style.color = "#1E8E3E"; btn.style.borderColor = "#1E8E3E";
-        }
-    }
-    if(metaName) { nameInput.disabled = true; nameInput.style.backgroundColor = '#EAEDF2'; nameInput.style.color = '#7A93B0'; }
-    else         { nameInput.disabled = false; nameInput.style.backgroundColor = '#fff';    nameInput.style.color = '#1A2B4A'; }
-    document.getElementById('edit-avatar-preview').textContent = nameStr.charAt(0).toUpperCase();
-}
-
-async function saveProfile() {
-    const btn = document.querySelector('#page-profile-edit .submit-btn');
-    const nameInput = document.getElementById('edit-nickname-input');
-    const bioInput  = document.getElementById('edit-bio-input');
-    const regionSelector = document.getElementById('edit-region-select');
-    const inputName = nameInput.value.trim();
-    const inputBio  = bioInput ? bioInput.value.trim() : '';
-    const selectedRegion = regionSelector ? regionSelector.value : '';
-    if(!nameInput.disabled && !inputName) { alert('닉네임을 먼저 입력해주세요.'); return; }
-
-    if (inputName.length > 30) { alert('닉네임은 30자 이하로 입력해주세요.'); return; }
-    if (inputBio.length > 500) { alert('소개는 500자 이하로 입력해주세요.'); return; }
-
-    btn.textContent = '메타데이터 저장 중...'; btn.disabled = true;
-    let isVeri = (tempVerifiedRegion !== null && tempVerifiedRegion === selectedRegion);
-    if(selectedRegion && !isVeri) isVeri = false;
-    let updatePayload = { bio: inputBio, region: selectedRegion, is_region_verified: isVeri };
-    if(!nameInput.disabled) updatePayload.display_name = inputName;
-    const { data, error } = await supabaseClient.auth.updateUser({ data: updatePayload });
-    btn.disabled = false; btn.textContent = '저장하고 돌아가기';
-    if(error) { console.error("Profile save error:", error); alert('프로필 변경 중 오류가 발생했습니다.'); }
-    else { currentUser = data.user; updateProfileUI(); showPage('mypage'); }
-}
-
-// ==== 위치 인증 ====
-let tempVerifiedRegion = null;
-window.verifyGPSLocation = async function() {
-    const selector = document.getElementById('edit-region-select');
-    const selectedRegion = selector.value;
-    const btn = document.getElementById('btn-gps-verify');
-    if(!selectedRegion) { alert("활동 지역(시/도)을 우선 선택해주세요."); return; }
-    
-    // 베타 버전 가벼운 통과 처리
-    alert("베타 데모 버전에서는 GPS 소재지 인증 기능 연동이 생략됩니다.\n임시 인증 처리되었습니다.");
-    tempVerifiedRegion = selectedRegion;
-    btn.textContent = "소재지 일치 확인됨 (베타)"; 
-    btn.style.background = "#E6F4EA"; 
-    btn.style.color = "#1E8E3E"; 
-    btn.style.borderColor = "#1E8E3E";
-    selector.disabled = true;
-}
-
-// ==== 사업자 인증 ====
-function openBusinessAuth() {
-    if(!currentUser) { alert('로그인이 필요한 기능입니다.'); showPage('login'); return; }
-    showPage('business-auth');
-    // ✅ P0-#4 수정: app_metadata 사용 (서버에서만 쓸 수 있는 신뢰 영역)
-    const isBiz = !!currentUser.app_metadata?.is_business;
-    const bizNum = currentUser.app_metadata?.biz_number;
-    const bizName = currentUser.app_metadata?.biz_name;
-    const formBox = document.getElementById('biz-auth-form');
-    const authDesc = document.getElementById('biz-auth-desc');
-    const verifiedBox = document.getElementById('biz-auth-verified');
-    const numDisplay = document.getElementById('biz-verified-number');
-    const nameDisplay = document.getElementById('biz-verified-name');
-    if(isBiz && bizNum) {
-        if(formBox) formBox.style.display = 'none';
-        if(authDesc) authDesc.style.display = 'none';
-        if(verifiedBox) verifiedBox.style.display = 'block';
-        // ✅ textContent로 자동 escape
-        if(nameDisplay) nameDisplay.textContent = bizName ? bizName : "인증된 해마마켓 기업";
-        if(numDisplay) {
-            const raw = String(bizNum).replace(/[^0-9]/g, '');
-            numDisplay.textContent = raw.length === 10 ? raw.substring(0,3) + "-" + raw.substring(3,5) + "-*****" : bizNum;
-        }
-    } else {
-        if(formBox) formBox.style.display = 'block';
-        if(authDesc) authDesc.style.display = 'block';
-        if(verifiedBox) verifiedBox.style.display = 'none';
-    }
-}
-
-// ============================================================================
-// ✅ P0-#4 수정: 사업자 인증 서버화
-// ============================================================================
-// 변경 핵심:
-//   - 클라이언트 auth.updateUser({is_business:true}) 호출 제거 (위조 가능)
-//   - Authorization 헤더로 세션 토큰 전송 → 서버가 JWT 검증 후 service_role로
-//     app_metadata 직접 업데이트 (위조 불가)
-//   - 응답 후 refreshSession()으로 새 app_metadata가 currentUser에 반영
-async function submitBusinessAuth() {
-    if(!currentUser) return;
-    const nameEl  = document.getElementById('biz-name-input');
-    const inputEl = document.getElementById('biz-number-input');
-    const nameVal = nameEl  ? nameEl.value.trim()  : "";
-    const val     = inputEl ? inputEl.value.trim() : "";
-    if(!nameVal) { alert("국세청 검증을 위해 상호명(기업명)을 먼저 입력해주세요."); return; }
-    if(val.length !== 10) { alert("하이픈(-)을 제외한 10자리 사업자등록번호를 입력해주세요."); return; }
-    if (!/^\d{10}$/.test(val)) { alert("사업자등록번호는 숫자 10자리여야 합니다."); return; }
-    const btn = document.querySelector('#page-business-auth .submit-btn');
-    if(btn) { btn.textContent = "국세청 Live DB 조회 중..."; btn.disabled = true; }
-
-    try {
-        // ✅ 현재 세션 토큰을 Authorization 헤더로 전송 →
-        //    서버가 JWT 검증 후 service_role로 app_metadata 업데이트.
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session?.access_token) {
-            alert('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
-            return;
-        }
-
-        const res = await fetch('/api/verify-business', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`
-            },
-            body: JSON.stringify({ b_no: val, biz_name: nameVal })
-        });
-        const result = await res.json();
-
-        if (result.success) {
-            // ✅ 새 app_metadata 반영을 위해 세션 갱신 → currentUser 동기화
-            const { data: refreshed, error: refreshErr } = await supabaseClient.auth.refreshSession();
-            if (refreshErr || !refreshed?.user) {
-                alert('인증은 완료되었지만 세션 갱신에 실패했습니다. 페이지를 새로고침해주세요.');
-                return;
-            }
-            currentUser = refreshed.user;
-
-            // UI 업데이트
-            const formEl = document.getElementById('biz-auth-form');
-            const verifiedEl = document.getElementById('biz-auth-verified');
-            if(formEl) formEl.style.display = 'none';
-            if(verifiedEl) verifiedEl.style.display = 'block';
-            const verifiedName = document.getElementById('biz-verified-name');
-            const verifiedNum  = document.getElementById('biz-verified-number');
-            // ✅ textContent로 자동 escape
-            if(verifiedName) verifiedName.textContent = result.companyName;
-            if(verifiedNum)  verifiedNum.textContent  = val.replace(/(\d{3})(\d{2})(\d{5})/, '$1-$2-$3');
-            updateProfileUI();
-            if(nameEl)  nameEl.value  = "";
-            if(inputEl) inputEl.value = "";
-        } else if (result.error) {
-            // 서버가 명시적 에러 반환 (이름 불일치, 휴업/폐업, 미등록, 인증 실패 등)
-            alert("인증 실패: " + result.error);
-        } else {
-            alert("인증 처리 중 알 수 없는 오류가 발생했습니다.");
-        }
-    } catch(err) {
-        console.error(err); alert("인증 중 오류가 발생했습니다: " + err.message);
-    } finally {
-        if(btn) { btn.textContent = "국세청 실시간 진위 확인 (Live)"; btn.disabled = false; }
-    }
-}
-
-async function toggleLike(productId) {
-    if(!currentUser) { alert('로그인 후 이용 가능합니다.'); return; }
-    const btn = document.getElementById('modal-heart-btn');
-    if(!btn) return;
-    btn.style.transform = 'scale(0.8)';
-    setTimeout(() => btn.style.transform = 'scale(1)', 100);
-    const { data: existing } = await supabaseClient
-        .from('haema_likes').select('*')
-        .eq('product_id', productId).eq('user_id', currentUser.id).maybeSingle();
-    if(existing) {
-        await supabaseClient.from('haema_likes').delete().eq('id', existing.id);
-        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-    } else {
-        await supabaseClient.from('haema_likes').insert({ product_id: productId, user_id: currentUser.id });
-        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#E53E3E" stroke="#E53E3E" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-    }
-}
-
-async function checkLikeStatus(productId) {
-    if(!currentUser || String(productId).startsWith('p')) return;
-    const { data } = await supabaseClient
-        .from('haema_likes').select('id')
-        .eq('product_id', productId).eq('user_id', currentUser.id).maybeSingle();
-    const btn = document.getElementById('modal-heart-btn');
-    if(btn) {
-        btn.innerHTML = data
-            ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="#E53E3E" stroke="#E53E3E" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>'
-            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-    }
-}
-
-async function loadLikedProducts() {
-    if(!currentUser) { alert('로그인이 필요한 기능입니다.'); showPage('login'); return; }
-    triggerBottomNav('mypage');
-    openMyListCommon("내 관심 목록 (찜)");
-    const { data: likes, error } = await supabaseClient
-        .from('haema_likes').select('product_id')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false });
-    if(error || !likes || likes.length === 0) {
-        document.getElementById('mylist-grid').innerHTML = `
-        <div style="grid-column: span auto; padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
-            <div style="font-size:48px; margin-bottom:16px; color:#CBD5E1;"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
-            <div style="font-size:18px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">아직 찜을 누른 매물이 없습니다</div>
-            <div style="font-size:14px; color:#7A93B0; line-height:1.5; margin-bottom:24px;">관심 있는 장비를 찜해두시면<br>마감 세일이나 협력 배송 알림을 받아볼 수 있습니다.</div>
-            <button onclick="triggerBottomNav('home')" style="background:#1A5FA0; color:#fff; font-size:15px; font-weight:700; border:none; border-radius:12px; padding:16px 32px; cursor:pointer; width:100%; max-width:240px; margin-bottom:12px;">매물 둘러보기</button>
-        </div>`;
-        return;
-    }
-    const pIds = likes.map(l => l.product_id);
-    const { data: pData } = await supabaseClient.from('haema_products').select('*').in('id', pIds);
-    const sortedProducts = pIds.map(id => pData ? pData.find(x => String(x.id) === String(id)) : null).filter(Boolean);
-    const container = document.getElementById('mylist-grid');
-    container.innerHTML = '';
-    sortedProducts.forEach(p => {
-        const safeTitle = escapeHtml(p.title);
-        const safePrice = escapeHtml(p.price);
-        const productImageHtml = (typeof getProductImageHtml === 'function')
-            ? getProductImageHtml(p)
-            : (p.svg || '');
-
-        const card = document.createElement('div');
-        card.className = 'product-card'; card.style.cursor = 'pointer';
-        card.onclick = () => openProductModal(p.id);
-        card.innerHTML = `<div class="product-img" style="position:relative;">${productImageHtml}<div style="position:absolute; bottom:8px; right:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#E53E3E" stroke="#E53E3E" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div></div><div class="product-body"><div class="product-title">${safeTitle}</div><div class="product-price">${safePrice}</div></div>`;
-        container.appendChild(card);
-    });
-}
-
-function openMyListCommon(titleText) {
-    showPage('mylist');
-    const subTitle = document.querySelector('#page-mylist .sub-title');
-    if(subTitle) subTitle.textContent = titleText;
-    document.getElementById('mylist-grid').innerHTML = '<div style="grid-column: span 3; padding:40px; text-align:center; color:#999; font-size:13px; display:flex; justify-content:center;">로딩 중...</div>';
-}
-
-// 거래완료/후기 — 전역 스코프
-let activeReviewProductId = null;
-let activeReviewTargetId  = null;
-
-window.completeTransaction = async function(productId, roomId) {
-    if(!confirm("정말 이 방의 유저와 거래를 완료하시겠습니까? 거래가 마감 처리됩니다.")) return;
-    const p = products.find(x => x.id === productId);
-    if(!p) return;
-
-    if (currentUser && p.seller_id && p.seller_id !== currentUser.id && p.user_id !== currentUser.id) {
-        alert('판매자만 거래 완료를 처리할 수 있습니다.');
-        return;
-    }
-
-    const { data: roomData } = await supabaseClient
-        .from('haema_chat_rooms').select('buyer_id').eq('id', roomId).maybeSingle();
-    if(!roomData) return;
-    const buyerId = roomData.buyer_id;
-    await supabaseClient.from('haema_products')
-        .update({ is_closed: true, highest_bidder_id: buyerId }).eq('id', productId);
-    p.is_closed = true;
-    document.getElementById('chat-trade-btn').textContent = '후기 남기기';
-    document.getElementById('chat-trade-btn').onclick = () => window.openReviewModal(productId, buyerId);
-    window.openReviewModal(productId, buyerId);
-};
-
-window.openReviewModal = function(productId, targetUserId) {
-    activeReviewProductId = productId;
-    activeReviewTargetId  = targetUserId;
-    if(document.getElementById('review-content'))
-        document.getElementById('review-content').value = '';
-    document.getElementById('review-modal').style.display = 'flex';
-};
-
-window.submitReview = async function(score) {
-    if(!activeReviewProductId || !activeReviewTargetId) return;
-    const content = document.getElementById('review-content')
-        ? document.getElementById('review-content').value.trim() : '';
-
-    if (content.length > 1000) { alert("후기는 1,000자 이하로 입력해주세요."); return; }
-
-    const { error } = await supabaseClient.from('haema_reviews').insert({
-        product_id:  activeReviewProductId,
-        reviewer_id: currentUser.id,
-        reviewee_id: activeReviewTargetId,
-        score:       score,
-        content:     content
-    });
-    if(error) {
-        if(error.code === '23505') alert('이미 이 거래에 대해 후기를 남기셨습니다!');
-        else { console.error(error); alert('후기 등록 중 오류가 발생했습니다.'); }
-    } else {
-        alert('소중한 후기가 등록되었습니다. 거래 신뢰도(별점)에 반영됩니다!');
-    }
-    document.getElementById('review-modal').style.display = 'none';
-};
-
-// ============================================================================
-// 회원 탈퇴 신청 (Phase 2 — Mock 아닌 실제 신청 기록 방식)
-// ============================================================================
-// 동작:
-//   1) admin 계정은 탈퇴 차단 (본인 권한 회복 수단 상실 방지)
-//   2) 사용자에게 1차 confirm
-//   3) 탈퇴 사유 prompt (선택)
-//   4) haema_account_deletion_requests 테이블에 INSERT
-//   5) 안내 메시지 + 자동 로그아웃
-//
-// ⚠️ 실제 auth.users 행 삭제는 어드민이 수동으로 처리하거나,
-//     Phase 3에서 Edge Function으로 자동화 예정.
-// ============================================================================
-window.deleteAccount = async function() {
-    // 1) 로그인 확인
-    if (!currentUser) {
-        alert('로그인이 필요합니다.');
-        showPage('login');
-        return;
-    }
-
-    // 2) admin 계정 가드 — 본인 탈퇴 시 권한 회복 불가능
-    const role = currentUser.app_metadata && currentUser.app_metadata.role;
-    if (role === 'admin') {
-        alert('관리자 계정은 본 화면에서 탈퇴할 수 없습니다.\n별도 절차로 진행해주세요.');
-        return;
-    }
-
-    // 2.5) 중복 신청 방지 체크 (서버 쿼리)
-    const { data: existingPending, error: chkErr } = await supabaseClient
-        .from('haema_account_deletion_requests')
-        .select('id, status')
-        .eq('user_id', currentUser.id)
-        .eq('status', 'pending')
-        .maybeSingle();
-
-    if (chkErr) {
-        console.warn('탈퇴 신청 중복 조회 실패 (무시하고 진행):', chkErr);
-    } else if (existingPending) {
-        alert('이미 접수된 탈퇴 신청 건이 있습니다.\n운영팀의 처리가 완료될 때까지 잠시 기다려주세요.');
-        return;
-    }
-
-    // 3) 1차 확인
-    if (!confirm('정말 탈퇴하시겠습니까?\n\n• 신청 즉시 로그아웃됩니다.\n• 운영팀 검토 후 영업일 기준 5일 이내 계정과 데이터가 완전히 삭제됩니다.\n• 한 번 처리되면 복구할 수 없습니다.')) {
-        return;
-    }
-
-    // 4) 탈퇴 사유 (선택)
-    const reason = prompt('탈퇴 사유를 알려주시면 서비스 개선에 큰 도움이 됩니다. (선택)\n\n* 비워두셔도 신청은 정상 접수됩니다.', '');
-    // prompt 취소(null) 시 신청 자체를 취소 (실수 방지)
-    if (reason === null) {
-        alert('탈퇴 신청이 취소되었습니다.');
-        return;
-    }
-
-    // 5) Supabase INSERT
-    try {
-        const fullName =
-            currentUser.user_metadata?.full_name_ko ||
-            currentUser.user_metadata?.full_name ||
-            currentUser.user_metadata?.display_name ||
-            null;
-
-        const { error } = await supabaseClient
-            .from('haema_account_deletion_requests')
-            .insert([{
-                user_id: currentUser.id,
-                user_email: currentUser.email,
-                user_full_name: fullName,
-                reason: reason ? reason.trim().slice(0, 1000) : null
-                // status, requested_at은 DB DEFAULT 사용
-            }]);
-
-        if (error) {
-            // 중복 신청 등의 에러 안내
-            console.error('탈퇴 신청 INSERT 오류:', error);
-            alert('탈퇴 신청 중 오류가 발생했습니다.\n\n잠시 후 다시 시도하시거나, 문제가 지속되면 고객센터로 연락 주세요.\n\n오류 코드: ' + (error.message || '알 수 없음'));
-            return;
-        }
-
-        // 6) 성공 안내 + 자동 로그아웃
-        alert('탈퇴 신청이 정상 접수되었습니다.\n\n운영팀 검토 후 영업일 기준 5일 이내 계정이 완전 삭제됩니다.\n잠시 후 자동으로 로그아웃됩니다.');
-
-        await supabaseClient.auth.signOut();
-        window.location.href = 'index.html';
-    } catch (err) {
-        console.error('deleteAccount 예외:', err);
-        alert('탈퇴 신청 처리 중 예기치 않은 오류가 발생했습니다.\n\n' + (err.message || err));
-    }
-};
 ```
