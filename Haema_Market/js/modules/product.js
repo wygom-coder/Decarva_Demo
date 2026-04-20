@@ -952,7 +952,18 @@ async function registerProduct() {
 
   // 폼/모드 초기화 후 마이페이지 판매목록으로 복귀
   resetRegisterFormToCreateMode();
-  await fetchProducts();
+  
+  // ✅ 필터 초기화: 방금 수정한 매물이 홈 필터에 걸려 전역 products 배열에서 누락되는 현상 방지
+  if (typeof filterState !== 'undefined') {
+      filterState.category = '전체';
+      filterState.topCategory = '전체';
+      filterState.keyword = '';
+  }
+  if (typeof resetFilters === 'function') {
+      resetFilters();
+  }
+
+  await fetchProducts(true);
   if (typeof showMyList === 'function') {
       showMyList();
   } else {
