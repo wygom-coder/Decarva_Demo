@@ -1,10 +1,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-serif; background: #eef2f5; margin: 0; padding: 0; }
 :root {
-  --blue-50: #F0FDF4; --blue-100: #E0E7FF; --blue-200: #C7D2FE; --blue-400: #818CF8;
-  --blue-600: #4F46E5; --blue-800: #1E3A8A;
-  --yellow-50: #FFFBEB; --yellow-100: #FEF3C7; --yellow-300: #FCD34D;
-  --yellow-400: #F59E0B; --yellow-600: #D97706; --yellow-800: #92400E;
+  --blue-50: #F0F9FF; --blue-100: #E0F2FE; --blue-200: #BAE6FD; --blue-400: #38BDF8;
+  --blue-600: #0284C7; --blue-800: #075985;
+  --yellow-50: #FFF7ED; --yellow-100: #FFEDD5; --yellow-300: #FDBA74;
+  --yellow-400: #FB923C; --yellow-600: #EA580C; --yellow-800: #9A3412;
   --text-primary: #0F172A; --text-secondary: #475569; --text-muted: #64748B;
   --border: #E2E8F0; --surface: #F8FAFC;
 }

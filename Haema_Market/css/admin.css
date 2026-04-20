@@ -1,6 +1,6 @@
 /* ============================================================================
    admin.css — 어드민 백오피스 스타일
-   톤: 딥블랙(#0A0A0A) + 화이트 + 옐로우 포인트 (해마 마켓 B2B 프리미엄 톤)
+   톤: 딥블랙(#0F172A) + 화이트 + 옐로우 포인트 (해마 마켓 B2B 프리미엄 톤)
    ============================================================================ */
 
 * { box-sizing: border-box; }
@@ -24,7 +24,7 @@ body {
 /* ── 사이드바 ──────────────────────────────────────────────────────────────── */
 .admin-sidebar {
     width: 240px;
-    background: #0A0A0A;
+    background: #0F172A;
     color: #fff;
     display: flex;
     flex-direction: column;
@@ -45,8 +45,8 @@ body {
 .admin-brand-logo {
     width: 36px;
     height: 36px;
-    background: #FFD400;
-    color: #0A0A0A;
+    background: #FB923C;
+    color: #0F172A;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -102,7 +102,7 @@ body {
 
 .admin-nav-item.active {
     background: rgba(255,212,0,0.12);
-    color: #FFD400;
+    color: #FB923C;
     font-weight: 700;
 }
 
@@ -148,7 +148,7 @@ body {
 
 .admin-user-role {
     font-size: 11px;
-    color: #FFD400;
+    color: #FB923C;
     margin-top: 2px;
     letter-spacing: 0.3px;
 }
@@ -197,7 +197,7 @@ body {
     font-size: 22px;
     font-weight: 800;
     letter-spacing: -0.5px;
-    color: #0A0A0A;
+    color: #0F172A;
 }
 
 .admin-view-header p {
@@ -227,8 +227,8 @@ body {
 }
 
 .admin-stat-card-warn {
-    border-color: #FFD400;
-    background: #FFFBE6;
+    border-color: #FB923C;
+    background: #FFF7ED;
 }
 
 .admin-stat-label {
@@ -242,7 +242,7 @@ body {
 .admin-stat-value {
     font-size: 30px;
     font-weight: 800;
-    color: #0A0A0A;
+    color: #0F172A;
     line-height: 1.1;
     letter-spacing: -1px;
 }
@@ -268,8 +268,8 @@ body {
 }
 
 .admin-info-box {
-    background: #FFFBE6;
-    border: 1px solid #FFD400;
+    background: #FFF7ED;
+    border: 1px solid #FB923C;
     border-radius: 8px;
     padding: 12px 14px;
     font-size: 12px;
@@ -321,7 +321,7 @@ body {
 
 .admin-cell-strong {
     font-weight: 600;
-    color: #0A0A0A;
+    color: #0F172A;
 }
 
 .admin-cell-muted {
@@ -369,16 +369,16 @@ body {
 }
 
 .admin-btn-secondary:hover:not(:disabled) {
-    border-color: #0A0A0A;
+    border-color: #0F172A;
 }
 
 .admin-btn-primary {
-    background: #0A0A0A;
+    background: #0F172A;
     color: #fff;
 }
 
 .admin-btn-primary:hover:not(:disabled) {
-    background: #222;
+    background: #1E293B;
 }
 
 .admin-btn-danger {
@@ -404,9 +404,9 @@ body {
 }
 
 .admin-badge-warn {
-    background: #FFFBE6;
+    background: #FFF7ED;
     color: #B8860B;
-    border: 1px solid #FFD400;
+    border: 1px solid #FB923C;
 }
 
 .admin-badge-ok {
