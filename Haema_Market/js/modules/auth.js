@@ -117,14 +117,20 @@ async function submitAuth() {
     const errObj = document.getElementById('auth-error');
     const btn = document.getElementById('btn-auth-submit');
     errObj.textContent = '';
+    
+    // 에러를 화면과 알림창 양쪽에 띄워주는 헬퍼 함수
+    const showError = (msg) => {
+        errObj.textContent = msg;
+        alert(msg);
+    };
 
     if (!email || !pw) {
-        errObj.textContent = '이메일과 비밀번호를 모두 입력해주세요.';
+        showError('이메일과 비밀번호를 모두 입력해주세요.');
         return;
     }
 
     if (pw.length < 6) {
-        errObj.textContent = '비밀번호는 6자 이상이어야 합니다.';
+        showError('비밀번호는 6자 이상이어야 합니다.');
         return;
     }
 
@@ -134,7 +140,7 @@ async function submitAuth() {
     if (authMode === 'signup') {
         const pwConfirm = document.getElementById('auth-pw-confirm').value;
         if (pw !== pwConfirm) {
-            errObj.textContent = '비밀번호가 일치하지 않습니다.';
+            showError('비밀번호가 일치하지 않습니다.');
             btn.disabled = false;
             switchAuthMode('signup');
             return;
@@ -142,7 +148,7 @@ async function submitAuth() {
 
         // ✅ 약관 동의 검증
         if (!document.getElementById('auth-agree-terms').checked || !document.getElementById('auth-agree-privacy').checked) {
-            errObj.textContent = '이용약관 및 개인정보처리방침 열람 후 동의가 필수입니다.';
+            showError('이용약관 및 개인정보처리방침 열람 후 동의가 필수입니다.');
             btn.disabled = false;
             switchAuthMode('signup');
             return;
@@ -157,8 +163,8 @@ async function submitAuth() {
         const department = document.getElementById('auth-department').value.trim();
         const jobTitle = document.getElementById('auth-job-title').value.trim();
 
-        if (!nickname || !fullNameKo || !fullNameEn) {
-            errObj.textContent = '필수 항목(닉네임, 국문/영문 성명)을 모두 입력해주세요.';
+        if (!nickname || !fullNameKo) {
+            showError('필수 항목(닉네임, 국문 성명)을 모두 입력해주세요.');
             btn.disabled = false;
             switchAuthMode('signup');
             return;
@@ -167,7 +173,7 @@ async function submitAuth() {
         // 휴대폰 번호 정규화 + 형식 검증 (선택사항이나 입력된 경우)
         const phoneDigits = phoneRaw ? phoneRaw.replace(/\D/g, '') : '';
         if (phoneRaw && !/^01[016789]\d{7,8}$/.test(phoneDigits)) {
-            errObj.textContent = '휴대폰 번호 형식이 올바르지 않습니다. (예: 010-1234-5678)';
+            showError('휴대폰 번호 형식이 올바르지 않습니다. (예: 010-1234-5678)');
             btn.disabled = false;
             switchAuthMode('signup');
             return;
@@ -196,11 +202,13 @@ async function submitAuth() {
         });
 
         if (error) {
-            errObj.textContent = error.message;
+            showError(error.message);
         } else if (data.user && data.user.identities && data.user.identities.length === 0) {
-            errObj.textContent = '이미 가입된 이메일입니다. 로그인을 시도해주세요.';
+            showError('이미 가입된 이메일입니다. 로그인을 시도해주세요.');
         } else {
-            alert('📧 인증 이메일을 발송했습니다!\n받은 메일함을 확인하고 링크를 클릭하면 로그인됩니다.');
+            errObj.style.color = '#10B981';
+            errObj.textContent = '가입이 완료되었습니다! 이메일 인증 링크를 확인해주세요.';
+            alert('가입이 완료되었습니다! 이메일 인증 링크를 확인해주세요.\n(이메일이 오지 않았다면 스팸함을 확인해보세요)');
             showPage('home');
             // 모든 입력 필드 초기화
             document.getElementById('auth-email').value = '';
@@ -225,9 +233,9 @@ async function submitAuth() {
 
         if (error) {
             if (error.message === 'Email not confirmed') {
-                errObj.textContent = '이메일 인증이 완료되지 않았습니다. 받은 메일함을 확인하고 링크를 클릭해주세요.';
+                showError('이메일 인증이 완료되지 않았습니다. 받은 메일함을 확인하고 링크를 클릭해주세요.');
             } else {
-                errObj.textContent = '로그인 실패: 이메일 또는 비밀번호를 확인해주세요.';
+                showError('로그인 실패: 이메일 또는 비밀번호를 확인해주세요.');
             }
         } else {
             showPage('home');
