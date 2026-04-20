@@ -535,20 +535,24 @@
     
     <div class="auth-form-wrap">
       <div class="form-row">
-        <label class="form-label">이메일</label>
+        <label class="form-label">이메일<span style="color:#D32F2F; margin-left:2px;">*</span></label>
         <input class="form-input" type="email" id="auth-email" placeholder="이메일 주소를 입력해주세요" onkeypress="if(event.key==='Enter') submitAuth()">
       </div>
       <div class="form-row">
-        <label class="form-label">비밀번호</label>
+        <label class="form-label">비밀번호<span style="color:#D32F2F; margin-left:2px;">*</span></label>
         <input class="form-input" type="password" id="auth-pw" placeholder="비밀번호 6자리 이상" onkeypress="if(event.key==='Enter') submitAuth()">
       </div>
       <div class="form-row" id="auth-pw-confirm-row" style="display:none;">
-        <label class="form-label">비밀번호 확인</label>
+        <label class="form-label">비밀번호 확인<span style="color:#D32F2F; margin-left:2px;">*</span></label>
         <input class="form-input" type="password" id="auth-pw-confirm" placeholder="비밀번호를 한번 더 입력해주세요" onkeypress="if(event.key==='Enter') submitAuth()">
       </div>
 
       <!-- ✅ 회원가입 모드 전용 추가 정보 (signin일 땐 display:none) -->
       <div id="auth-signup-extra" style="display:none;">
+        <div class="form-row">
+          <label class="form-label">닉네임<span style="color:#D32F2F; margin-left:2px;">*</span></label>
+          <input class="form-input" type="text" id="auth-nickname" placeholder="앱에서 사용할 닉네임" autocomplete="nickname" maxlength="20">
+        </div>
         <div class="form-row">
           <label class="form-label">국문 성명<span style="color:#D32F2F; margin-left:2px;">*</span></label>
           <input class="form-input" type="text" id="auth-full-name-ko" placeholder="홍길동" autocomplete="name" maxlength="50">
@@ -558,20 +562,20 @@
           <input class="form-input" type="text" id="auth-full-name-en" placeholder="Hong Gildong" autocomplete="off" maxlength="100">
         </div>
         <div class="form-row">
-          <label class="form-label">연락처<span style="color:#D32F2F; margin-left:2px;">*</span></label>
-          <input class="form-input" type="tel" id="auth-phone-number" placeholder="010-1234-5678" autocomplete="tel" maxlength="13">
+          <label class="form-label">연락처</label>
+          <input class="form-input" type="tel" id="auth-phone-number" placeholder="선택 입력" autocomplete="tel" maxlength="13">
         </div>
         <div class="form-row">
-          <label class="form-label">소속 기업<span style="color:#D32F2F; margin-left:2px;">*</span></label>
-          <input class="form-input" type="text" id="auth-company-name" placeholder="(주)해마 해운" autocomplete="organization" maxlength="100">
+          <label class="form-label">소속 기업</label>
+          <input class="form-input" type="text" id="auth-company-name" placeholder="선택 입력" autocomplete="organization" maxlength="100">
         </div>
         <div class="form-row">
-          <label class="form-label">부서<span style="color:#D32F2F; margin-left:2px;">*</span></label>
-          <input class="form-input" type="text" id="auth-department" placeholder="구매팀" autocomplete="off" maxlength="50">
+          <label class="form-label">부서</label>
+          <input class="form-input" type="text" id="auth-department" placeholder="선택 입력" autocomplete="off" maxlength="50">
         </div>
         <div class="form-row">
-          <label class="form-label">직함<span style="color:#D32F2F; margin-left:2px;">*</span></label>
-          <input class="form-input" type="text" id="auth-job-title" placeholder="과장" autocomplete="organization-title" maxlength="50">
+          <label class="form-label">직함</label>
+          <input class="form-input" type="text" id="auth-job-title" placeholder="선택 입력" autocomplete="organization-title" maxlength="50">
         </div>
       </div>
       

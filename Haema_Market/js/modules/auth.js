@@ -148,7 +148,8 @@ async function submitAuth() {
             return;
         }
 
-        // ✅ 회원가입 6필드 읽기 + 검증
+        // ✅ 회원가입 필드 읽기 + 검증
+        const nickname = document.getElementById('auth-nickname').value.trim();
         const fullNameKo = document.getElementById('auth-full-name-ko').value.trim();
         const fullNameEn = document.getElementById('auth-full-name-en').value.trim();
         const phoneRaw = document.getElementById('auth-phone-number').value.trim();
@@ -156,16 +157,16 @@ async function submitAuth() {
         const department = document.getElementById('auth-department').value.trim();
         const jobTitle = document.getElementById('auth-job-title').value.trim();
 
-        if (!fullNameKo || !fullNameEn || !phoneRaw || !companyName || !department || !jobTitle) {
-            errObj.textContent = '회원가입에 필요한 모든 정보를 입력해주세요.';
+        if (!nickname || !fullNameKo || !fullNameEn) {
+            errObj.textContent = '필수 항목(닉네임, 국문/영문 성명)을 모두 입력해주세요.';
             btn.disabled = false;
             switchAuthMode('signup');
             return;
         }
 
-        // 휴대폰 번호 정규화 + 형식 검증 (010/011/016/017/018/019)
-        const phoneDigits = phoneRaw.replace(/\D/g, '');
-        if (!/^01[016789]\d{7,8}$/.test(phoneDigits)) {
+        // 휴대폰 번호 정규화 + 형식 검증 (선택사항이나 입력된 경우)
+        const phoneDigits = phoneRaw ? phoneRaw.replace(/\D/g, '') : '';
+        if (phoneRaw && !/^01[016789]\d{7,8}$/.test(phoneDigits)) {
             errObj.textContent = '휴대폰 번호 형식이 올바르지 않습니다. (예: 010-1234-5678)';
             btn.disabled = false;
             switchAuthMode('signup');
@@ -184,9 +185,9 @@ async function submitAuth() {
                     company_name: companyName,
                     department: department,
                     job_title: jobTitle,
-                    // ⚠️ 기존 코드(채팅/마이페이지/커뮤니티)가 user_metadata.full_name을
-                    //     참조하므로 호환성 유지를 위해 국문 성명을 같이 기록
-                    full_name: fullNameKo,
+                    nickname: nickname,
+                    //     참조하므로 호환성 유지를 위해 닉네임 또는 국문 성명을 같이 기록
+                    full_name: nickname || fullNameKo,
                     agreed_terms_at: new Date().toISOString(),
                     agreed_privacy_at: new Date().toISOString(),
                     agreed_marketing: document.getElementById('auth-agree-marketing').checked
@@ -205,6 +206,7 @@ async function submitAuth() {
             document.getElementById('auth-email').value = '';
             document.getElementById('auth-pw').value = '';
             document.getElementById('auth-pw-confirm').value = '';
+            document.getElementById('auth-nickname').value = '';
             document.getElementById('auth-full-name-ko').value = '';
             document.getElementById('auth-full-name-en').value = '';
             document.getElementById('auth-phone-number').value = '';
