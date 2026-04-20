@@ -49,11 +49,24 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
             if (loginPage && loginPage.classList.contains('active')) {
                 showPage('home');
             }
+
+            // 어드민 대시보드 버튼 토글
+            const adminBtn = document.getElementById('admin-route-btn');
+            if (adminBtn) {
+                if (currentUser.app_metadata && currentUser.app_metadata.role === 'admin') {
+                    adminBtn.style.display = 'flex';
+                } else {
+                    adminBtn.style.display = 'none';
+                }
+            }
         } else {
             const myNameEl = document.querySelector('.my-name');
             const myEmailEl = document.querySelector('.my-sub');
             if (myNameEl) myNameEl.textContent = '로그인이 필요합니다';
             if (myEmailEl) myEmailEl.innerHTML = '비회원';
+            
+            const adminBtn = document.getElementById('admin-route-btn');
+            if (adminBtn) adminBtn.style.display = 'none';
         }
     }, 0);
 
