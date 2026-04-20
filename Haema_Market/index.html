@@ -536,15 +536,15 @@
     <div class="auth-form-wrap">
       <div class="form-row">
         <label class="form-label">이메일</label>
-        <input class="form-input" type="email" id="auth-email" placeholder="이메일 주소를 입력해주세요">
+        <input class="form-input" type="email" id="auth-email" placeholder="이메일 주소를 입력해주세요" onkeypress="if(event.key==='Enter') submitAuth()">
       </div>
       <div class="form-row">
         <label class="form-label">비밀번호</label>
-        <input class="form-input" type="password" id="auth-pw" placeholder="비밀번호 6자리 이상">
+        <input class="form-input" type="password" id="auth-pw" placeholder="비밀번호 6자리 이상" onkeypress="if(event.key==='Enter') submitAuth()">
       </div>
       <div class="form-row" id="auth-pw-confirm-row" style="display:none;">
         <label class="form-label">비밀번호 확인</label>
-        <input class="form-input" type="password" id="auth-pw-confirm" placeholder="비밀번호를 한번 더 입력해주세요">
+        <input class="form-input" type="password" id="auth-pw-confirm" placeholder="비밀번호를 한번 더 입력해주세요" onkeypress="if(event.key==='Enter') submitAuth()">
       </div>
 
       <!-- ✅ 회원가입 모드 전용 추가 정보 (signin일 땐 display:none) -->
