@@ -428,6 +428,12 @@ function resetRegisterFormToCreateMode() {
     const titleInput = document.getElementById('title-input');
     if (titleInput) { titleInput.value = ''; titleInput.disabled = false; }
 
+    const manufacturerInput = document.getElementById('manufacturer-input');
+    if (manufacturerInput) manufacturerInput.value = '';
+
+    const yearInput = document.getElementById('year-input');
+    if (yearInput) yearInput.value = '';
+
     const priceInput = document.getElementById('price-input');
     if (priceInput) { priceInput.value = ''; priceInput.disabled = false; }
 
