@@ -205,7 +205,7 @@
     <!-- 동적 채팅 목록 렌더링 영역 -->
   </div>
   <div class="chatroom" id="chatroom" style="display:none;">
-    
+    <div class="chatroom-header"><span class="back-btn" onclick="hideChatRoom()">‹</span><span id="chat-receiver-name" style="font-size:15px;font-weight:700;color:#1A2B4A;flex:1;">판매자와 채팅</span></div>
     <div class="chatroom-product" id="chat-product-bar" style="display:flex; border-bottom:1px solid #eee; padding:12px 16px; align-items:center; gap:8px; background:#fff;"><div class="cp-img" id="chat-product-img" style="width:40px;height:40px;overflow:hidden;border-radius:4px;background:#F0F9FF;"></div><div style="flex:1;"><div class="cp-title" id="chat-product-title" style="font-size:13px;font-weight:600;color:#1a2b4a;"></div><div class="cp-price" id="chat-product-price" style="font-size:14px;font-weight:700;color:#0284C7;"></div></div><button id="chat-trade-btn" class="cp-btn" style="background:#F0F9FF; color:#0284C7; border:none; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer;">거래완료</button></div>
     
     <!-- 🚨 [Phase 7 최우선 방어벽] 채팅방 면책 고지 배너 -->
@@ -462,6 +462,7 @@
           </div>
       </div>
   </div>
+</div>
 </div>
 </div>
  
