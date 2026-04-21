@@ -310,7 +310,7 @@ body { padding-bottom: 70px; }
     .header-nav { gap: 6px; }
     
     /* Hide text & show icon for top buttons to save space */
-    .h-text { display: none; }
-    .h-icon { display: block; width: 18px; height: 18px; }
-    .nav-btn-icon { min-width: 36px; padding: 0; width: 36px; height: 36px; border-radius: 8px; }
+    .h-text { display: none !important; }
+    .h-icon { display: block !important; width: 18px; height: 18px; margin: auto; }
+    .nav-btn-icon { min-width: 36px !important; width: 36px !important; height: 36px !important; border-radius: 8px !important; padding: 0 !important; display: flex !important; justify-content: center !important; align-items: center !important; gap: 0 !important; }
 }
