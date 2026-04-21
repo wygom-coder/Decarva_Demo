@@ -29,9 +29,11 @@ window.fetchCommunityPosts = async function(reset = true) {
     let query = supabaseClient.from('haema_posts').select('*');
     
     const searchInput = document.getElementById('comm-search-input');
-    const keyword = searchInput ? searchInput.value.trim() : '';
+    const rawVal = searchInput ? searchInput.value.trim() : '';
+    const keyword = sanitizeSearchKeyword(rawVal);
+    
     if (keyword) {
-        query = query.or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`);
+        query = query.ilike('title', `%${keyword}%`);
     }
     
     if (window.currentCommTag && window.currentCommTag !== '전체') {
@@ -70,16 +72,25 @@ window.fetchCommunityPosts = async function(reset = true) {
     renderCommunityPostsAppend(posts);
 }
 
+const TAG_COLORS = {
+    '공지': { bg: '#FFF3E0', color: '#E65100' },
+    '자유게시판': { bg: '#E3F2FD', color: '#1565C0' },
+    'Q&A': { bg: '#E8F5E9', color: '#2E7D32' },
+    '도움요청': { bg: '#FFEBEE', color: '#C62828' }
+};
+
 function renderCommunityPostsAppend(posts) {
     const area = document.getElementById('community-content-area');
     if(!area) return;
     
-    let html = '';
+    const frag = document.createDocumentFragment();
     posts.forEach(post => {
         const safeId = escapeHtml(post.id);
         const safeTag = escapeHtml(post.tag);
-        const safeTagBg = escapeHtml(post.tag_bg);
-        const safeTagColor = escapeHtml(post.tag_color);
+        const tagMap = TAG_COLORS[post.tag] || { bg: '#F4F9FF', color: '#1A5FA0' };
+        const safeTagBg = tagMap.bg;
+        const safeTagColor = tagMap.color;
+        
         const safeTitle = escapeHtml(post.title);
         const safeContent = escapeHtml(post.content);
         const safeAuthorName = escapeHtml(post.author_name);
@@ -87,7 +98,8 @@ function renderCommunityPostsAppend(posts) {
         const views = parseInt(post.views) || 0;
         const commentsCount = parseInt(post.comments_count) || 0;
 
-        html += `
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
             <div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #eaedf2; box-shadow:0 2px 4px rgba(0,0,0,0.02); cursor:pointer;" onclick="openPostDetail('${safeId}')">
                 <div style="display:inline-block; font-size:11px; font-weight:800; background:${safeTagBg}; color:${safeTagColor}; padding:4px 8px; border-radius:6px; margin-bottom:8px;">
                     ${safeTag}
@@ -111,9 +123,10 @@ function renderCommunityPostsAppend(posts) {
                 </div>
             </div>
         `;
+        frag.appendChild(wrapper.firstElementChild);
     });
     
-    area.innerHTML += html;
+    area.appendChild(frag);
     
     if(hasMoreCommunityPosts) setupCommInfiniteScroll();
 }
@@ -176,11 +189,6 @@ window.submitPost = async function() {
     if (title.length > 200) { alert("제목은 200자 이하로 입력해주세요."); return; }
     if (content.length > 10000) { alert("본문은 10,000자 이하로 입력해주세요."); return; }
     
-    let tagBg = '#F4F9FF';
-    let tagColor = '#1A5FA0';
-    if(tag.includes('수리지식')) { tagBg = '#E8F5E9'; tagColor = '#1E8E3E'; }
-    if(tag.includes('구인구직')) { tagBg = '#FFF3E0'; tagColor = '#F57C00'; }
-
     const btn = document.getElementById('btn-submit-post');
     btn.disabled = true;
     btn.textContent = '등록 중...';
@@ -188,10 +196,8 @@ window.submitPost = async function() {
     const newPost = {
         author_id: currentUser.id,
         author_name: currentUser.user_metadata?.nickname || currentUser.user_metadata?.full_name_ko || currentUser.user_metadata?.full_name || '익명선장',
-        author_role: currentUser.user_metadata?.role || '일반 회원',
+        author_role: (currentUser.app_metadata && currentUser.app_metadata.role === 'admin') ? '해마 운영팀' : '일반 회원',
         tag: tag,
-        tag_bg: tagBg,
-        tag_color: tagColor,
         title: title,
         content: content,
         views: 0,
@@ -229,13 +235,9 @@ window.openPostDetail = async function(postId) {
     }
 
     if(postData) {
-        // ⚠️ views 카운트 — 클라이언트 +1 방식은 race condition + 임의 조작 가능.
-        //     2차 작업에서 PostgreSQL rpc()로 atomic increment로 전환 예정.
-        //     임시로 그대로 두되, 실패해도 UI는 진행.
+        // ⚠️ [RPC] 조회수 원자적 증가 방식으로 변경 (Silent failure 해결)
         try {
-            await supabaseClient.from('haema_posts')
-                .update({ views: (postData.views || 0) + 1 })
-                .eq('id', postId);
+            await supabaseClient.rpc('increment_post_views', { p_post_id: postId });
             postData.views = (postData.views || 0) + 1;
         } catch (e) {
             console.warn('조회수 업데이트 실패:', e);
@@ -251,8 +253,9 @@ window.openPostDetail = async function(postId) {
 
     // ✅ 모든 사용자 입력 필드 escape
     const safeTag = escapeHtml(postData.tag);
-    const safeTagBg = escapeHtml(postData.tag_bg);
-    const safeTagColor = escapeHtml(postData.tag_color);
+    const tagMap = TAG_COLORS[postData.tag] || { bg: '#F4F9FF', color: '#1A5FA0' };
+    const safeTagBg = tagMap.bg;
+    const safeTagColor = tagMap.color;
     const safeTitle = escapeHtml(postData.title);
     const safeAuthorName = escapeHtml(postData.author_name);
     const safeAuthorRole = escapeHtml(postData.author_role);
@@ -337,7 +340,7 @@ window.submitComment = async function() {
         post_id: currentPostId,
         author_id: currentUser.id,
         author_name: currentUser.user_metadata?.nickname || currentUser.user_metadata?.full_name_ko || currentUser.user_metadata?.full_name || '익명선장',
-        author_role: currentUser.user_metadata?.role || '일반 회원',
+        author_role: (currentUser.app_metadata && currentUser.app_metadata.role === 'admin') ? '해마 운영팀' : '일반 회원',
         content: content
     };
 
@@ -350,15 +353,8 @@ window.submitComment = async function() {
         return;
     }
 
-    // ⚠️ comments_count 카운트 — 2차에서 RPC로 전환 예정
-    const { data: pData } = await supabaseClient
-        .from('haema_posts').select('comments_count')
-        .eq('id', currentPostId).maybeSingle();
-    if(pData) {
-        await supabaseClient.from('haema_posts')
-            .update({ comments_count: (pData.comments_count || 0) + 1 })
-            .eq('id', currentPostId);
-    }
+    // [G2] 댓글 수 증가는 DB의 trg_sync_comments_count 트리거가 자동으로 처리하므로
+    // 프론트에서 호출하던 RPC(update_post_comments_count)는 제거됨.
 
     // ✅ 성공 시에만 input.value를 비움
     input.value = '';

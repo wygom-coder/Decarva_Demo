@@ -106,16 +106,26 @@ function renderProductsAppend(newItems) {
         const recItems = shuffled.slice(0, 4);
         const curItems = shuffled.slice(4, 8);
         
-        if(recItems.length > 0) recItems.forEach(p => recList.innerHTML += createProductCardHTML(p));
-        else recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">매물이 없습니다.</div>';
+        let recFrag = document.createDocumentFragment();
+        if(recItems.length > 0) {
+            recItems.forEach(p => { const div = document.createElement('div'); div.innerHTML = createProductCardHTML(p); recFrag.appendChild(div.firstElementChild); });
+            recList.appendChild(recFrag);
+        } else recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">매물이 없습니다.</div>';
         
-        if(curItems.length > 0) curItems.forEach(p => curList.innerHTML += createProductCardHTML(p));
-        else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">매물이 없습니다.</div>';
+        let curFrag = document.createDocumentFragment();
+        if(curItems.length > 0) {
+            curItems.forEach(p => { const div = document.createElement('div'); div.innerHTML = createProductCardHTML(p); curFrag.appendChild(div.firstElementChild); });
+            curList.appendChild(curFrag);
+        } else curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">매물이 없습니다.</div>';
     }
     
+    const frag = document.createDocumentFragment();
     newItems.forEach(p => {
-        grid.innerHTML += createProductCardHTML(p);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = createProductCardHTML(p);
+        frag.appendChild(wrapper.firstElementChild);
     });
+    grid.appendChild(frag);
     
     if (hasMoreProducts) setupInfiniteScroll();
     setupAuctionTimers();
@@ -215,6 +225,10 @@ async function submitBid(id) {
     }
     
     const newBid = parseInt(newBidStr, 10);
+    if (!Number.isInteger(newBid) || newBid <= 0 || !/^\d+$/.test(newBidStr.trim())) {
+        alert('숫자만 입력해주세요 (예: 500000).');
+        return;
+    }
     const curr = p.current_bid || parseInt((p.price || '').replace(/[^0-9]/g, '')) || 0;
     
     if(newBid <= curr) {
@@ -229,29 +243,20 @@ async function submitBid(id) {
     const btn = document.querySelector('.auction-bid-btn');
     if(btn) btn.textContent = '입찰 처리중...';
     
-    // ✅ .lt('current_bid', newBid) 조건이 DB 단 원자적 optimistic lock 역할.
-    //    동시 입찰 시 더 낮은 bid는 0행 반환으로 거부됨.
-    const { data: updateRows, error } = await supabaseClient.from('haema_products')
-        .update({ 
-            current_bid: newBid, 
-            bid_count: count + 1,
-            highest_bidder_id: currentUser.id,
-            highest_bidder_name: bidderName
-        })
-        .eq('id', id)
-        .lt('current_bid', newBid)
-        .select();
-        
-    if(error) {
-        console.error(error);
+    // [RPC] 원자적 입찰 로직 연동 (RLS 차단 방지)
+    const { data: result, error } = await supabaseClient.rpc('place_bid', {
+        p_product_id: id,
+        p_amount: newBid
+    });
+
+    if (error) {
         alert('입찰 중 오류가 발생했습니다: ' + error.message);
         if(btn) btn.textContent = '입찰';
         return;
     }
 
-    // ✅ 0행 update = 다른 사람이 더 높은 가격으로 먼저 입찰함
-    if (!updateRows || updateRows.length === 0) {
-        alert('입찰 실패: 그 사이 다른 사용자가 더 높은 가격으로 입찰했습니다. 새로고침 후 다시 시도해주세요.');
+    if (result && !result.ok) {
+        alert('입찰 실패: ' + result.error);
         if(btn) btn.textContent = '입찰';
         await fetchProducts();
         return;
@@ -311,10 +316,16 @@ async function fetchProducts(reset = true) {
     if (filterState.tradeType === '가격제안') query = query.eq('offer', true);
 
     if (filterState.keyword) {
-        query = query.or(`title.ilike.%${filterState.keyword}%,category.ilike.%${filterState.keyword}%`);
+        const keyword = sanitizeSearchKeyword(filterState.keyword);
+        if (keyword) {
+            query = query.ilike('title', `%${keyword}%`);
+        }
     }
     if (filterState.supplier !== '전체') {
-        query = query.ilike('title', `%${filterState.supplier}%`);
+        const supplier = sanitizeSearchKeyword(filterState.supplier);
+        if (supplier) {
+            query = query.ilike('title', `%${supplier}%`);
+        }
     }
 
     // Cursor (무한스크롤 락 포인트)
@@ -388,19 +399,8 @@ async function closeAuction(p) {
         closeProductModal();
     }
 }
-
-// 5초 주기 경매 마감 감시자
-setInterval(() => {
-    const now = new Date().getTime();
-    products.forEach(p => {
-        if(p.auction && !p.is_closed && p.auction_end) {
-            const end = new Date(p.auction_end).getTime();
-            if(now >= end) {
-                closeAuction(p);
-            }
-        }
-    });
-}, 5000);
+// 경매 마감(is_closed 처리) 타이머는 클라이언트에서 제거되었습니다.
+// pg_cron을 통해 서버에서 매 1분마다 주기적으로 마감 기한이 지난 경매를 자동으로 닫습니다.
 
 
 // ============================================================================
@@ -754,14 +754,11 @@ async function registerProduct() {
 
   // ✅ 추가 입력 검증
   if (title.length > 200) { alert('상품명은 200자 이하로 입력해주세요.'); return; }
-  if (priceParsed < 0 || priceParsed > 99999999999) { alert('가격을 올바르게 입력해주세요.'); return; }
+  if (priceParsed < 0 || priceParsed > 1000000000) { alert('가격을 올바르게 입력해주세요. (최대 10억)'); return; }
 
-  // 🚨 [Phase 7 최우선 방어벽] 100만원 한도 시뮬레이션
-  const MAX_PRICE_BETA = 1_000_000;
-  const isEditingOldPrice = document.getElementById('price-input').disabled;
-  if (priceParsed > MAX_PRICE_BETA && !isEditingOldPrice) {
-      alert('⚠️ 알파 테스트 기간 중에는 100만 원 이하의 매물만 등록 가능합니다.\n\n정식 출시 후 고가 거래(에스크로 및 계약 지원) 기능을 오픈할 예정입니다.');
-      return;
+  // 🚨 [Phase 7 완화] 100만원 한도 시뮬레이션 경고 (작업 계속됨)
+  if (priceParsed > 1_000_000 && !isEditingOldPrice) {
+      alert('⚠️ 에스크로 결제 전용 시스템이 오픈되기 전까지, 고액 결제(100만 원 초과) 거래는 해마 운영팀이 직접 안전 결제를 보조해 드립니다.');
   }
 
   const isAuction = tradeType === '경매';
@@ -788,12 +785,12 @@ async function registerProduct() {
   if (uploadedBlob) {
       // 새 사진 업로드 (등록 모드든 수정 모드든 동일)
       submitBtn.textContent = inProgressText;
-      const fileName = `public/product_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+      const fileName = `public/product_${Date.now()}_${crypto.randomUUID()}.webp`;
 
       const { data: uploadData, error: uploadError } = await supabaseClient.storage
           .from('market_images')
           .upload(fileName, uploadedBlob, {
-              contentType: 'image/jpeg'
+              contentType: uploadedBlob.type || 'image/webp'
           });
 
       if (uploadError) {
@@ -819,7 +816,8 @@ async function registerProduct() {
       let newProd = {
         title: title,
         sub: '방금 전 등록',
-        price: priceInput ? ('₩ ' + priceInput.replace('₩','').trim()) : '₩ 협의 가능',
+        price: '₩ ' + priceParsed.toLocaleString(),
+        price_krw: priceParsed || null,
         category: cat,
         "tradeType": tradeType,
         region: regionVal,
@@ -995,4 +993,19 @@ async function registerProduct() {
 //   진입 경로를 두 함수로만 한정. HTML의 onclick은 모두 위 두 함수만 호출.
 document.addEventListener('DOMContentLoaded', () => {
     // 더미 데이터 진입점 제거됨 (Phase 7)
+});
+
+// 타이머 최적화 로직 추가: 다른 탭으로 이동 시 불필요한 배터리 소모 무한루프 방지
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        if (window.auctionInterval) {
+            clearInterval(window.auctionInterval);
+            window.auctionInterval = null;
+        }
+    } else {
+        const homePage = document.getElementById('page-home');
+        if (homePage && homePage.style.display !== 'none' && typeof setupAuctionTimers === 'function') {
+            setupAuctionTimers();
+        }
+    }
 });

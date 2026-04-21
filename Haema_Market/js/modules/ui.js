@@ -8,6 +8,9 @@
 // ============================================================================
 
 function showPage(id, pushHistory = true) {
+    if (typeof window.hideChatRoom === 'function' && id !== 'chat') {
+        window.hideChatRoom();
+    }
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const target = document.getElementById('page-' + id);
     if (target) target.classList.add('active');
@@ -34,7 +37,13 @@ function triggerBottomNav(tab) {
     else if (tab === 'search')    { showPage('home'); document.getElementById('search-input')?.focus(); }
     else if (tab === 'auction')   { showPage('home'); resetFilters(); applySubFilter('tradeType', '경매'); }
     else if (tab === 'community') { showPage('community'); if (typeof renderCommunityPosts === 'function') renderCommunityPosts(); }
-    else if (tab === 'chat')      { showPage('chat'); document.getElementById('chat-list').style.display = 'block'; document.getElementById('chatroom').style.display = 'none'; const fab = document.querySelector('.fab-container'); if (fab) fab.style.display = 'flex'; }
+    if (tab === 'chat') { 
+        if(typeof window.hideChatRoom === 'function') window.hideChatRoom();
+        showPage('chat'); 
+        document.getElementById('chat-list').style.display = 'block'; 
+        document.getElementById('chatroom').style.display = 'none'; 
+        const fab = document.querySelector('.fab-container'); if (fab) fab.style.display = 'flex'; 
+    }
     else if (tab === 'mypage')    { showPage('mypage'); }
 
     const fabReg = document.querySelector('.fab-register');
@@ -53,13 +62,6 @@ function showChatRoom() {
     document.getElementById('chatroom').style.display = 'flex';
     const fab = document.querySelector('.fab-container');
     if (fab) fab.style.display = 'none';
-}
-
-function hideChatRoom() {
-    document.getElementById('chat-list').style.display = 'block';
-    document.getElementById('chatroom').style.display = 'none';
-    const fab = document.querySelector('.fab-container');
-    if (fab) fab.style.display = 'flex';
 }
 
 function renderSubCategories(topCat) {

@@ -21,6 +21,13 @@ function escapeHtml(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
+// ✅ [H2] PostgREST 검색 인젝션 방어기
+// 검색어에 들어간 쉼표(,)나 특수문자가 .or() 필터 구분자로 해석되는 것을 방지합니다.
+function sanitizeSearchKeyword(raw) {
+    if (!raw) return '';
+    return String(raw).replace(/[,\*%(){}\[\]'"\\]/g, '').trim().slice(0, 100);
+}
+
 // ✅ 카테고리 → SVG 매핑 — DB에 HTML을 저장하지 않기 위한 클라이언트 측 렌더링
 // product.svg 컬럼이 더 이상 HTML 문자열을 담지 않도록 마이그레이션 후 사용.
 // 카테고리 이름이 일치하지 않으면 기본 placeholder SVG 반환.

@@ -170,6 +170,14 @@ async function submitAuth() {
             return;
         }
 
+        const blockPattern = /(\[\s*해마|해마\s*공식|해마\s*운영|해마\s*관리|^(admin|administrator|어드민|운영자)$|\[운영팀|공식\s*계정)/i;
+        if (blockPattern.test(nickname)) {
+            showError('해당 닉네임은 운영자 사칭으로 오해될 수 있어 사용할 수 없습니다.');
+            btn.disabled = false;
+            switchAuthMode('signup');
+            return;
+        }
+
         // 휴대폰 번호 정규화 + 형식 검증 (선택사항이나 입력된 경우)
         const phoneDigits = phoneRaw ? phoneRaw.replace(/\D/g, '') : '';
         if (phoneRaw && !/^01[016789]\d{7,8}$/.test(phoneDigits)) {
