@@ -294,3 +294,15 @@ body { padding-bottom: 70px; }
 @keyframes hm-spin {
     to { transform: rotate(360deg); }
 }
+
+/* ✅ Mobile Header Responsiveness */
+@media screen and (max-width: 500px) {
+    .header { padding: 0 10px; gap: 6px; height: 52px; }
+    .logo-text-wrap { display: none; }
+    .logo-seahorse { width: 34px; height: 34px; }
+    .search-bar { padding: 0 8px; gap: 4px; height: 34px; border-radius: 8px; }
+    .search-bar input { font-size: 12px; }
+    .search-bar svg { width: 13px; height: 13px; }
+    .header-nav { gap: 5px; }
+    .btn-login, .btn-sell { min-width: auto; padding: 0 8px; font-size: 11px; height: 34px; border-radius: 6px; font-weight: 700; white-space: nowrap; }
+}
