@@ -295,6 +295,10 @@ body { padding-bottom: 70px; }
     to { transform: rotate(360deg); }
 }
 
+/* ✅ Desktop UI defaults for header icons */
+.h-icon { display: none; }
+.h-text { display: inline; }
+
 /* ✅ Mobile Header Responsiveness */
 @media screen and (max-width: 500px) {
     .header { padding: 0 10px; gap: 6px; height: 52px; }
@@ -303,6 +307,10 @@ body { padding-bottom: 70px; }
     .search-bar { padding: 0 8px; gap: 4px; height: 34px; border-radius: 8px; }
     .search-bar input { font-size: 12px; }
     .search-bar svg { width: 13px; height: 13px; }
-    .header-nav { gap: 5px; }
-    .btn-login, .btn-sell { min-width: auto; padding: 0 8px; font-size: 11px; height: 34px; border-radius: 6px; font-weight: 700; white-space: nowrap; }
+    .header-nav { gap: 6px; }
+    
+    /* Hide text & show icon for top buttons to save space */
+    .h-text { display: none; }
+    .h-icon { display: block; width: 18px; height: 18px; }
+    .nav-btn-icon { min-width: 36px; padding: 0; width: 36px; height: 36px; border-radius: 8px; }
 }

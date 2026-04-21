@@ -53,13 +53,19 @@
       <input type="text" id="search-input" placeholder="선박 엔진, 앵커, 레이더 등 검색" autocomplete="off">
     </div>
     <div class="header-nav" style="gap: 8px;">
-      <button class="btn-sell" id="header-cart-btn" onclick="showPage('cart'); renderCartPage();" style="background:#F0F9FF; color:#0284C7; border:1px solid #0284C7; position:relative;">
-        장바구니
+      <button class="btn-sell nav-btn-icon" id="header-cart-btn" onclick="showPage('cart'); renderCartPage();" style="background:#F0F9FF; color:#0284C7; border:1px solid #0284C7; position:relative; display:flex; align-items:center; justify-content:center; gap:4px;">
+        <svg class="h-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+        <span class="h-text">장바구니</span>
         <div id="header-cart-badge" style="position:absolute; top:-6px; right:-6px; background:#D32F2F; color:#fff; font-size:10px; font-weight:800; min-width:16px; height:16px; border-radius:8px; display:none; align-items:center; justify-content:center; padding:0 4px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">0</div>
       </button>
-      <button class="btn-login" id="header-btn-login" onclick="showPage('login')">로그인</button>
-      
-      <button class="btn-sell" onclick="goToRegisterCreateMode()">+ 등록</button>
+      <button class="btn-login nav-btn-icon" id="header-btn-login" onclick="showPage('login')" style="display:flex; align-items:center; justify-content:center; gap:4px;">
+        <svg class="h-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+        <span class="h-text">로그인</span>
+      </button>
+      <button class="btn-sell nav-btn-icon" onclick="goToRegisterCreateMode()" style="display:flex; align-items:center; justify-content:center; gap:4px;">
+        <svg class="h-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        <span class="h-text">등록</span>
+      </button>
     </div>
   </div>
  
