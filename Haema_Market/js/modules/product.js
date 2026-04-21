@@ -59,12 +59,17 @@ function renderProductsHeader() {
   const catArea = document.getElementById('home-category-area');
   const recArea = document.getElementById('home-recommendation-area');
   const listTitle = document.getElementById('main-product-title-header');
+  const mainGrid = document.getElementById('main-product-grid');
   
   if (filterState.topCategory === '전체') {
       // 1. 전체(홈) 탭: 카테고리 숨김, 기획전은 검색어가 없을 때만 표시
       if(catArea) catArea.style.display = 'none';
       if(recArea) recArea.style.display = (filterState.keyword === '') ? 'block' : 'none';
-      if(listTitle) listTitle.innerHTML = '<span class="section-title">최신 전체 매물</span><span class="section-more">더보기 →</span>';
+      if(listTitle) listTitle.innerHTML = '<span class="section-title"><span style="color:#0284C7; margin-right:6px; font-size:16px;">▪</span>최신 전체 매물</span><span class="section-more">더보기 →</span>';
+      if(mainGrid) {
+          mainGrid.classList.remove('product-grid');
+          mainGrid.classList.add('horizontal-scroll-list');
+      }
   } else {
       // 2. 상세 카테고리 탭(기부속, 선용품 등): 카테고리 표시, 기획전 숨김
       if(catArea) catArea.style.display = 'block';
@@ -74,6 +79,11 @@ function renderProductsHeader() {
           if(listTitle) listTitle.innerHTML = `<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>새로 올라온 매물</span><span class="section-more">더보기 →</span>`;
       } else {
           if(listTitle) listTitle.innerHTML = `<span class="section-title"><span style="color:#1A5FA0; margin-right:6px; font-size:16px;">▪</span>${escapeHtml(filterState.category)} 매물</span><span class="section-more">더보기 →</span>`;
+      }
+      
+      if(mainGrid) {
+          mainGrid.classList.remove('horizontal-scroll-list');
+          mainGrid.classList.add('product-grid');
       }
   }
 }
