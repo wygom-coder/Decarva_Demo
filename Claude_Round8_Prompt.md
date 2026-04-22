@@ -4,7 +4,7 @@
 
 ---
 
-**[프롬프트]**
+**[프롬프트 시작]**
 네가 7라운드에서 지적한 프론트엔드 에러 핸들링 증발 문제와 직거래 리뷰 RLS 이슈를 완벽하게 해결했어!
 
 1. `auth.js`의 카카오 로그인에는 네가 짜준 대로 `try-catch-finally` 패턴과 `showToast`를 적용해서 더블클릭 방지 및 에러 안내가 잘 나오도록 복원했어.
@@ -127,3 +127,4 @@ document.getElementById('chat-trade-btn').disabled = true;
 document.getElementById('chat-trade-btn').onclick = null;
 alert('거래가 성공적으로 완료되었습니다.');
 ```
+**[프롬프트 끝]**

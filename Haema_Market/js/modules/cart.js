@@ -162,42 +162,33 @@ window.requestQuoteCheckout = async function() {
         return;
     }
     if (!currentUser) {
-        alert('견적서를 발주하시려면 로그인이 필요합니다.');
-        showPage('login');
+        if (typeof showToast === 'function') {
+            showToast('견적서를 발주하시려면 로그인이 필요합니다.');
+            setTimeout(() => showPage('login'), 600);
+        } else {
+            showPage('login');
+        }
         return;
     }
 
-    // 업체별로 묶기
-    const groups = {};
-    userCart.forEach(cartItem => {
-        const product = products.find(p => String(p.id) === String(cartItem.id));
-        if(!product) return;
-        
-        const storeMatch = (product.title || '').match(/^\[(.*?)\]/);
-        const storeName = storeMatch ? storeMatch[1] : '일반 업체';
-        
-        if(!groups[storeName]) groups[storeName] = [];
-        groups[storeName].push({
-            product_id: product.id,
-            title: product.title,
-            qty: cartItem.qty,
-            price: product.price
-        });
-    });
-
-    const quotesToInsert = [];
-    for(const [storeName, itemsData] of Object.entries(groups)) {
-        quotesToInsert.push({
-            buyer_id: currentUser.id,
-            vendor_name: storeName,
-            items: itemsData,
-            status: 'pending'
-        });
-    }
+    // ✅ 서버의 RPC 함수로 넘기기 위해 최소한의 정보(product_id, qty)만 조립
+    // 해커가 가격이나 이름을 임의로 변조할 수 없게 방어
+    const itemsData = userCart.map(cartItem => ({
+        product_id: cartItem.id,
+        qty: cartItem.qty
+    }));
 
     try {
-        const { error } = await supabaseClient.from('haema_quotes').insert(quotesToInsert);
+        const { data, error } = await supabaseClient.rpc('submit_secure_quote', {
+            p_buyer_id: currentUser.id,
+            p_items: itemsData
+        });
+
         if (error) throw error;
+        
+        if (data && data.ok === false) {
+            throw new Error(data.error || '견적서 생성 중 거부되었습니다.');
+        }
 
         alert('✅ 성공적으로 견적 요청이 접수되었습니다.');
         userCart = [];
@@ -205,11 +196,16 @@ window.requestQuoteCheckout = async function() {
         renderCartPage();
         showPage('home');
     } catch (err) {
-        if (err.message && err.message.includes('relation "public.haema_quotes" does not exist')) {
-            alert('⚠️ 에러: DB에 [haema_quotes] 테이블이 아직 생성되지 않았습니다. 관리자에게 문의하세요.');
+        const msg = err.message || '알 수 없는 오류';
+        // PostgREST 에러 코드로 분기 (메시지 substring 매칭보다 정확)
+        if (err.code === 'PGRST202' || msg.includes('Could not find the function')) {
+            alert('⚠️ 최신 보안 패치가 DB에 반영되지 않았습니다. 관리자에게 문의해주세요.');
+        } else if (err.code === '42501' || msg.includes('permission denied')) {
+            alert('⚠️ 견적 요청 권한이 없습니다. 다시 로그인해주세요.');
         } else {
-            alert('견적 요청 중 오류가 발생했습니다: ' + (err.message || '알 수 없는 오류'));
+            alert('견적 요청 중 오류가 발생했습니다: ' + msg);
         }
+        console.error('Quote Checkout Error:', err);
     }
 }
 // --- 장바구니 기능 끝 ---

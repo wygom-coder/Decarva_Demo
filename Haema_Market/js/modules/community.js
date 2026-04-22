@@ -195,7 +195,8 @@ window.submitPost = async function() {
 
     const newPost = {
         author_id: currentUser.id,
-        author_name: currentUser.user_metadata?.nickname || currentUser.user_metadata?.full_name_ko || currentUser.user_metadata?.full_name || '익명선장',
+        // ✅ [보안 A-4 패치] 실명 및 회사 정보(PII) 유출 차단을 위해 닉네임 또는 익명으로 통일
+        author_name: currentUser.user_metadata?.nickname || '익명선장',
         author_role: (currentUser.app_metadata && currentUser.app_metadata.role === 'admin') ? '해마 운영팀' : '일반 회원',
         tag: tag,
         title: title,
@@ -339,7 +340,8 @@ window.submitComment = async function() {
     const newComment = {
         post_id: currentPostId,
         author_id: currentUser.id,
-        author_name: currentUser.user_metadata?.nickname || currentUser.user_metadata?.full_name_ko || currentUser.user_metadata?.full_name || '익명선장',
+        // ✅ [보안 A-4 패치] 실명 및 회사 정보(PII) 유출 차단을 위해 닉네임 또는 익명으로 통일
+        author_name: currentUser.user_metadata?.nickname || '익명선장',
         author_role: (currentUser.app_metadata && currentUser.app_metadata.role === 'admin') ? '해마 운영팀' : '일반 회원',
         content: content
     };

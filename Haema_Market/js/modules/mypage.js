@@ -592,12 +592,27 @@ window.completeTransaction = async function(productId, roomId) {
         .from('haema_chat_rooms').select('buyer_id').eq('id', roomId).maybeSingle();
     if(!roomData) return;
     const buyerId = roomData.buyer_id;
-    await supabaseClient.from('haema_products')
-        .update({ is_closed: true, highest_bidder_id: buyerId }).eq('id', productId);
+    const { data: result, error } = await supabaseClient.rpc('complete_transaction', {
+        p_product_id: productId,
+        p_buyer_id: buyerId
+    });
+
+    if (error) {
+        if (typeof showToast === 'function') showToast('거래 완료 처리 중 오류: ' + error.message);
+        else alert('거래 완료 처리 중 오류: ' + error.message);
+        return;
+    }
+    if (result && !result.ok) {
+        if (typeof showToast === 'function') showToast('거래 완료 실패: ' + result.error);
+        else alert('거래 완료 실패: ' + result.error);
+        return;
+    }
     p.is_closed = true;
-    document.getElementById('chat-trade-btn').textContent = '후기 남기기';
-    document.getElementById('chat-trade-btn').onclick = () => window.openReviewModal(productId, buyerId);
-    window.openReviewModal(productId, buyerId);
+    document.getElementById('chat-trade-btn').textContent = '거래 완료됨';
+    document.getElementById('chat-trade-btn').disabled = true;
+    document.getElementById('chat-trade-btn').onclick = null;
+    if (typeof showToast === 'function') showToast('거래가 성공적으로 완료되었습니다.');
+    else alert('거래가 성공적으로 완료되었습니다.');
 };
 
 window.openReviewModal = function(productId, targetUserId) {

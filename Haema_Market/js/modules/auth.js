@@ -266,14 +266,40 @@ window.doLogout = async function() {
 
 // 카카오 소셜 로그인
 window.loginWithKakao = async function() {
-    const { error } = await supabaseClient.auth.signInWithOAuth({
-        provider: 'kakao',
-        options: {
-            redirectTo: window.location.origin + window.location.pathname
+    const btn = document.querySelector('[onclick*="loginWithKakao"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.dataset.originalText = btn.textContent;
+        btn.textContent = '카카오로 이동 중...';
+    }
+    
+    try {
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+            provider: 'kakao',
+            options: {
+                redirectTo: window.location.origin + '/'
+            }
+        });
+        
+        if (error) {
+            console.error('카카오 OAuth 시작 실패:', error);
+            if (typeof showToast === 'function') {
+                showToast('카카오 로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            } else {
+                alert('카카오 로그인 중 오류가 발생했습니다: ' + error.message);
+            }
         }
-    });
-    if (error) {
-        console.error('카카오 로그인 오류:', error.message);
-        alert('카카오 로그인 중 오류가 발생했습니다: ' + error.message);
+    } catch (e) {
+        console.error('카카오 로그인 네트워크 오류:', e);
+        if (typeof showToast === 'function') {
+            showToast('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
+        } else {
+            alert('네트워크 오류: ' + (e.message || '알 수 없는 오류'));
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = btn.dataset.originalText || '카카오로 시작하기';
+        }
     }
 };

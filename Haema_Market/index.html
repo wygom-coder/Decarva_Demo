@@ -19,7 +19,10 @@
   <!-- ⚠️ 중요: defer 속성을 쓸 때, 스크립트는 HTML에 적힌 순서대로 실행됨.
        utils.js는 escapeHtml/getProductImageHtml를 정의하므로 다른 모듈보다
        먼저 와야 함 (config.js 다음 추천) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script 
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"
+    integrity="sha384-a/lNwZPcu6ljtrss4FfZMEv3VEpCASWo3ikRnWnLZWKIO0wgo4sfkNP0aNRzgqAC"
+    crossorigin="anonymous"></script>
   <script src="./js/modules/config.js" defer></script>
   <script src="./js/modules/utils.js" defer></script>
   <script src="./js/modules/store.js" defer></script>
@@ -32,7 +35,7 @@
   <script src="./js/modules/mypage.js" defer></script>
   <script src="./js/modules/app.js" defer></script>
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" integrity="sha384-f9iEnfDmuRSuBrXQjpPibejnfJMrZ2yI+715EjxlzBsPFIpaD1NxMh1MIzthxtCh" crossorigin="anonymous">
   <link rel="stylesheet" href="./css/market.css">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -47,7 +50,7 @@
       <img class="logo-seahorse" src="images/seahorse_logo.png?v=2" alt="해마 마켓 로고">
       <div class="logo-text-wrap">
         <span class="logo-name">해마</span>
-        <span class="logo-sub">해운 마켓</span>
+        <span class="logo-sub">해양 마켓</span>
       </div>
     </div>
     <div class="search-bar">
@@ -260,7 +263,8 @@
       <div class="my-menu-title">계정 관리</div>
       <div class="my-menu-item" onclick="openProfileEdit()"><div class="menu-icon" style="background:#F0F9FF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="7" r="4" stroke="#7A93B0" stroke-width="1.2"/><path d="M2 16c0-3.3 3.1-5 7-5s7 1.7 7 5" stroke="#7A93B0" stroke-width="1.2" stroke-linecap="round"/></svg></div><span class="menu-text">프로필 편집</span><span class="menu-arrow">›</span></div>
       <div class="my-menu-item" onclick="openBusinessAuth()"><div class="menu-icon" style="background:#F0F9FF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2" stroke="#7A93B0" stroke-width="1.2"/><path d="M6 9l2 2 4-4" stroke="#7A93B0" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="menu-text">사업자 인증</span><span id="biz-auth-status" style="font-size:11px;color:#1E8E3E;margin-right:6px;font-weight:700;display:none;">✓ 승인완료</span><span class="menu-arrow">›</span></div>
-      <div class="my-menu-item" onclick="showPage('reviews')"><div class="menu-icon" style="background:#F0F9FF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="#7A93B0" stroke-width="1.2"/><path d="M9 6v3l2 2" stroke="#7A93B0" stroke-width="1.2" stroke-linecap="round"/></svg></div><span class="menu-text">거래 후기</span><span class="menu-arrow">›</span></div>
+      <!-- 🚨 알파 릴리즈 안정성을 위해 거래 후기 기능 임시 숨김 (Option A) -->
+      <div class="my-menu-item" onclick="showPage('reviews')" style="display:none;"><div class="menu-icon" style="background:#F0F9FF;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="#7A93B0" stroke-width="1.2"/><path d="M9 6v3l2 2" stroke="#7A93B0" stroke-width="1.2" stroke-linecap="round"/></svg></div><span class="menu-text">거래 후기</span><span class="menu-arrow">›</span></div>
       <div class="my-menu-item" id="admin-route-btn" style="display:none; background:#FFF7ED; margin-bottom: 8px; border-radius:8px;" onclick="window.location.href='admin.html'"><div class="menu-icon" style="background:#FB923C;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1z" stroke="#0F172A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="menu-text" style="color:#0F172A; font-weight:700;">관리자 대시보드</span><span class="menu-arrow" style="color:#0F172A;">›</span></div>
       <div class="my-menu-item" onclick="doLogout()"><div class="menu-icon" style="background:#FFF0F0;"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4l4 5-4 5M4 9h11M8 2h-4v14h4" stroke="#D32F2F" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="menu-text" style="color:#D32F2F;">로그아웃</span></div>
     </div>
@@ -357,8 +361,8 @@
 </div>
 </div>
  
-<!-- 거래 후기 뷰 페이지 -->
-<div class="page" id="page-reviews">
+<!-- 🚨 알파 릴리즈 안정성을 위해 거래 후기 뷰 페이지 접근 차단 -->
+<div class="page" id="page-reviews" style="display:none !important;">
 <div class="wrap" style="background:#F0F9FF; height:100vh; display:flex; flex-direction:column;">
   <div class="sub-header" style="background:#fff;">
     <span class="back-btn" onclick="showPage('mypage')">‹</span>

@@ -279,3 +279,39 @@ window.hideLoading = function() {
     el.classList.remove('is-active');
     el.setAttribute('aria-hidden', 'true');
 };
+
+// ============================================================================
+// 전역 모달 닫기 이벤트 (바깥 영역 클릭 및 Esc 키 지원)
+// ============================================================================
+const GLOBAL_MODALS = [
+    { id: 'product-modal', closeFn: () => { if(typeof closeProductModal === 'function') closeProductModal(); else document.getElementById('product-modal').style.display='none'; } },
+    { id: 'post-detail-modal', closeFn: () => { if(typeof closePostDetail === 'function') closePostDetail(); else document.getElementById('post-detail-modal').style.display='none'; } },
+    { id: 'post-write-modal', closeFn: () => { if(typeof closePostWrite === 'function') closePostWrite(); else document.getElementById('post-write-modal').style.display='none'; } },
+    { id: 'review-modal', closeFn: () => { if(typeof closeReviewModal === 'function') closeReviewModal(); else document.getElementById('review-modal').style.display='none'; } },
+    { id: 'quote-modal', closeFn: () => { document.getElementById('quote-modal').style.display='none'; } },
+    { id: 'modal-terms', closeFn: () => { document.getElementById('modal-terms').style.display='none'; } },
+    { id: 'modal-privacy', closeFn: () => { document.getElementById('modal-privacy').style.display='none'; } }
+];
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        for (const m of GLOBAL_MODALS) {
+            const el = document.getElementById(m.id);
+            if (el && el.style.display !== 'none') {
+                m.closeFn();
+                return; // 최상단 모달 하나만 닫기
+            }
+        }
+    }
+});
+
+document.addEventListener('click', function(e) {
+    for (const m of GLOBAL_MODALS) {
+        const el = document.getElementById(m.id);
+        // 클릭된 대상이 모달 컨테이너의 어두운 배경(overlay) 자체일 때 닫기
+        if (el && el.style.display !== 'none' && e.target === el) {
+            m.closeFn();
+            return;
+        }
+    }
+});

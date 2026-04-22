@@ -270,14 +270,12 @@ async function openChatRoom(roomId, pData) {
 
     if (pData && tradeBtn) {
         if (pData.is_closed) {
-            tradeBtn.textContent = '후기 남기기';
+            tradeBtn.textContent = '거래 완료됨';
             tradeBtn.style.background = '#EAEDF2';
             tradeBtn.style.color = '#7A93B0';
             tradeBtn.style.display = 'block';
-            tradeBtn.onclick = () => {
-                const revieweeId = pData.user_id === currentUser.id ? (pData.highest_bidder_id || currentRoomBuyerId) : pData.user_id;
-                openReviewModal(pData.id, revieweeId);
-            };
+            tradeBtn.disabled = true;
+            tradeBtn.onclick = null;
         } else {
             const isSeller = (pData.user_id === currentUser.id || pData.seller_id === currentUser.id);
             if (isSeller) {
