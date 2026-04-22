@@ -510,7 +510,7 @@ function resetRegisterFormToCreateMode() {
 //   3) showPage('register')
 window.goToRegisterCreateMode = function() {
     if (!currentUser) {
-        alert('회원가입 및 로그인이 필요한 기능입니다.');
+        showToast('회원가입 및 로그인이 필요한 기능입니다.');
         showPage('login');
         return;
     }

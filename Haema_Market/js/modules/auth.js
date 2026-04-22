@@ -86,7 +86,6 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 
 function requireAuthAndShow(id) {
     if (!currentUser) {
-        alert('회원가입 및 로그인이 필요한 기능입니다.');
         showPage('login');
     } else {
         showPage(id);

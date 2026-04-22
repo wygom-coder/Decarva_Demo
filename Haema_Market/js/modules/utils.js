@@ -109,3 +109,18 @@ async function resizeAndCompressImage(file, { maxWidth = 1080, quality = 0.85 } 
         reader.readAsDataURL(file);
     });
 }
+
+// ✅ UI 토스트 메시지 유틸리티
+window.showToast = function(message, ms = 2000) {
+    let t = document.getElementById('haema-toast');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'haema-toast';
+        t.style.cssText = 'position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#1A2B4A;color:#fff;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.15);';
+        document.body.appendChild(t);
+    }
+    t.textContent = message;
+    t.style.opacity = '1';
+    clearTimeout(t._h);
+    t._h = setTimeout(() => { t.style.opacity = '0'; }, ms);
+};

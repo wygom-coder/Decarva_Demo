@@ -45,9 +45,8 @@ async function startChat(productId) {
 
     try {
         if(!currentUser) {
-            alert("채팅을 위해 로그인이 필요합니다.");
-            showPage('mypage');
             closeProductModal();
+            showPage('login');
             return;
         }
     

@@ -19,7 +19,12 @@ function showPage(id, pushHistory = true) {
 }
 
 window.addEventListener('popstate', (e) => {
-    showPage(e.state?.pageId || 'home', false);
+    const targetPage = e.state?.pageId || 'home';
+    if ((targetPage === 'chat' || targetPage === 'mypage') && !currentUser) {
+        showPage('home', false);
+        return;
+    }
+    showPage(targetPage, false);
 });
 
 function triggerBottomNav(tab) {
@@ -28,7 +33,6 @@ function triggerBottomNav(tab) {
     if (active) active.classList.add('active');
 
     if ((tab === 'chat' || tab === 'mypage') && !currentUser) {
-        alert('로그인이 필요한 기능입니다.');
         showPage('login');
         return;
     }

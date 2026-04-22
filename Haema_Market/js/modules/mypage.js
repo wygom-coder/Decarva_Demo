@@ -1,7 +1,7 @@
 // ⚠️ escapeHtml은 utils.js에서 정의 (중복 정의 금지)
 
 window.showMyQuotes = async function() {
-    if(!currentUser) { alert('로그인이 필요한 기능입니다.'); return showPage('login'); }
+    if(!currentUser) { showPage('login'); return; }
     showPage('myquotes');
     const area = document.getElementById('myquotes-content-area');
     area.innerHTML = '<div style="padding: 60px 20px; font-size:14px; color:#999; text-align:center;">목록을 불러오는 중입니다...</div>';
@@ -65,7 +65,7 @@ window.showMyQuotes = async function() {
 };
 
 function showMyList() {
-    if(!currentUser) { alert("로그인이 필요한 기능입니다."); showPage('login'); return; }
+    if(!currentUser) { showPage('login'); return; }
     showPage('mylist');
     const myProducts = products.filter(p => p.seller_id === currentUser.id);
     const container = document.getElementById('mylist-grid');
@@ -292,7 +292,7 @@ async function fetchAndRenderMannerTemp() {
 
 // ==== 프로필 편집 ====
 function openProfileEdit() {
-    if(!currentUser) { alert('로그인이 필요한 기능입니다.'); showPage('login'); return; }
+    if(!currentUser) { showPage('login'); return; }
     showPage('profile-edit');
     tempVerifiedRegion = null;
     const btn = document.getElementById('btn-gps-verify');
@@ -367,7 +367,7 @@ window.verifyGPSLocation = async function() {
 
 // ==== 사업자 인증 ====
 function openBusinessAuth() {
-    if(!currentUser) { alert('로그인이 필요한 기능입니다.'); showPage('login'); return; }
+    if(!currentUser) { showPage('login'); return; }
     showPage('business-auth');
     // ✅ P0-#4 수정: app_metadata 사용 (서버에서만 쓸 수 있는 신뢰 영역)
     const isBiz = !!currentUser.app_metadata?.is_business;
@@ -501,7 +501,7 @@ async function checkLikeStatus(productId) {
 }
 
 async function loadLikedProducts() {
-    if(!currentUser) { alert('로그인이 필요한 기능입니다.'); showPage('login'); return; }
+    if(!currentUser) { showPage('login'); return; }
     triggerBottomNav('mypage');
     openMyListCommon("내 관심 목록 (찜)");
     const { data: likes, error } = await supabaseClient
