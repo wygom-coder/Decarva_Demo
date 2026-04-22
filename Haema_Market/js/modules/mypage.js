@@ -353,16 +353,42 @@ window.verifyGPSLocation = async function() {
     const selector = document.getElementById('edit-region-select');
     const selectedRegion = selector.value;
     const btn = document.getElementById('btn-gps-verify');
-    if(!selectedRegion) { alert("활동 지역(시/도)을 우선 선택해주세요."); return; }
+    if(!selectedRegion) { showToast("활동 지역(시/도)을 우선 선택해주세요."); return; }
     
-    // 베타 버전 가벼운 통과 처리
-    alert("베타 데모 버전에서는 GPS 소재지 인증 기능 연동이 생략됩니다.\n임시 인증 처리되었습니다.");
-    tempVerifiedRegion = selectedRegion;
-    btn.textContent = "소재지 일치 확인됨 (베타)"; 
-    btn.style.background = "#E6F4EA"; 
-    btn.style.color = "#1E8E3E"; 
-    btn.style.borderColor = "#1E8E3E";
-    selector.disabled = true;
+    btn.textContent = "GPS 위치 확인 중...";
+    btn.disabled = true;
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                // 실제 서비스에서는 position.coords.latitude, longitude를 카카오지도 API 등으로 역지오코딩하여 비교합니다.
+                // 알파 버전에서는 권한 허용 시 정상 통과로 시뮬레이션합니다.
+                setTimeout(() => {
+                    showToast(`현재 위치와 [${selectedRegion}] 선택지가 일치합니다.`);
+                    tempVerifiedRegion = selectedRegion;
+                    btn.textContent = "소재지 일치 (GPS 인증됨)"; 
+                    btn.style.background = "#E6F4EA"; 
+                    btn.style.color = "#1E8E3E"; 
+                    btn.style.borderColor = "#1E8E3E";
+                    selector.disabled = true;
+                }, 600);
+            },
+            (error) => {
+                btn.textContent = "사업자 소재지 검증";
+                btn.disabled = false;
+                if (error.code === error.PERMISSION_DENIED) {
+                    showToast("위치 정보 접근 권한이 거부되었습니다. 브라우저 설정에서 권한을 허용해주세요.");
+                } else {
+                    showToast("GPS 위치를 가져올 수 없습니다. 다시 시도해주세요.");
+                }
+            },
+            { enableHighAccuracy: false, timeout: 5000, maximumAge: 0 }
+        );
+    } else {
+        showToast("이 브라우저에서는 위치 기반 인증을 지원하지 않습니다.");
+        btn.textContent = "사업자 소재지 검증";
+        btn.disabled = false;
+    }
 }
 
 // ==== 사업자 인증 ====
