@@ -33,11 +33,22 @@ function triggerBottomNav(tab) {
     if (active) active.classList.add('active');
 
     if ((tab === 'chat' || tab === 'mypage') && !currentUser) {
-        showPage('login');
+        showToast('로그인이 필요합니다. 로그인 화면으로 이동합니다.', 800);
+        setTimeout(() => showPage('login'), 800);
         return;
     }
 
-    if (tab === 'home')           { showPage('home'); resetFilters(); }
+    if (tab === 'home') { 
+        showPage('home'); 
+        if (typeof filterState !== 'undefined') {
+            filterState.topCategory = '전체';
+            filterState.category = '전체';
+        }
+        resetFilters();
+        document.querySelectorAll('.top-tab').forEach(t => t.classList.toggle('active', t.getAttribute('data-top') === '전체'));
+        if (typeof renderSubCategories === 'function') renderSubCategories('전체');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     else if (tab === 'search')    { showPage('home'); document.getElementById('search-input')?.focus(); }
     else if (tab === 'auction')   { showPage('home'); resetFilters(); applySubFilter('tradeType', '경매'); }
     else if (tab === 'community') { showPage('community'); if (typeof renderCommunityPosts === 'function') renderCommunityPosts(); }
@@ -82,7 +93,7 @@ function renderSubCategories(topCat) {
         const isActive = filterState.category === c.name;
         const safeName = escapeHtml(c.name);
         const safeBg = escapeHtml(c.bg);
-        return `<div class="cat-icon-item" data-cat="${safeName}"><div class="cat-icon-box" style="background:${safeBg};${isActive ? 'box-shadow:0 0 0 2px #1E8E3E;' : ''}">${c.svg}</div><span class="cat-icon-label"${isActive ? ' style="color:#1E8E3E;font-weight:800;"' : ''}>${safeName}</span></div>`;
+        return `<div class="cat-icon-item" data-cat="${safeName}"><div class="cat-icon-box" style="background:${safeBg}; color:${c.color ? c.color : '#1A5FA0'};${isActive ? 'box-shadow:0 0 0 2px #1E8E3E;' : ''}"><i data-lucide="${c.icon}" style="width:22px; height:22px; stroke-width:1.8px;"></i></div><span class="cat-icon-label"${isActive ? ' style="color:#1E8E3E;font-weight:800;"' : ''}>${safeName}</span></div>`;
     }).join('');
 
     catGrid.querySelectorAll('.cat-icon-item').forEach(el => {
@@ -93,6 +104,10 @@ function renderSubCategories(topCat) {
             fetchProducts(true);
         });
     });
+    
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 }
 
 function initTopCategory() {
