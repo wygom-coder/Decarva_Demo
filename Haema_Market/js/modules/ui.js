@@ -9,7 +9,7 @@
 
 function showPage(id, pushHistory = true) {
     if (typeof window.hideChatRoom === 'function' && id !== 'chat') {
-        window.hideChatRoom();
+        window.hideChatRoom(true); // 페이지 변환 시 리스트 재로드 스킵하여 무한루프 방지
     }
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const target = document.getElementById('page-' + id);
@@ -37,8 +37,8 @@ function triggerBottomNav(tab) {
     else if (tab === 'search')    { showPage('home'); document.getElementById('search-input')?.focus(); }
     else if (tab === 'auction')   { showPage('home'); resetFilters(); applySubFilter('tradeType', '경매'); }
     else if (tab === 'community') { showPage('community'); if (typeof renderCommunityPosts === 'function') renderCommunityPosts(); }
-    if (tab === 'chat') { 
-        if(typeof window.hideChatRoom === 'function') window.hideChatRoom();
+    else if (tab === 'chat') { 
+        if(typeof window.hideChatRoom === 'function') window.hideChatRoom(true);
         showPage('chat'); 
         document.getElementById('chat-list').style.display = 'block'; 
         document.getElementById('chatroom').style.display = 'none'; 

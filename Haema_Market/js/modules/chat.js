@@ -426,7 +426,7 @@ function subscribeToMessages(roomId) {
 }
 
 // 채팅방 닫기 (뒤로가기)
-window.hideChatRoom = function() {
+window.hideChatRoom = function(skipLoad = false) {
     if(chatSubscription) {
         supabaseClient.removeChannel(chatSubscription);
         chatSubscription = null;
@@ -434,8 +434,10 @@ window.hideChatRoom = function() {
     currentChatRoomId = null;
     document.getElementById('chatroom').style.display = 'none';
     
-    // 리스트 다시 로드시켜 최신 메시지 반영
-    loadChats();
+    // 리스트 다시 로드시켜 최신 메시지 반영 (페이지 전환에 의한 강제 해제 시에는 건너뜀)
+    if (!skipLoad) {
+        loadChats();
+    }
 };
 
 // ============================================================================
