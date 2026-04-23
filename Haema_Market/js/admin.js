@@ -121,62 +121,40 @@
             if (el) el.textContent = val;
         };
 
-        // 오늘 등록 매물 (최근 24시간)
         try {
-            const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-            const { count: todayCount } = await supabaseClient
-                .from('haema_products')
-                .select('*', { count: 'exact', head: true })
-                .gte('created_at', since);
-            setText('stat-today-products', todayCount !== null ? todayCount.toLocaleString() : '?');
-        } catch (e) {
-            console.error('today products count error:', e);
-            setText('stat-today-products', '?');
-        }
-
-        // 총 매물
-        try {
-            const { count: totalProducts } = await supabaseClient
-                .from('haema_products')
-                .select('*', { count: 'exact', head: true });
-            setText('stat-total-products', totalProducts !== null ? totalProducts.toLocaleString() : '?');
-        } catch (e) {
-            console.error('total products count error:', e);
-            setText('stat-total-products', '?');
-        }
-
-        // 총 커뮤니티 글
-        try {
-            const { count: totalPosts } = await supabaseClient
-                .from('haema_posts')
-                .select('*', { count: 'exact', head: true });
-            setText('stat-total-posts', totalPosts !== null ? totalPosts.toLocaleString() : '?');
-        } catch (e) {
-            console.error('total posts count error:', e);
-            setText('stat-total-posts', '?');
-        }
-
-        // 대기중 탈퇴 요청
-        try {
-            const { count: pendingDel } = await supabaseClient
-                .from('haema_account_deletion_requests')
-                .select('*', { count: 'exact', head: true })
-                .eq('status', 'pending');
-            setText('stat-pending-deletions', pendingDel !== null ? pendingDel.toLocaleString() : '?');
-
-            // 사이드바 뱃지
-            const badge = document.getElementById('deletion-badge');
-            if (badge) {
-                if (pendingDel && pendingDel > 0) {
-                    badge.style.display = 'inline-flex';
-                    badge.textContent = pendingDel > 99 ? '99+' : String(pendingDel);
-                } else {
-                    badge.style.display = 'none';
+            // [보안/최적화] 어드민 통계 조회를 단 한 번의 RPC 호출로 처리
+            // 이 함수는 서버 측에서 JWT 롤(admin)을 검증하므로, 안전하고 빠릅니다.
+            const { data: stats, error } = await supabaseClient.rpc('get_admin_dashboard_stats');
+            
+            if (error) throw error;
+            
+            if (stats) {
+                setText('stat-today-users', (stats.today_new_users || 0).toLocaleString() + '명');
+                setText('stat-today-products', (stats.today_new_products || 0).toLocaleString() + '건');
+                setText('stat-active-chats', (stats.active_chats || 0).toLocaleString() + '개');
+                setText('stat-unread-chats', (stats.unread_24h_chats || 0).toLocaleString() + '개');
+                setText('stat-completed-deals', (stats.completed_deals || 0).toLocaleString() + '건');
+                setText('stat-anomaly-count', (stats.anomaly_count || 0).toLocaleString() + '건');
+                
+                // 사이드바 뱃지 업데이트 (이상 징후에 탈퇴 대기 건수가 포함되므로 뱃지에도 활용)
+                const badge = document.getElementById('deletion-badge');
+                if (badge) {
+                    if (stats.anomaly_count > 0) {
+                        badge.style.display = 'inline-flex';
+                        badge.textContent = stats.anomaly_count > 99 ? '99+' : String(stats.anomaly_count);
+                    } else {
+                        badge.style.display = 'none';
+                    }
                 }
             }
         } catch (e) {
-            console.error('pending deletions count error:', e);
-            setText('stat-pending-deletions', '?');
+            console.error('admin dashboard stats error:', e);
+            setText('stat-today-users', '?');
+            setText('stat-today-products', '?');
+            setText('stat-active-chats', '?');
+            setText('stat-unread-chats', '?');
+            setText('stat-completed-deals', '?');
+            setText('stat-anomaly-count', '?');
         }
     }
 

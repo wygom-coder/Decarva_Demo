@@ -68,26 +68,36 @@
             <p>플랫폼 운영 현황 요약</p>
         </header>
 
-        <div class="admin-stat-grid">
+        <div class="admin-stat-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px;">
             <div class="admin-stat-card">
-                <div class="admin-stat-label">오늘 등록 매물</div>
+                <div class="admin-stat-label">오늘 신규 가입</div>
+                <div class="admin-stat-value" id="stat-today-users">-</div>
+                <div class="admin-stat-sub">최근 24시간 누적</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="admin-stat-label">오늘 신규 매물</div>
                 <div class="admin-stat-value" id="stat-today-products">-</div>
-                <div class="admin-stat-sub">최근 24시간 기준</div>
+                <div class="admin-stat-sub">최근 24시간 누적</div>
             </div>
             <div class="admin-stat-card">
-                <div class="admin-stat-label">총 매물</div>
-                <div class="admin-stat-value" id="stat-total-products">-</div>
-                <div class="admin-stat-sub">누적 등록 수</div>
+                <div class="admin-stat-label">활성 채팅방</div>
+                <div class="admin-stat-value" id="stat-active-chats">-</div>
+                <div class="admin-stat-sub">열려있는 전체 채팅</div>
+            </div>
+            <div class="admin-stat-card" style="border:1px solid #E53E3E; background:#FEF2F2;">
+                <div class="admin-stat-label" style="color:#E53E3E; font-weight:700;">응답 대기 채팅 (24h+)</div>
+                <div class="admin-stat-value" id="stat-unread-chats" style="color:#E53E3E;">-</div>
+                <div class="admin-stat-sub" style="color:#E53E3E;">판매자 찔러보기 필요</div>
             </div>
             <div class="admin-stat-card">
-                <div class="admin-stat-label">총 커뮤니티 글</div>
-                <div class="admin-stat-value" id="stat-total-posts">-</div>
-                <div class="admin-stat-sub">누적 작성 수</div>
+                <div class="admin-stat-label">거래 협의 완료</div>
+                <div class="admin-stat-value" id="stat-completed-deals">-</div>
+                <div class="admin-stat-sub">누적 판매 완료 매물</div>
             </div>
             <div class="admin-stat-card admin-stat-card-warn">
-                <div class="admin-stat-label">대기중 탈퇴 요청</div>
-                <div class="admin-stat-value" id="stat-pending-deletions">-</div>
-                <div class="admin-stat-sub">처리 대기</div>
+                <div class="admin-stat-label">이상 징후 발생</div>
+                <div class="admin-stat-value" id="stat-anomaly-count">-</div>
+                <div class="admin-stat-sub">24h 내 가격 변동 + 대기 탈퇴 건</div>
             </div>
         </div>
     </section>
