@@ -40,6 +40,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1000);
         }
     }
+
+    if (hash.startsWith('#post/')) {
+        const rawId = hash.replace('#post/', '');
+        let decodedId = rawId;
+        try { decodedId = decodeURIComponent(rawId); } catch(e) {}
+        const postId = decodedId.replace(/[^a-zA-Z0-9_-]/g, '');
+        
+        if (postId && postId.length > 0 && postId.length < 50) {
+            setTimeout(() => {
+                if (typeof openPostDetail === 'function') {
+                    openPostDetail(postId);
+                }
+            }, 1000);
+        }
+    }
     // 키워드 라이브 검색 (디바운스 최적화 도입 - 메모리 절약)
     const searchInput = document.getElementById('search-input');
     if (searchInput) {

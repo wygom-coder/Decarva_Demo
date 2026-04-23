@@ -19,11 +19,19 @@ function showPage(id, pushHistory = true) {
 }
 
 window.addEventListener('popstate', (e) => {
-    // 매물 상세 URL에서 이탈 시 모달 닫기
+    // 매물 모달 닫기
     if (!window.location.hash.startsWith('#product/')) {
         const modal = document.getElementById('product-modal');
         if (modal && modal.style.display !== 'none') {
             modal.style.display = 'none';
+        }
+    }
+    
+    // 커뮤니티 글 상세 닫기
+    if (!window.location.hash.startsWith('#post/')) {
+        const postDetail = document.getElementById('post-detail-modal');
+        if (postDetail && postDetail.style.display !== 'none') {
+            postDetail.style.display = 'none';
         }
     }
     

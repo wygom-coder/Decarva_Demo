@@ -8,7 +8,7 @@ body { font-family: 'Inter', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR'
   --text-primary: #0F172A; --text-secondary: #475569; --text-muted: #64748B;
   --border: #E2E8F0; --surface: #F8FAFC;
 }
-.wrap { max-width: 1024px; margin: 0 auto; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.04); min-height: 100vh; position: relative; overflow-x: hidden; }
+.wrap { max-width: 1024px; margin: 0 auto; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.04); position: relative; overflow-x: hidden; min-height: 100vh; min-height: calc(var(--vh, 1vh) * 100); min-height: 100dvh; }
 .header { background: #fff; border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; align-items: center; gap: 12px; height: 58px; }
 .logo-area { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
 .logo-seahorse { width: 44px; height: 44px; }
@@ -89,7 +89,7 @@ body { font-family: 'Inter', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR'
 .page-nav button.on { background: var(--yellow-400); border-color: var(--yellow-600); color: var(--yellow-800); font-weight: 700; }
 .page { display: none; }
 .page.active { display: block; }
-.sub-header { background: #fff; border-bottom: 1px solid var(--border); padding: 0 16px; display: flex; align-items: center; gap: 10px; height: 52px; }
+.sub-header { background: #fff; border-bottom: 1px solid var(--border); padding: 0 16px; padding-top: calc(10px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 10px; height: 52px; }
 .back-btn { font-size: 20px; color: var(--blue-600); cursor: pointer; }
 .sub-title { font-size: 16px; font-weight: 700; color: var(--text-primary); flex: 1; }
 .sub-action { font-size: 13px; color: var(--blue-600); font-weight: 600; cursor: pointer; }
@@ -202,7 +202,7 @@ body { font-family: 'Inter', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR'
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 @media (max-width: 768px) {
   body { background: #fff; }
-  .wrap { width: 100%; max-width: 100%; box-shadow: none; min-height: 100vh; }
+  .wrap { width: 100%; max-width: 100%; box-shadow: none; min-height: 100vh; min-height: calc(var(--vh, 1vh) * 100); min-height: 100dvh; }
   .bottom-tab-bar { max-width: 100%; }
 }
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; }

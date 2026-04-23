@@ -219,7 +219,7 @@
     <div class="chat-messages" id="chat-messages-container" style="flex:1; overflow-y:auto; padding:16px;">
       <!-- 동적 메시지 영역 -->
     </div>
-    <div class="chat-input-bar" style="background:#fff; border-top:1px solid #eee; padding:12px 16px; display:flex; gap:8px;"><input type="text" id="chat-input-text" placeholder="메시지를 입력하세요" onkeypress="if(event.key==='Enter') sendChatMessage()" style="flex:1; background:#F0F9FF; border:none; padding:10px 14px; border-radius:20px; font-size:14px; outline:none;"><button class="chat-send" onclick="sendChatMessage()" style="width:40px; height:40px; border-radius:50%; background:var(--yellow-400); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-6-5 6 5 6-12-6z" fill="#7A5200"/></svg></button></div>
+    <div class="chat-input-bar" style="background:#fff; border-top:1px solid #eee; padding:12px 16px; display:flex; gap:8px;"><input type="text" id="chat-input-text" placeholder="메시지를 입력하세요" onkeypress="if(event.key==='Enter') sendChatMessage()" style="flex:1; background:#F0F9FF; border:none; padding:10px 14px; border-radius:20px; font-size:14px; outline:none;"><button class="chat-send" onclick="sendChatMessage()" style="width:40px; height:40px; border-radius:50%; background:var(--yellow-400); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="#7A5200" stroke-width="2.5" stroke-linecap="round"/><path d="M22 2l-7 20-4-9-9-4 20-7z" stroke="#7A5200" stroke-width="2.5" stroke-linejoin="round" fill="#7A5200"/></svg></button></div>
  
   </div>
 </div>
@@ -274,7 +274,7 @@
  
 <!-- 발주한 견적/결제 내역 페이지 -->
 <div class="page" id="page-myquotes">
-  <div class="wrap" style="background:#F0F9FF; height:100vh; display:flex; flex-direction:column;">
+  <div class="wrap" style="background:#F0F9FF; display:flex; flex-direction:column;">
     <div class="sub-header" style="background:#fff;">
       <span class="back-btn" onclick="showPage('mypage')">‹</span>
       <span class="sub-title">발주한 견적 내역</span>
@@ -286,7 +286,7 @@
 </div>
 <!-- 커뮤니티 페이지 -->
 <div class="page" id="page-community">
-  <div class="wrap" style="background:#F0F9FF; height:100vh; display:flex; flex-direction:column; position:relative;">
+  <div class="wrap" style="background:#F0F9FF; display:flex; flex-direction:column; position:relative;">
     <!-- 상단 헤더 (프리미엄 개편) -->
     <div style="background:#fff; padding: 32px 20px 20px 20px; text-align:center;">
       <h1 style="margin:0; font-size:26px; font-weight:800; color:var(--text-primary); letter-spacing:-0.5px;">해마 커뮤니티</h1>
@@ -323,7 +323,7 @@
  
 <!-- 사업자 인증 페이지 -->
 <div class="page" id="page-business-auth">
-<div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
+<div class="wrap" style="background:#fff; display:flex; flex-direction:column;">
   <div class="sub-header">
     <span class="back-btn" onclick="showPage('mypage')">‹</span>
     <span class="sub-title">사업자 인증</span>
@@ -363,7 +363,7 @@
  
 <!-- 🚨 알파 릴리즈 안정성을 위해 거래 후기 뷰 페이지 접근 차단 -->
 <div class="page" id="page-reviews" style="display:none !important;">
-<div class="wrap" style="background:#F0F9FF; height:100vh; display:flex; flex-direction:column;">
+<div class="wrap" style="background:#F0F9FF; display:flex; flex-direction:column;">
   <div class="sub-header" style="background:#fff;">
     <span class="back-btn" onclick="showPage('mypage')">‹</span>
     <span class="sub-title">받은 거래 후기</span>
@@ -473,7 +473,7 @@
  
 <!-- 프로필 편집 -->
 <div class="page" id="page-profile-edit">
-<div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
+<div class="wrap" style="background:#fff; display:flex; flex-direction:column;">
   <div class="sub-header">
     <span class="back-btn" onclick="showPage('mypage')">‹</span>
     <span class="sub-title">프로필 편집</span>
@@ -523,7 +523,7 @@
  
 <!-- 로그인 / 회원가입 -->
 <div class="page" id="page-login">
-<div class="wrap" style="background:#fff; height:100vh; display:flex; flex-direction:column;">
+<div class="wrap" style="background:#fff; display:flex; flex-direction:column;">
   <div class="sub-header" style="border:none;"><span class="back-btn" onclick="showPage('home')">✕</span><span class="sub-title"></span></div>
   <div class="login-container">
     <div class="login-logo">
@@ -620,7 +620,7 @@
  
 <!-- 견적 장바구니 페이지 -->
 <div class="page" id="page-cart">
-<div class="wrap" style="background:#F0F9FF; height:100vh; display:flex; flex-direction:column;">
+<div class="wrap" style="background:#F0F9FF; display:flex; flex-direction:column;">
   <div class="sub-header" style="background:#fff;">
     <span class="back-btn" onclick="showPage('home')">‹</span>
     <span class="sub-title">견적 장바구니</span>

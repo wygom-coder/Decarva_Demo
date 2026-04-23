@@ -222,6 +222,12 @@ window.submitPost = async function() {
 let currentPostId = null;
 
 window.openPostDetail = async function(postId) {
+    // URL 히스토리에 추가 (뒤로가기 대응)
+    const newHash = '#post/' + postId;
+    if (window.location.hash !== newHash) {
+        window.history.pushState({ postId: postId, view: 'post-detail' }, '', newHash);
+    }
+
     currentPostId = postId;
     document.getElementById('post-detail-modal').style.display = 'flex';
     const body = document.getElementById('post-detail-body');
@@ -315,6 +321,11 @@ window.openPostDetail = async function(postId) {
 window.closePostDetail = function() {
     document.getElementById('post-detail-modal').style.display = 'none';
     currentPostId = null;
+    
+    // URL 복원 (뒤로가기 효과)
+    if (window.location.hash.startsWith('#post/')) {
+        window.history.back();
+    }
 }
 
 window.submitComment = async function() {

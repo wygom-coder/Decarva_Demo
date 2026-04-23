@@ -1075,18 +1075,21 @@ function buildCompactCard(p) {
 // ============================================================================
 window.shareProduct = async function(productId) {
     const p = products.find(x => String(x.id) === String(productId));
-    const title = p?.title || '해마 마켓 매물';
-    const priceText = p?.price || '';
+    const title = (p?.title || '해마 마켓 매물').trim();
+    const priceText = (p?.price || '').trim();
     const url = `${window.location.origin}/#product/${productId}`;
     
-    const shareText = priceText 
-        ? `${title}\n${priceText}\n해마 마켓에서 확인하세요`
-        : `${title} - 해마 마켓에서 확인하세요`;
+    // 빈 줄 방지 — truthy 항목만 join
+    const parts = [title];
+    if (priceText) parts.push(priceText);
+    parts.push('해마 마켓에서 확인하세요');
+    parts.push(url);  // URL을 text 내부에 포함
+    const shareText = parts.join('\n');
     
     const shareData = {
         title: '해마 마켓',
-        text: shareText,
-        url: url
+        text: shareText
+        // url 필드 의도적 생략 — 카톡이 자동 추가하는 것 방지
     };
     
     // 1순위: 모바일 네이티브 공유
