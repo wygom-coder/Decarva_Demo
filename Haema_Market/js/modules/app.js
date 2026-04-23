@@ -27,8 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const hash = window.location.hash;
     if (hash.startsWith('#product/')) {
         const rawId = hash.replace('#product/', '');
-        // XSS/path traversal 방어: 영숫자+하이픈+언더스코어만, 50자 제한
-        const productId = rawId.replace(/[^a-zA-Z0-9_-]/g, '');
+        // XSS/path traversal 방어: URL 디코딩 후 영숫자+하이픈+언더스코어만, 50자 제한
+        let decodedId = rawId;
+        try { decodedId = decodeURIComponent(rawId); } catch(e) {}
+        const productId = decodedId.replace(/[^a-zA-Z0-9_-]/g, '');
         
         if (productId && productId.length > 0 && productId.length < 50) {
             setTimeout(() => {
