@@ -120,10 +120,18 @@ function renderProductsAppend(newItems) {
     }
     
     const frag = document.createDocumentFragment();
+    const isCompact = filterState.category !== '전체' && filterState.category !== '';
+    
     newItems.forEach(p => {
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = createProductCardHTML(p);
-        frag.appendChild(wrapper.firstElementChild);
+        let card;
+        if (isCompact) {
+            card = buildCompactCard(p);
+        } else {
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = createProductCardHTML(p);
+            card = wrapper.firstElementChild;
+        }
+        frag.appendChild(card);
     });
     grid.appendChild(frag);
     
@@ -1009,3 +1017,99 @@ document.addEventListener('visibilitychange', () => {
         }
     }
 });
+
+// ============================================================================
+// 컴팩트 매물 카드 뷰 (트랙 1-2)
+// ============================================================================
+function buildCompactCard(p) {
+    const div = document.createElement('div');
+    div.className = 'product-compact-card';
+    div.onclick = () => openProductModal(p.id);
+    
+    const safeTitle = escapeHtml(p.title || '');
+    const safePrice = escapeHtml(p.price || '');
+    const safeCondition = escapeHtml(p.condition || '');
+    const safeTradeType = escapeHtml(p.tradeType || '');
+    const safeVendor = escapeHtml(p.vendor_name || p.seller_company || '판매자');
+    const safeRegion = escapeHtml(p.region || '');
+    const likeCount = parseInt(p.like_count) || 0;
+    
+    // 경매 마감 임박 배지
+    let auctionBadge = '';
+    if (p.auction && p.auction_end && !p.is_closed) {
+        const msLeft = new Date(p.auction_end) - Date.now();
+        const hoursLeft = msLeft / (1000 * 60 * 60);
+        if (hoursLeft > 0 && hoursLeft < 2) {
+            auctionBadge = `<span class="compact-badge-urgent">🔴 마감 ${Math.floor(hoursLeft * 60)}분</span>`;
+        } else if (hoursLeft > 0 && hoursLeft < 24) {
+            auctionBadge = `<span class="compact-badge-urgent-soft">마감 ${Math.floor(hoursLeft)}시간</span>`;
+        }
+    }
+    
+    const imgHtml = (typeof getProductImageHtml === 'function') 
+        ? getProductImageHtml(p) 
+        : (p.svg || '');
+    
+    div.innerHTML = `
+        <div class="compact-thumb">${imgHtml}</div>
+        <div class="compact-body">
+            <div class="compact-badges">
+                <span class="compact-badge-condition">${safeCondition}</span>
+                <span class="compact-badge-trade">${safeTradeType}</span>
+                ${auctionBadge}
+            </div>
+            <div class="compact-title">${safeTitle}</div>
+            <div class="compact-price">${safePrice}</div>
+            <div class="compact-meta">
+                <span class="compact-vendor">🏢 ${safeVendor}</span>
+                ${safeRegion ? `<span class="compact-region">· ${safeRegion}</span>` : ''}
+                ${likeCount > 0 ? `<span class="compact-like">· ♥ ${likeCount}</span>` : ''}
+            </div>
+        </div>
+    `;
+    return div;
+}
+
+// ============================================================================
+// 매물 공유 및 라우팅 도구 (트랙 2)
+// ============================================================================
+window.shareProduct = async function(productId) {
+    const p = products.find(x => String(x.id) === String(productId));
+    const title = p?.title || '해마 마켓 매물';
+    const priceText = p?.price || '';
+    const url = `${window.location.origin}/#product/${productId}`;
+    
+    const shareText = priceText 
+        ? `${title}\n${priceText}\n해마 마켓에서 확인하세요`
+        : `${title} - 해마 마켓에서 확인하세요`;
+    
+    const shareData = {
+        title: '해마 마켓',
+        text: shareText,
+        url: url
+    };
+    
+    // 1순위: 모바일 네이티브 공유
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        try {
+            await navigator.share(shareData);
+            return;
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+        }
+    }
+    
+    // 2순위: 클립보드 복사
+    try {
+        await navigator.clipboard.writeText(url);
+        if (typeof showToast === 'function') {
+            showToast('링크가 복사되었습니다');
+        } else {
+            alert('링크가 복사되었습니다:\n' + url);
+        }
+        return;
+    } catch (err) {
+        // 3순위: prompt로 수동 복사 (구형 브라우저)
+        prompt('이 링크를 복사하세요:', url);
+    }
+};

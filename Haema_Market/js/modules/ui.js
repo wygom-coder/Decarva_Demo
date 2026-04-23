@@ -19,6 +19,14 @@ function showPage(id, pushHistory = true) {
 }
 
 window.addEventListener('popstate', (e) => {
+    // 매물 상세 URL에서 이탈 시 모달 닫기
+    if (!window.location.hash.startsWith('#product/')) {
+        const modal = document.getElementById('product-modal');
+        if (modal && modal.style.display !== 'none') {
+            modal.style.display = 'none';
+        }
+    }
+    
     const targetPage = e.state?.pageId || 'home';
     if ((targetPage === 'chat' || targetPage === 'mypage') && !currentUser) {
         showPage('home', false);
@@ -216,7 +224,13 @@ function openProductModal(id) {
         ? getProductImageHtml(p)
         : (p.svg || '');
 
-    body.innerHTML = `<div style="width:100%;aspect-ratio:4/3;background:#f4f4f4;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:16px;position:relative;">${productImageHtml}<div id="modal-heart-btn" class="heart-btn" onclick="toggleLike('${safeId}')" style="position:absolute;bottom:12px;right:12px;width:40px;height:40px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div></div><div style="padding:0 20px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div style="background:#EAEDF2;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#7A93B0;">${escapeHtml(p.tradeType)}</div><div style="background:#E6F4EA;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#1E8E3E;">${escapeHtml(p.condition)}</div></div><h2 style="margin:0 0 4px 0;font-size:20px;color:#1A2B4A;">${escapeHtml(p.title)}</h2><div style="color:#7A93B0;font-size:13px;margin-bottom:16px;">${escapeHtml(p.sub)}</div><div style="font-size:24px;font-weight:800;color:#1A2B4A;margin-bottom:8px;">${escapeHtml(p.price)}</div><div style="padding:16px;background:#fff;border:1px solid rgba(0,0,0,0.05);border-radius:12px;display:flex;align-items:center;gap:12px;margin-top:20px;"><div style="width:40px;height:40px;border-radius:50%;background:#1A5FA0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">판</div><div><div style="font-size:13px;font-weight:700;color:#1A2B4A;">판매자 정보 (보호됨)</div><div style="font-size:11px;color:#7A93B0;">안전거래 사용 우수 판매자</div></div></div><div style="margin-top:20px;white-space:pre-wrap;font-size:14px;color:#1A2B4A;line-height:1.6;">${escapeHtml(safeContent)}</div>${actionArea}</div>`;
+    // 모달 오픈 시 URL도 같이 변경 (공유 가능하게)
+    const newHash = '#product/' + id;
+    if (window.location.hash !== newHash) {
+        window.history.pushState({ productId: id }, '', newHash);
+    }
+
+    body.innerHTML = `<div style="width:100%;aspect-ratio:4/3;background:#f4f4f4;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:16px;position:relative;">${productImageHtml}<div onclick="shareProduct('${safeId}')" style="position:absolute;bottom:12px;right:60px;width:40px;height:40px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A5FA0" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><div id="modal-heart-btn" class="heart-btn" onclick="toggleLike('${safeId}')" style="position:absolute;bottom:12px;right:12px;width:40px;height:40px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div></div><div style="padding:0 20px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div style="background:#EAEDF2;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#7A93B0;">${escapeHtml(p.tradeType)}</div><div style="background:#E6F4EA;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#1E8E3E;">${escapeHtml(p.condition)}</div></div><h2 style="margin:0 0 4px 0;font-size:20px;color:#1A2B4A;">${escapeHtml(p.title)}</h2><div style="color:#7A93B0;font-size:13px;margin-bottom:16px;">${escapeHtml(p.sub)}</div><div style="font-size:24px;font-weight:800;color:#1A2B4A;margin-bottom:8px;">${escapeHtml(p.price)}</div><div style="padding:16px;background:#fff;border:1px solid rgba(0,0,0,0.05);border-radius:12px;display:flex;align-items:center;gap:12px;margin-top:20px;"><div style="width:40px;height:40px;border-radius:50%;background:#1A5FA0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">판</div><div><div style="font-size:13px;font-weight:700;color:#1A2B4A;">판매자 정보 (보호됨)</div><div style="font-size:11px;color:#7A93B0;">안전거래 사용 우수 판매자</div></div></div><div style="margin-top:20px;white-space:pre-wrap;font-size:14px;color:#1A2B4A;line-height:1.6;">${escapeHtml(safeContent)}</div>${actionArea}</div>`;
 
     // ✅ OG 메타 태그 동적 갱신 (디카바 포털 등 외부 미리보기용)
     //    ⚠️ 일반적인 HTTP 페치 기반 크롤러(카톡/페북 등)는 JS 실행을 안 하므로

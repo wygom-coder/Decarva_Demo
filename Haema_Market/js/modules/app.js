@@ -4,6 +4,40 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchProducts();
     updateFilterStyles();
 
+    // 모바일 뷰포트 높이 보정 (iOS 100vh 버그 대응)
+    function setMobileVH() {
+        document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+    }
+    setMobileVH();
+    window.addEventListener('resize', setMobileVH);
+    window.addEventListener('orientationchange', setMobileVH);
+
+    // 채팅 input focus 시 iOS 키보드 대응 스크롤
+    const chatInput = document.getElementById('chat-input-text');
+    if (chatInput) {
+        chatInput.addEventListener('focus', () => {
+            setTimeout(() => {
+                const container = document.getElementById('chat-messages-container');
+                if (container) container.scrollTop = container.scrollHeight;
+            }, 300);
+        });
+    }
+
+    // 딥링크 처리 — URL에 #product/xxx 있으면 해당 매물 모달 자동 오픈
+    const hash = window.location.hash;
+    if (hash.startsWith('#product/')) {
+        const rawId = hash.replace('#product/', '');
+        // XSS/path traversal 방어: 영숫자+하이픈+언더스코어만, 50자 제한
+        const productId = rawId.replace(/[^a-zA-Z0-9_-]/g, '');
+        
+        if (productId && productId.length > 0 && productId.length < 50) {
+            setTimeout(() => {
+                if (typeof openProductModal === 'function') {
+                    openProductModal(productId);
+                }
+            }, 1000);
+        }
+    }
     // 키워드 라이브 검색 (디바운스 최적화 도입 - 메모리 절약)
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
