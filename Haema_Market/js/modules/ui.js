@@ -14,6 +14,12 @@ function showPage(id, pushHistory = true) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const target = document.getElementById('page-' + id);
     if (target) target.classList.add('active');
+
+    const fabCont = document.querySelector('.fab-container');
+    if (fabCont) {
+        fabCont.style.display = (id === 'login') ? 'none' : 'flex';
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (pushHistory) window.history.pushState({ pageId: id }, '', '#' + id);
 }

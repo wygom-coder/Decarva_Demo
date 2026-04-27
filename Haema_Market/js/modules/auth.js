@@ -77,10 +77,13 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     }, 0);
 
     const topLoginBtn = document.getElementById('header-btn-login');
+    const fabRegisterBtn = document.querySelector('.fab-register');
     if (currentUser) {
         if (topLoginBtn) topLoginBtn.style.display = 'none';
+        if (fabRegisterBtn) fabRegisterBtn.style.display = 'flex';
     } else {
-        if (topLoginBtn) topLoginBtn.style.display = 'inline-block';
+        if (topLoginBtn) topLoginBtn.style.display = 'flex';
+        if (fabRegisterBtn) fabRegisterBtn.style.display = 'none';
     }
 });
 

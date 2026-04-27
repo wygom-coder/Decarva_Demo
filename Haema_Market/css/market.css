@@ -61,7 +61,7 @@ body { font-family: 'Inter', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR'
 
 /* ✅ [개선1] 카드 hover 애니메이션 — transform + shadow 추가 */
 .product-card { background: #fff; border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s; }
-.product-card:hover { border-color: var(--blue-400); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(79, 70, 229, 0.09); }
+.product-card:hover { border-color: var(--blue-600); box-shadow: 0 4px 16px rgba(2, 132, 199, 0.15); }
 
 /* ✅ [개선2] 이미지 배경 중립화 — var(--blue-50)=#F0FDF4(초록)에서 중립 슬레이트로 */
 .product-img { width: 100%; aspect-ratio: 1; background: #F1F5F9; display: flex; align-items: center; justify-content: center; }
