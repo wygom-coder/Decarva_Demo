@@ -40,7 +40,7 @@ function renderCartBadge() {
     }
 }
 
-window.renderCartPage = function() {
+window.renderCartPage = async function() {
     const area = document.getElementById('cart-content-area');
     const totalCountEl = document.getElementById('cart-total-count');
     if(!area) return;
@@ -57,12 +57,27 @@ window.renderCartPage = function() {
         return;
     }
     
+    const cartIds = userCart.map(c => String(c.id));
+    const { data, error } = await supabaseClient
+        .from('haema_products')
+        .select('*')
+        .in('id', cartIds);
+    
+    if (error) {
+        console.error('renderCartPage fetch error:', error);
+        area.innerHTML = `<div style="padding: 100px 20px; text-align:center; color:#C62828;">장바구니 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>`;
+        return;
+    }
+
+    const productsMap = {};
+    (data || []).forEach(p => { productsMap[String(p.id)] = p; });
+
     // Group by supplier
     const groups = {};
     let totalItems = 0;
     
     userCart.forEach(cartItem => {
-        const product = products.find(p => String(p.id) === String(cartItem.id));
+        const product = productsMap[String(cartItem.id)];
         if(!product) return;
         
         // ✅ 정규식 백슬래시 수정: 원본은 \\[ 였으나 string literal에서 \[가 정확
@@ -103,7 +118,7 @@ window.renderCartPage = function() {
                 ? `background:#f4f9ff url('${safeImageUrl}') center/cover;`
                 : `background:#f4f9ff;`;
 
-            const displayPrice = (p.price || '').replace(/[^0-9]/g, '');
+            const displayPrice = String(p.price || '').replace(/[^0-9]/g, '');
             const priceNum = parseInt(displayPrice || 0);
             const safePriceText = priceNum.toLocaleString();
             const qty = parseInt(c.qty) || 0;

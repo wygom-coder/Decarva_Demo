@@ -64,12 +64,27 @@ window.showMyQuotes = async function() {
     }
 };
 
-function showMyList() {
+async function showMyList() {
     if(!currentUser) { showPage('login'); return; }
     showPage('mylist');
-    const myProducts = products.filter(p => p.seller_id === currentUser.id);
     const container = document.getElementById('mylist-grid');
     if(!container) return;
+    
+    container.innerHTML = '<div style="grid-column: span auto; padding: 40px; text-align:center; color:#7A93B0;">불러오는 중...</div>';
+
+    const { data, error } = await supabaseClient
+        .from('haema_products')
+        .select('*')
+        .eq('seller_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('showMyList fetch error:', error);
+        container.innerHTML = '<div style="grid-column: span auto; padding: 40px; text-align:center; color:#C62828;">매물을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>';
+        return;
+    }
+
+    const myProducts = data || [];
     container.innerHTML = '';
     if(myProducts.length === 0) {
         // ✅ P0-A 안전망: onclick을 goToRegisterCreateMode로 (혹시 이전 변경이 캐시였을 경우 재적용)
@@ -444,8 +459,8 @@ async function submitBusinessAuth() {
     try {
         // ✅ 현재 세션 토큰을 Authorization 헤더로 전송 →
         //    서버가 JWT 검증 후 service_role로 app_metadata 업데이트.
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session?.access_token) {
+        const { data, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError || !data?.session?.access_token) {
             alert('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
             return;
         }
