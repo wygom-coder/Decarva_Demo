@@ -746,6 +746,7 @@ window.deleteAccount = async function() {
         alert('탈퇴 신청이 정상 접수되었습니다.\n\n운영팀 검토 후 영업일 기준 5일 이내 계정이 완전 삭제됩니다.\n잠시 후 자동으로 로그아웃됩니다.');
 
         await supabaseClient.auth.signOut();
+        localStorage.removeItem('haema_cart');
         window.location.href = 'index.html';
     } catch (err) {
         console.error('deleteAccount 예외:', err);

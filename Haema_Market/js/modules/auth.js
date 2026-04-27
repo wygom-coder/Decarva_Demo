@@ -259,6 +259,7 @@ async function submitAuth() {
 window.doLogout = async function() {
     if (confirm("정말 로그아웃 하시겠습니까?")) {
         await supabaseClient.auth.signOut();
+        localStorage.removeItem('haema_cart');
         alert('로그아웃 되었습니다.');
         showPage('home');
     }

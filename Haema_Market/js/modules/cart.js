@@ -5,6 +5,14 @@
 const CART_MAX_QTY_PER_ITEM = 9999;
 
 function addToCart(productId) {
+    // ✅ B2B 보안: 로그인 사용자만 장바구니 사용 가능
+    if (!currentUser) {
+        if (confirm('장바구니 사용은 로그인이 필요합니다.\n로그인 페이지로 이동할까요?')) {
+            showPage('login');
+        }
+        return;
+    }
+    
     const existingIndex = userCart.findIndex(item => String(item.id) === String(productId));
     if (existingIndex > -1) {
         if (userCart[existingIndex].qty >= CART_MAX_QTY_PER_ITEM) {
