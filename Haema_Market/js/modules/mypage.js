@@ -747,6 +747,8 @@ window.deleteAccount = async function() {
 
         await supabaseClient.auth.signOut();
         localStorage.removeItem('haema_cart');
+        userCart = [];
+        if (typeof renderCartBadge === 'function') renderCartBadge();
         window.location.href = 'index.html';
     } catch (err) {
         console.error('deleteAccount 예외:', err);
