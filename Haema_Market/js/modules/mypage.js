@@ -758,6 +758,7 @@ window.deleteAccount = async function() {
         console.error('deleteAccount 예외:', err);
         alert('탈퇴 신청 처리 중 예기치 않은 오류가 발생했습니다.\n\n' + (err.message || err));
     }
+};
 
 
 // ============================================================================
