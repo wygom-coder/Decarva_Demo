@@ -20,6 +20,12 @@ function showPage(id, pushHistory = true) {
         fabCont.style.display = (id === 'login') ? 'none' : 'flex';
     }
 
+    if (id === 'settings') {
+        if (typeof loadSettingsPage === 'function') {
+            loadSettingsPage();
+        }
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (pushHistory) window.history.pushState({ pageId: id }, '', '#' + id);
 }

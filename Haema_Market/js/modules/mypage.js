@@ -758,4 +758,179 @@ window.deleteAccount = async function() {
         console.error('deleteAccount 예외:', err);
         alert('탈퇴 신청 처리 중 예기치 않은 오류가 발생했습니다.\n\n' + (err.message || err));
     }
+
+
+// ============================================================================
+// ✅ 설정 페이지 동적 데이터 로더 (loadSettingsPage)
+// ============================================================================
+// 호출처: ui.js의 showPage('settings') 분기에서 자동 호출
+// 역할:
+//   - 이메일, 연결 계정, 사업자 인증 상태, 기본 거래 지역, 알림 토글 4개
+//     모두 user_metadata / app_metadata 기반으로 동적 표시
+//   - 거짓 데이터 표시 방지 (알파 신뢰도)
+// 보안:
+//   - app_metadata만 신뢰 영역으로 사용 (사업자 인증 상태)
+//   - user_metadata는 본인 알림 설정 등 비위험 영역만 사용
+// ============================================================================
+window.loadSettingsPage = function() {
+    if (!currentUser) {
+        showPage('login');
+        return;
+    }
+
+    // 1) 이메일 표시 (이미 auth.js에서도 일부 처리되지만 안전망)
+    const emailEl = document.getElementById('settings-email');
+    if (emailEl) emailEl.textContent = currentUser.email || '이메일 정보 없음';
+
+    // 2) 연결 계정 (identity provider) 동적 표시
+    const providerEl = document.getElementById('settings-provider');
+    if (providerEl) {
+        const identities = currentUser.identities || [];
+        const providers = identities.map(i => i.provider).filter(Boolean);
+        if (providers.includes('kakao')) {
+            providerEl.textContent = '카카오';
+        } else if (providers.includes('google')) {
+            providerEl.textContent = 'Google';
+        } else if (providers.includes('email') || providers.length === 0) {
+            providerEl.textContent = '이메일';
+        } else {
+            providerEl.textContent = providers[0];
+        }
+    }
+
+    // 3) 사업자 인증 상태 (app_metadata만 신뢰)
+    const bizEl = document.getElementById('settings-biz-status');
+    if (bizEl) {
+        const isBiz = !!currentUser.app_metadata?.is_business;
+        if (isBiz) {
+            bizEl.textContent = '인증 완료';
+            bizEl.style.color = '#1E8E3E';
+            bizEl.style.fontWeight = '700';
+        } else {
+            bizEl.textContent = '미인증';
+            bizEl.style.color = '#94A3B8';
+            bizEl.style.fontWeight = '400';
+        }
+    }
+
+    // 4) 기본 거래 지역 (프로필 region 동적 표시)
+    const regionEl = document.getElementById('settings-region');
+    if (regionEl) {
+        const region = currentUser.user_metadata?.region;
+        const isVerified = currentUser.user_metadata?.is_region_verified;
+        if (region) {
+            regionEl.textContent = isVerified ? `${region} (인증됨)` : region;
+            regionEl.style.color = isVerified ? '#1E8E3E' : '#1A2B4A';
+            regionEl.style.fontWeight = '600';
+        } else {
+            regionEl.textContent = '미설정';
+            regionEl.style.color = '#94A3B8';
+            regionEl.style.fontWeight = '400';
+        }
+    }
+
+    // 5) 알림 토글 4개 상태 복원 (user_metadata 기반, 기본값 true)
+    const notifKeys = ['notif_chat', 'notif_auction', 'notif_likes', 'notif_marketing'];
+    const toggleIds = ['toggle-notif-chat', 'toggle-notif-auction', 'toggle-notif-likes', 'toggle-notif-marketing'];
+    notifKeys.forEach((key, idx) => {
+        const toggleEl = document.getElementById(toggleIds[idx]);
+        if (!toggleEl) return;
+        // 기본값: marketing은 false, 나머지는 true
+        const defaultOn = (key !== 'notif_marketing');
+        const savedValue = currentUser.user_metadata?.[key];
+        const isOn = (savedValue === undefined || savedValue === null) ? defaultOn : !!savedValue;
+        if (isOn) {
+            toggleEl.classList.add('on');
+        } else {
+            toggleEl.classList.remove('on');
+        }
+    });
+};
+
+// ============================================================================
+// ✅ 알림 토글 클릭 핸들러 (user_metadata에 저장)
+// ============================================================================
+// 인자:
+//   - key: 'notif_chat' | 'notif_auction' | 'notif_likes' | 'notif_marketing'
+//   - el: 클릭된 .toggle div 엘리먼트
+// 동작:
+//   1) UI 즉시 토글 (낙관적 업데이트)
+//   2) Supabase auth.updateUser로 저장
+//   3) 실패 시 UI 롤백 + 에러 토스트
+// ============================================================================
+window.toggleNotifSetting = async function(key, el) {
+    if (!currentUser) {
+        showToast('로그인이 필요합니다.');
+        return;
+    }
+    if (!el) return;
+
+    // 1) 낙관적 UI 업데이트
+    const wasOn = el.classList.contains('on');
+    const newValue = !wasOn;
+    el.classList.toggle('on');
+
+    // 2) 클릭 직후 다시 누르면 race condition 발생 → debounce
+    if (el._saving) return;
+    el._saving = true;
+
+    try {
+        const updatePayload = {};
+        updatePayload[key] = newValue;
+
+        const { data, error } = await supabaseClient.auth.updateUser({
+            data: updatePayload
+        });
+
+        if (error) {
+            // 3) 실패 시 UI 롤백
+            el.classList.toggle('on');
+            console.error('알림 설정 저장 실패:', error);
+            showToast('설정 저장에 실패했습니다. 잠시 후 다시 시도해주세요.');
+            return;
+        }
+
+        // 4) currentUser 동기화 (user_metadata 갱신)
+        if (data?.user) currentUser = data.user;
+
+        // 5) 라벨에 따라 짧은 피드백 (선택적)
+        const labelMap = {
+            'notif_chat': '채팅 알림',
+            'notif_auction': '경매 입찰 알림',
+            'notif_likes': '관심 매물 업데이트',
+            'notif_marketing': '마케팅 수신'
+        };
+        const label = labelMap[key] || '알림';
+        showToast(`${label} ${newValue ? '켜짐' : '꺼짐'}`);
+    } catch (err) {
+        // 예외 시 UI 롤백
+        el.classList.toggle('on');
+        console.error('toggleNotifSetting 예외:', err);
+        showToast('설정 저장 중 오류가 발생했습니다.');
+    } finally {
+        el._saving = false;
+    }
+};
+
+// ============================================================================
+// ✅ 기본 거래 지역 클릭 시 동작
+// ============================================================================
+// - region이 설정되어 있으면 → 프로필 편집으로 이동 (지역 변경 가능)
+// - region이 미설정이면     → 토스트 안내 후 프로필 편집으로 워프
+// ============================================================================
+window.goToRegionSetting = function() {
+    if (!currentUser) {
+        showPage('login');
+        return;
+    }
+    const hasRegion = !!currentUser.user_metadata?.region;
+    if (!hasRegion) {
+        showToast('먼저 활동 지역을 설정해주세요.');
+    }
+    // openProfileEdit가 region selector까지 포함된 화면을 띄움
+    if (typeof openProfileEdit === 'function') {
+        openProfileEdit();
+    } else {
+        showPage('profile-edit');
+    }
 };

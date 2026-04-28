@@ -504,6 +504,9 @@ window.subscribeToGlobalMessages = function() {
                 if (!isMyRoom) return;
 
                 // 4) 카운트 증가 + 뱃지 갱신
+                // ✅ 사용자가 채팅 알림을 끈 경우 뱃지 갱신 스킵
+                //    (메시지 수신·DB 저장은 정상 진행)
+                if (currentUser?.user_metadata?.notif_chat === false) return;
                 unreadChatCount += 1;
                 updateChatBadge();
             }
