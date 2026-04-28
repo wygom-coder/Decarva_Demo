@@ -19,14 +19,19 @@ function createProductCardHTML(p) {
         }
     }
 
-    const safePrice = escapeHtml(p.price);
+    let _rawP = p.price || '';
+    let _numP = parseInt(String(_rawP).replace(/[^0-9]/g, ''));
+    const safePrice = escapeHtml(isNaN(_numP) ? _rawP : '₩ ' + _numP.toLocaleString());
     let priceHTML = `<div class="product-price">${safePrice}</div>`;
     if (p.auction) {
       if(p.is_closed) {
           const finalPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : '유찰됨';
           priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge" style="background:#7A93B0;">종료</span><span style="font-size:14px;font-weight:700;color:#7A93B0;text-decoration:line-through;">${escapeHtml(finalPrice)}</span></div>`;
       } else {
-          const showPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : (p.price || '');
+          let _sp = p.price || '';
+          let _spN = parseInt(String(_sp).replace(/[^0-9]/g, ''));
+          let _fp = isNaN(_spN) ? _sp : '₩ ' + _spN.toLocaleString();
+          const showPrice = p.current_bid ? `₩ ${p.current_bid.toLocaleString()}` : _fp;
           priceHTML = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="auction-badge">경매중</span><span style="font-size:14px;font-weight:700;color:#1A2B4A;">${escapeHtml(showPrice)}</span></div>`;
       }
     }
@@ -1027,7 +1032,9 @@ function buildCompactCard(p) {
     div.onclick = () => openProductModal(p.id);
     
     const safeTitle = escapeHtml(p.title || '');
-    const safePrice = escapeHtml(p.price || '');
+    let _rawP2 = p.price || '';
+    let _numP2 = parseInt(String(_rawP2).replace(/[^0-9]/g, ''));
+    const safePrice = escapeHtml(isNaN(_numP2) ? _rawP2 : '₩ ' + _numP2.toLocaleString());
     const safeCondition = escapeHtml(p.condition || '');
     const safeTradeType = escapeHtml(p.tradeType || '');
     const safeVendor = escapeHtml(p.vendor_name || p.seller_company || '판매자');

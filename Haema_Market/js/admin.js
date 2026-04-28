@@ -187,7 +187,11 @@
                     '<td>' + escapeHtml(String(p.id).slice(0, 8)) + '</td>' +
                     '<td class="admin-cell-strong">' + escapeHtml(p.title) + '</td>' +
                     '<td>' + escapeHtml(p.category) + '</td>' +
-                    '<td>' + escapeHtml(p.price) + '</td>' +
+                    '<td>' + (function(val){
+                        let _raw = val || '';
+                        let _num = parseInt(String(_raw).replace(/[^0-9]/g, ''));
+                        return escapeHtml(isNaN(_num) ? _raw : '₩ ' + _num.toLocaleString());
+                    })(p.price) + '</td>' +
                     '<td>' + escapeHtml(tradeLabel) + '</td>' +
                     '<td>' + escapeHtml(p.region) + '</td>' +
                     '<td class="admin-cell-muted">' + fmtDate(p.created_at) + '</td>' +

@@ -239,7 +239,9 @@ async function openChatRoom(roomId, pData) {
     
     // ✅ textContent 사용 → 자동 escape (XSS 안전)
     document.getElementById('chat-product-title').textContent = pData ? (pData.title || '상품 정보') : '상품 정보';
-    document.getElementById('chat-product-price').textContent = (pData && pData.price) ? pData.price : '-';
+    let _rawChatPrice = (pData && pData.price) ? pData.price : '-';
+    let _numChatPrice = parseInt(String(_rawChatPrice).replace(/[^0-9]/g, ''));
+    document.getElementById('chat-product-price').textContent = isNaN(_numChatPrice) ? _rawChatPrice : '₩ ' + _numChatPrice.toLocaleString();
 
     // ✅ 배너 렌더링 — DB의 svg 컬럼이 사용자 입력 HTML일 가능성이 있으므로
     //    getProductImageHtml로 대체 (image_url 우선, 없으면 카테고리 SVG)

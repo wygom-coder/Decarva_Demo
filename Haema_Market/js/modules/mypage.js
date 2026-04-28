@@ -109,7 +109,9 @@ async function showMyList() {
         const safeRegion = escapeHtml(p.region);
         const safeCondition = escapeHtml(p.condition);
         const safeTitle = escapeHtml(p.title);
-        const safePrice = escapeHtml(p.price);
+        let _rawP = p.price || '';
+        let _numP = parseInt(String(_rawP).replace(/[^0-9]/g, ''));
+        const safePrice = escapeHtml(isNaN(_numP) ? _rawP : '₩ ' + _numP.toLocaleString());
 
         // ✅ p.svg → getProductImageHtml(p)
         const productImageHtml = (typeof getProductImageHtml === 'function')
@@ -568,7 +570,9 @@ async function loadLikedProducts() {
     
     sortedProducts.forEach(p => {
         const safeTitle = escapeHtml(p.title);
-        const safePrice = escapeHtml(p.price);
+        let _rawP2 = p.price || '';
+        let _numP2 = parseInt(String(_rawP2).replace(/[^0-9]/g, ''));
+        const safePrice = escapeHtml(isNaN(_numP2) ? _rawP2 : '₩ ' + _numP2.toLocaleString());
         const productImageHtml = (typeof getProductImageHtml === 'function')
             ? getProductImageHtml(p)
             : (p.svg || '');
