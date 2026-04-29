@@ -80,7 +80,7 @@ async function showMyList() {
 
     if (error) {
         console.error('showMyList fetch error:', error);
-        container.innerHTML = '<div style="grid-column: span auto; padding: 40px; text-align:center; color:#C62828;">매물을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>';
+        container.innerHTML = '<div style="width:100%; flex-shrink:0; grid-column: 1 / -1; padding: 40px; text-align:center; color:#C62828;">매물을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>';
         return;
     }
 
@@ -89,7 +89,7 @@ async function showMyList() {
     if(myProducts.length === 0) {
         // ✅ P0-A 안전망: onclick을 goToRegisterCreateMode로 (혹시 이전 변경이 캐시였을 경우 재적용)
         container.innerHTML = `
-        <div style="grid-column: span auto; padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+        <div style="width:100%; flex-shrink:0; grid-column: 1 / -1; padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
             <div style="font-size:48px; margin-bottom:16px; color:#CBD5E1;"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></div>
             <div style="font-size:18px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">등록하신 판매 매물이 없습니다</div>
             <div style="font-size:14px; color:#7A93B0; line-height:1.5; margin-bottom:24px;">보유하신 잉여 자재나 중고 부품을 올려<br>전국의 수많은 바이어와 바로 거래하세요.</div>
@@ -553,7 +553,7 @@ async function loadLikedProducts() {
         .order('created_at', { ascending: false });
     if(error || !likes || likes.length === 0) {
         document.getElementById('mylist-grid').innerHTML = `
-        <div style="grid-column: span auto; padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+        <div style="width:100%; flex-shrink:0; grid-column: 1 / -1; padding: 100px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
             <div style="font-size:48px; margin-bottom:16px; color:#CBD5E1;"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
             <div style="font-size:18px; font-weight:800; color:#1A2B4A; margin-bottom:8px;">아직 찜을 누른 매물이 없습니다</div>
             <div style="font-size:14px; color:#7A93B0; line-height:1.5; margin-bottom:24px;">관심 있는 장비를 찜해두시면<br>마감 세일이나 협력 배송 알림을 받아볼 수 있습니다.</div>
