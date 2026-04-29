@@ -84,7 +84,7 @@ function renderCommunityPostsAppend(posts) {
     if(!area) return;
     
     const frag = document.createDocumentFragment();
-    posts.forEach(post => {
+    posts.forEach((post, index) => {
         const safeId = escapeHtml(post.id);
         const safeTag = escapeHtml(post.tag);
         const tagMap = TAG_COLORS[post.tag] || { bg: '#F4F9FF', color: '#1A5FA0' };
@@ -93,7 +93,8 @@ function renderCommunityPostsAppend(posts) {
         
         const safeTitle = escapeHtml(post.title);
         const safeContent = escapeHtml(post.content);
-        const safeAuthorName = escapeHtml(post.author_name);
+        const anonymousLabel = `익명${index + 1}`;
+        const safeAuthorName = escapeHtml(anonymousLabel);
         const safeAuthorRole = escapeHtml(post.author_role);
         const views = parseInt(post.views) || 0;
         const commentsCount = parseInt(post.comments_count) || 0;
@@ -264,7 +265,7 @@ window.openPostDetail = async function(postId) {
     const safeTagBg = tagMap.bg;
     const safeTagColor = tagMap.color;
     const safeTitle = escapeHtml(postData.title);
-    const safeAuthorName = escapeHtml(postData.author_name);
+    const safeAuthorName = escapeHtml('작성자');
     const safeAuthorRole = escapeHtml(postData.author_role);
     const safePostContent = escapeHtml(postData.content);
     const safeViews = escapeHtml(postData.views);
@@ -292,9 +293,23 @@ window.openPostDetail = async function(postId) {
     `;
     
     if(comments && comments.length > 0) {
+        const postAuthorId = postData.author_id;
+        const commenterMap = {};
+        let nextAnonymousNumber = 1;
+
         comments.forEach(c => {
+            let anonymousLabel;
+            if (c.author_id === postAuthorId) {
+                anonymousLabel = '작성자';
+            } else if (commenterMap[c.author_id]) {
+                anonymousLabel = commenterMap[c.author_id];
+            } else {
+                anonymousLabel = `익명${nextAnonymousNumber}`;
+                commenterMap[c.author_id] = anonymousLabel;
+                nextAnonymousNumber++;
+            }
             // ✅ 댓글 모든 필드 escape (가장 흔한 XSS 통로)
-            const safeCAuthor = escapeHtml(c.author_name);
+            const safeCAuthor = escapeHtml(anonymousLabel);
             const safeCRole = escapeHtml(c.author_role);
             const safeCContent = escapeHtml(c.content);
             html += `
