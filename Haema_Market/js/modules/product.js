@@ -94,8 +94,38 @@ function renderProductsHeader() {
 }
 
 function renderProductsEmpty() {
+    // 1) 메인 매물 그리드 ("최신 전체 매물" 또는 카테고리별)
     const grid = document.getElementById('main-product-grid');
-    if(grid) grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 100px 20px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); font-size: 14px;">선택한 조건에 맞는 매물이 없습니다.</div>';
+    if(grid) {
+        // filterState.keyword 또는 카테고리 필터가 있으면 "선택한 조건에..." 메시지
+        // 없으면 (전체 + 키워드 없음) "등록된 매물이 아직 없습니다." 메시지
+        const hasFilter = (filterState.keyword !== '') ||
+                          (filterState.category !== '전체') ||
+                          (filterState.region !== '전체') ||
+                          (filterState.condition !== '전체') ||
+                          (filterState.cert !== '전체') ||
+                          (filterState.tradeType !== '전체') ||
+                          (filterState.supplier !== '전체') ||
+                          (filterState.minPrice !== null) ||
+                          (filterState.maxPrice !== null);
+        const mainMsg = hasFilter ? '선택한 조건에 맞는 매물이 없습니다.' : '등록된 매물이 아직 없습니다.';
+        grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 100px 20px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); font-size: 14px;">' + mainMsg + '</div>';
+    }
+
+    // 2) "오늘의 추천 특가" 영역 (recommendation-list)
+    //    전체 탭 + 키워드 없을 때만 표시되는 영역이라 그때만 빈 상태 처리
+    if (filterState.topCategory === '전체' && filterState.keyword === '') {
+        const recList = document.getElementById('recommendation-list');
+        if (recList) {
+            recList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">추천할 매물이 아직 없습니다.</div>';
+        }
+
+        // 3) "인기 카테고리 기획전" 영역 (curation-list)
+        const curList = document.getElementById('curation-list');
+        if (curList) {
+            curList.innerHTML = '<div style="padding: 60px 20px; font-size:13px; color:#999; text-align:center; width:100%;">기획전 매물이 아직 없습니다.</div>';
+        }
+    }
 }
 
 function renderProductsAppend(newItems) {
