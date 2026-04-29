@@ -109,7 +109,7 @@ function renderProductsEmpty() {
                           (filterState.minPrice !== null) ||
                           (filterState.maxPrice !== null);
         const mainMsg = hasFilter ? '선택한 조건에 맞는 매물이 없습니다.' : '등록된 매물이 아직 없습니다.';
-        grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 100px 20px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); font-size: 14px;">' + mainMsg + '</div>';
+        grid.innerHTML = '<div style="width:100%; flex-shrink:0; grid-column: 1 / -1; padding: 100px 20px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); font-size: 14px;">' + mainMsg + '</div>';
     }
 
     // 2) "오늘의 추천 특가" 영역 (recommendation-list)
