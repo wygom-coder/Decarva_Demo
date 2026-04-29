@@ -131,9 +131,28 @@ async function submitAuth() {
         return;
     }
 
-    if (pw.length < 6) {
-        showError('비밀번호는 6자 이상이어야 합니다.');
-        return;
+    // 회원가입 시에만 강화된 비밀번호 검증
+    if (authMode === 'signup') {
+        if (pw.length < 10) {
+            showError('비밀번호는 10자 이상이어야 합니다.');
+            return;
+        }
+        if (!/[a-z]/.test(pw)) {
+            showError('비밀번호는 영문 소문자를 1자 이상 포함해야 합니다.');
+            return;
+        }
+        if (!/[A-Z]/.test(pw)) {
+            showError('비밀번호는 영문 대문자를 1자 이상 포함해야 합니다.');
+            return;
+        }
+        if (!/[0-9]/.test(pw)) {
+            showError('비밀번호는 숫자를 1자 이상 포함해야 합니다.');
+            return;
+        }
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(pw)) {
+            showError('비밀번호는 특수문자를 1자 이상 포함해야 합니다.');
+            return;
+        }
     }
 
     btn.disabled = true;
